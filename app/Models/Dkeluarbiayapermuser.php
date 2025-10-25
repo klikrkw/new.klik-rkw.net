@@ -20,6 +20,7 @@ class Dkeluarbiayapermuser extends Model
         'jumlah_biaya',
         'ket_biaya',
         'image_dkeluarbiayapermuser',
+        'date_alert',
     ];
     public static function getPrimaryId()
     {
@@ -31,12 +32,25 @@ class Dkeluarbiayapermuser extends Model
             ->skip(0)->take(1)->first();
         return substr($year, 2) . str_pad($month, 2, '0', STR_PAD_LEFT) . str_pad($date, 2, '0', STR_PAD_LEFT) . str_pad($rec ? (int) substr($rec->id, 6) + 1 : 1, 4, '0', STR_PAD_LEFT);
     }
+    public static function getAlertDate($itemkegiatan_id)
+    {
+        $date = Carbon::now();
+        $itemkegiatan = Itemkegiatan::find($itemkegiatan_id);
+        if($itemkegiatan){
+            if($itemkegiatan->is_alert){
+                $start_alert = $itemkegiatan->start_alert;
+                $date = $date->addDays($start_alert);
+            }
+        }
+        return $date;
+    }
 
     public static function boot()
     {
         parent::boot();
         self::creating(function (Dkeluarbiayapermuser $dkeluarbiayapermuser) {
             $dkeluarbiayapermuser->id = Dkeluarbiayapermuser::getPrimaryId();
+            $dkeluarbiayapermuser->date_alert = Dkeluarbiayapermuser::getAlertDate($dkeluarbiayapermuser->itemkegiatan_id);
         });
     }
 
@@ -60,9 +74,13 @@ class Dkeluarbiayapermuser extends Model
     public function scopeFilter($query, array $filters)
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {
-            $query->where(function ($query) use ($search) {
-                $query->where('ket_biaya', 'like', '%' . $search . '%');
-            });
+            // $query->where(function ($query) use ($search) {
+                $query
+                ->where('ket_biaya', 'like', '%' . $search . '%')
+                ->orWhereRelation('transpermohonan.permohonan','nama_penerima','like','%'.$search.'%')
+                ->orWhereRelation('transpermohonan.permohonan','nama_pelepas','like','%'.$search.'%')
+                ->orWhereRelation('transpermohonan.permohonan','nomor_hak','like','%'.$search.'%');
+            // });
         });
         $query->when($filters['itemkegiatan_id'] ?? null, function ($query, $itemkegiatan_id) {
             $query->where('itemkegiatan_id', '=', $itemkegiatan_id);

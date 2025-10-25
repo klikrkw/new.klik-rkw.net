@@ -61,7 +61,7 @@ export default function Modal({
                     leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                 >
                     <Dialog.Panel
-                        className={`mb-6 bg-white rounded-lg shadow-xl transform transition-all sm:w-full sm:mx-auto overflow-visible ${maxWidthClass} `}
+                        className={`mb-6 bg-blueGray-200 rounded-lg shadow-xl transform transition-all w-full sm:mx-auto md:w-1/2 overflow-visible ${maxWidthClass} `}
                     >
                         {title ? (
                             <Dialog.Title

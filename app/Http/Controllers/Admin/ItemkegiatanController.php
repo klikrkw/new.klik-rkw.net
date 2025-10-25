@@ -8,9 +8,11 @@ use App\Models\Akun;
 use App\Models\Grupitemkegiatan;
 use App\Models\Instansi;
 use App\Models\Itemkegiatan;
+use App\Models\Itemprosesperm;
 use App\Models\Itemrincianbiayaperm;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class ItemkegiatanController extends Controller
@@ -41,6 +43,7 @@ class ItemkegiatanController extends Controller
     {
         $instansis = Instansi::all();
         $grupitemkegiatans = Grupitemkegiatan::all();
+        $itemprosesperms = Itemprosesperm::all();
         $itemrincianbiayaperms = Itemrincianbiayaperm::all();
         $akuns = Akun::all();
         return Inertia::render('Admin/Itemkegiatan/Create', [
@@ -48,6 +51,7 @@ class ItemkegiatanController extends Controller
             'akunopts' => collect($akuns)->map(fn ($o) => ['label' => $o->nama_akun, 'value' => $o->id])->toArray(),
             'grupitemkegiatanopts' => collect($grupitemkegiatans)->map(fn ($o) => ['label' => $o->nama_grupitemkegiatan, 'value' => $o->id])->toArray(),
             'itemrincianbiayapermOpts' => collect($itemrincianbiayaperms)->map(fn ($o) => ['label' => $o->nama_itemrincianbiayaperm, 'value' => $o->id])->toArray(),
+            'itemprosespermOpts' => collect($itemprosesperms)->map(fn ($o) => ['label' => $o->nama_itemprosesperm, 'value' => $o->id])->toArray(),
         ]);
     }
 
@@ -57,20 +61,31 @@ class ItemkegiatanController extends Controller
     public function store(Request $request)
     {
         $validated =  request()->validate([
-            'nama_itemkegiatan' => ['required'],
+            'nama_itemkegiatan' => ['required', 'unique:itemkegiatans,nama_itemkegiatan'],
             'instansi_id' => ['required'],
             'akun_id' => ['required'],
             'grupitemkegiatans' => ['nullable'],
+            'itemprosesperms' => ['nullable'],
             'itemrincianbiayaperms' => ['nullable'],
             'isunique' => ['required'],
-            'checkbiaya' => ['required']
+            'checkbiaya' => ['required'],
+            'is_alert' => ['required'],
+            'start_alert' => ['required']
         ]);
         $ids = collect($validated['grupitemkegiatans'])->map(fn ($r) => $r['value']);
+        $itemprosespermIds = collect($validated['itemprosesperms'])->map(fn ($r) => $r['value']);
 
         $itemkegiatan = Itemkegiatan::create(
             $validated
         );
-        $itemkegiatan->grupitemkegiatans()->attach($ids);
+        if(count($ids)>0){
+            $itemkegiatan->grupitemkegiatans()->attach($ids);
+        }
+
+        if(count($itemprosespermIds) > 0){
+            $itemkegiatan->itemprosesperms()->attach($itemprosespermIds);
+        }
+
         if($validated['checkbiaya']){
             $rincianbya_ids = collect($validated['itemrincianbiayaperms'])->map(fn ($r) => $r['value']);
             $itemkegiatan->itemrincianbiayaperms()->attach($rincianbya_ids);
@@ -97,6 +112,7 @@ class ItemkegiatanController extends Controller
         $instansi = $itemkegiatan->instansi;
         $akun = $itemkegiatan->akun;
         $itemrincianbiayaperms = Itemrincianbiayaperm::all();
+        $itemprosesperms = Itemprosesperm::all();
         return Inertia::render('Admin/Itemkegiatan/Edit', [
             'itemkegiatan' => $itemkegiatan,
             'selInstansiOpt' => ['value' => $instansi->id, 'label' => $instansi->nama_instansi],
@@ -107,6 +123,8 @@ class ItemkegiatanController extends Controller
             'akunOpts' => collect($akuns)->map(fn ($o) => ['label' => $o->nama_akun, 'value' => $o->id])->toArray(),
             'itemrincianbiayapermOpts' => collect($itemrincianbiayaperms)->map(fn ($o) => ['label' => $o->nama_itemrincianbiayaperm, 'value' => $o->id])->toArray(),
             'selItemrincianbiayapermOpts' => collect($itemkegiatan->itemrincianbiayaperms)->map(fn ($v, $k) => ["label" => $v["nama_itemrincianbiayaperm"], "value" => $v["id"]])->toArray(),
+            'itemprosespermOpts' => collect($itemprosesperms)->map(fn ($o) => ['label' => $o->nama_itemprosesperm, 'value' => $o->id])->toArray(),
+            'selItemprosespermOpts' => collect($itemkegiatan->itemprosesperms)->map(fn ($v, $k) => ["label" => $v["nama_itemprosesperm"], "value" => $v["id"]])->toArray(),
         ]);
     }
 
@@ -116,21 +134,28 @@ class ItemkegiatanController extends Controller
     public function update(Itemkegiatan $itemkegiatan)
     {
         $validated =  request()->validate([
-            'nama_itemkegiatan' => ['required'],
+            'nama_itemkegiatan' => ['required', Rule::unique(Itemkegiatan::class)->ignore($itemkegiatan->id)],
             'instansi_id' => ['required'],
             'akun_id' => ['required'],
             'grupitemkegiatans' => ['nullable'],
             'itemrincianbiayaperms' => ['nullable'],
+            'itemprosesperms' => ['nullable'],
             'isunique' => ['required'],
-            'checkbiaya' => ['required']
+            'checkbiaya' => ['required'],
+            'is_alert' => ['required'],
+            'start_alert' => ['required']
         ]);
-
         $itemkegiatan->update(
             $validated
         );
         $ids = collect($validated['grupitemkegiatans'])->map(fn ($r) => $r['value']);
+        $itemprosespermIds = collect($validated['itemprosesperms'])->map(fn ($r) => $r['value']);
 
         $itemkegiatan->grupitemkegiatans()->sync($ids);
+
+        if(count($itemprosespermIds) > 0){
+            $itemkegiatan->itemprosesperms()->sync($itemprosespermIds);
+        }
 
         if($validated['checkbiaya']){
             $rincianbya_ids = collect($validated['itemrincianbiayaperms'])->map(fn ($r) => $r['value']);

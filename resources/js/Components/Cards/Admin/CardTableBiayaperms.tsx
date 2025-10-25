@@ -24,6 +24,7 @@ import { pickBy } from "lodash";
 import React, { useEffect, useState } from "react";
 import { usePrevious } from "react-use";
 import { Lightbox } from "react-modal-image";
+import classNames from "classnames";
 
 type Props = {
     biayaperms: Biayaperm[];
@@ -84,12 +85,12 @@ function CardTableBiayaperms({ biayaperms }: Props) {
                     <span>Menu</span>
                 </div>
             </div>
-            <ul className="list-none container-snap max-h-80 overflow-x-hidden rounded-b-md">
+            <ul className="list-none container-snap max-h-96 overflow-x-hidden rounded-b-md">
                 {biayaperms &&
                     biayaperms.map((biayaperm: Biayaperm, index: number) => (
                         <li
                             key={biayaperm.id}
-                            className="w-full flex flex-col overflow-hidden bg-lightBlue-100 px-4 border-b-2 border-lightBlue-200"
+                            className="w-full flex flex-col  bg-lightBlue-100 px-4 border-b-2 border-lightBlue-200 overflow-y-visible"
                         >
                             <div className="flex text-xs py-2 items-center justify-center font-semibold text-lightBlue-600 ">
                                 <div className="w-[5%] ">{index + 1}</div>
@@ -129,7 +130,7 @@ function CardTableBiayaperms({ biayaperms }: Props) {
                                 <div className="hidden md:flex md:w-[10%]">
                                     <span>{biayaperm.user.name}</span>
                                 </div>
-                                <div className="w-[10%] flex justify-center items-center">
+                                <div className="w-[10%] flex justify-center items-center overflow-visible">
                                     <div className="absolute">
                                         <DropdownMenu>
                                             <Menu.Item>

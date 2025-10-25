@@ -90,7 +90,6 @@ const SubCardNeracaTblKeluarBiayaPermUser = ({
                     transpermohonan_id
                 )}
             />
-            ;
         </ul>
     );
 };

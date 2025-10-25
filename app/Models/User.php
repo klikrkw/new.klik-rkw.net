@@ -27,6 +27,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'telp_user',
+        'two_factor_code',
+        'expires_at',
     ];
 
     /**
@@ -106,4 +109,17 @@ class User extends Authenticatable
         );
     }
 
+    public static function userOpts()
+    {
+         $users = User::whereHas('roles', function($q){
+            $q->whereIn('name', ['admin','staf']);
+        })->get();
+        $userOpts = collect($users)->map(fn ($o) => ['label' => $o['name'], 'value' => $o['id']])->toArray();
+        array_unshift($userOpts, ['value'=>'','label'=>"All Petugas"]);
+        return $userOpts;
+    }
+     public function isExpired()
+    {
+        return Carbon::now()->greaterThan($this->expires_at);
+    }
 }

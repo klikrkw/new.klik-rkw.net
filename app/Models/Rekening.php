@@ -12,11 +12,16 @@ class Rekening extends Model
     protected $fillable = [
         'nama_rekening',
         'ket_rekening',
-        'akun_id'
+        'akun_id',
+        'metodebayar_id',
     ];
     public function akun()
     {
         return $this->belongsTo(Akun::class);
+    }
+    public function metodebayar()
+    {
+        return $this->belongsTo(Metodebayar::class);
     }
     public function scopeFilter($query, array $filters)
     {

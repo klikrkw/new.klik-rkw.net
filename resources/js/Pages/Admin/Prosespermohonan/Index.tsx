@@ -1,11 +1,13 @@
 import CardFilterProsespermohonan from "@/Components/Cards/Admin/CardFilterProsespermohonan";
 import CardListProsespermohonan from "@/Components/Cards/Admin/CardListProsespermohonan";
 import AdminLayout from "@/Layouts/AdminLayout";
-import { PageProps } from "@/types";
 import { usePage } from "@inertiajs/react";
 
 const Index = () => {
-    const { itemprosespermsOpts, prosespermohonans } = usePage<any>().props;
+    const { itemprosespermsOpts, prosespermohonans, userOpts } = usePage<{
+        itemprosespermsOpts: any;
+        prosespermohonans: any;
+    }>().props;
     return (
         <AdminLayout>
             {/* <div
@@ -25,10 +27,14 @@ const Index = () => {
             {/* </div> */}
             <div className="flex flex-col md:flex-row items-start gap-2">
                 <div className="w-full md:w-1/3">
-                    <CardFilterProsespermohonan itemprosespermsOpts={itemprosespermsOpts} />
+                    <CardFilterProsespermohonan
+                        itemprosespermsOpts={itemprosespermsOpts}
+                    />
                 </div>
                 <div className="w-full md:w-2/3">
-                    <CardListProsespermohonan prosespermohonans={prosespermohonans} />
+                    <CardListProsespermohonan
+                        prosespermohonans={prosespermohonans}
+                    />
                 </div>
             </div>
         </AdminLayout>

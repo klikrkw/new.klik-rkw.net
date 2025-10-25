@@ -11,6 +11,8 @@ import AsyncSelectSearch from "@/Components/Shared/AsyncSelectSearch";
 import InputWithMask from "@/Components/Shared/InputWithMask";
 import { Jenispermohonan, OptionSelectActive } from "@/types";
 import ListCheckbox from "@/Components/Shared/ListCheckbox";
+import moment from "moment";
+import DateInput from "@/Components/Shared/DateInput";
 
 const Create = () => {
     type OptionSelect = {
@@ -28,7 +30,6 @@ const Create = () => {
         luas_tanah: number;
         atas_nama: string;
         jenis_tanah: string;
-        jenistanah: OptionSelect;
         desa_id: string;
         bidang: number;
         // nodaftar_permohonan: number;
@@ -36,6 +37,11 @@ const Create = () => {
         users: MultiValue<OptionSelect[]>;
         jenispermohonans: MultiValue<OptionSelectActive>;
         active: boolean;
+        cek_biaya: boolean;
+        period_cekbiaya: string;
+        periodCekbiayaOpt: OptionSelect | undefined;
+        date_cekbiaya: string;
+        jenistanah: OptionSelect;
         desa: OptionSelect | undefined;
         jenishak: OptionSelect | undefined;
         kode_unik: string;
@@ -45,6 +51,10 @@ const Create = () => {
     const jenisTanahOptions: OptionSelect[] = [
         { label: "Pertanian", value: "pertanian" },
         { label: "Non Pertanian", value: "non_pertanian" },
+    ];
+    const periodCekbiayaOptions: OptionSelect[] = [
+        { label: "Forever", value: "forever" },
+        { label: "limited", value: "limited" },
     ];
 
     const { permohonanUsers, jenishaks, jenispermohonans, userOpts } =
@@ -65,6 +75,10 @@ const Create = () => {
             users: permohonanUsers,
             jenispermohonans: [],
             active: true,
+            cek_biaya: false,
+            period_cekbiaya: periodCekbiayaOptions[0].value,
+            periodCekbiayaOpt: periodCekbiayaOptions[0],
+            date_cekbiaya: moment().format("YYYY-MM-DD"),
             jenishak: jenishaks.length > 0 ? jenishaks[0] : "",
             desa: undefined,
             bidang: 1,
@@ -380,17 +394,7 @@ const Create = () => {
                                     }
                                 />
 
-                                {/* <AsyncSelectSearch
-                                    name="users"
-                                    url="/admin/users/api/list/"
-                                    isMulti
-                                    label="User"
-                                    onChange={onChange}
-                                    value={data.users}
-                                    optionLabels={["name", "email"]}
-                                    optionValue="id"
-                                /> */}
-                                <div className="mb-4">
+                                <div className="mb-4 w-full flex flex-row justify-start gap-2">
                                     <label className="inline-flex items-center cursor-pointer">
                                         <input
                                             id="customCheckLogin"
@@ -408,6 +412,58 @@ const Create = () => {
                                             Active
                                         </span>
                                     </label>
+                                    <label className="inline-flex items-center cursor-pointer">
+                                        <input
+                                            id="customCheckLogin1"
+                                            type="checkbox"
+                                            className="form-checkbox border-0 rounded text-blueGray-700 ml-1 w-5 h-5 ease-linear transition-all duration-150"
+                                            checked={data.cek_biaya}
+                                            onChange={(e) =>
+                                                setData(
+                                                    "cek_biaya",
+                                                    e.target.checked
+                                                )
+                                            }
+                                        />
+                                        <span className="ml-2 text-sm font-semibold text-blueGray-600">
+                                            Cek Biaya
+                                        </span>
+                                    </label>
+                                </div>
+                                <div className="mb-4 w-full flex flex-row justify-center gap-2 items-center ">
+                                    <SelectSearch
+                                        className="mb-0"
+                                        name="period_cekbiaya"
+                                        value={data.periodCekbiayaOpt}
+                                        isDisabled={data.cek_biaya}
+                                        options={periodCekbiayaOptions}
+                                        onChange={(e: any) =>
+                                            setData({
+                                                ...data,
+                                                periodCekbiayaOpt: e ? e : {},
+                                                period_cekbiaya: e
+                                                    ? e.value
+                                                    : "",
+                                            })
+                                        }
+                                        errors={errors.period_cekbiaya}
+                                    />
+                                    <DateInput
+                                        selected={data.date_cekbiaya}
+                                        value={data.date_cekbiaya}
+                                        name="Until"
+                                        disabled={
+                                            data.period_cekbiaya === "forever"
+                                        }
+                                        errors={errors.date_cekbiaya}
+                                        customDateFormat="DD-MMM-YYYY"
+                                        onChange={(e) =>
+                                            setData(
+                                                "date_cekbiaya",
+                                                moment(e).format("YYYY-MM-DD")
+                                            )
+                                        }
+                                    />
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <LinkButton

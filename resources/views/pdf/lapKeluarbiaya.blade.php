@@ -181,24 +181,36 @@
                 </tr>
             </tfoot>
         </table>
-        <div style="width: 500px; margin-left: 500px;">
-            <table>
-                <tr>
-                    <td>Pati, </td>
-                    <td>{{ $tanggal }}</td>
-                </tr>
-                <tr>
-                    <td colspan="2">Petugas</td>
-                </tr>
-                <tr>
-                    <td style="padding-top: 40px;" colspan="2">&nbsp;</td>
-                </tr>
-                <tr>
-                    <td colspan="2">{{ strtoupper($keluarbiaya->user->name) }}</td>
-                </tr>
-            </table>
-
-        </div>
+        <table style="width: 700px; margin-left: 5px;">
+            <tr>
+                <td>&nbsp;</td>
+                <td style="text-align: center;">Pati, {{ $tanggal }}</td>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">Notaris dan PPAT</td>
+                <td style="text-align: center;">Bendahara</td>
+                <td style="text-align: center;">Petugas</td>
+            </tr>
+            <tr>
+                {{-- <td style="padding-top: 40px;" colspan="2">&nbsp;</td> --}}
+                <td></td>
+                <td style="text-align:center;vertical-align: middle; padding: 2px;" align="center">
+                    @if ($keluarbiaya->status_keluarbiaya == 'wait_approval')
+                        <h2>menunggu persetujuan</h2>
+                    @else
+                        <img src="{{ $qrcode }}" width="100" height="100" />
+                        <div style="margin-top:5px;">{{ $keluarbiaya->id }}</div>
+                    @endif
+                </td>
+                <td></td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">REKOWARNO, S.H., M.H.</td>
+                <td style="text-align: center;">BAHTIAR</td>
+                <td style="text-align: center;">{{ strtoupper($keluarbiaya['user']['name']) }}</td>
+            </tr>
+        </table>
     </div>
 </body>
 

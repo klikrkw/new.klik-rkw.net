@@ -13,6 +13,8 @@ import InputWithMask from "@/Components/Shared/InputWithMask";
 import { OptionSelectActive, Transpermohonan } from "@/types";
 import ListCheckbox from "@/Components/Shared/ListCheckbox";
 import CardCatatanperm from "@/Components/Cards/Admin/CardCatatanperm";
+import moment from "moment";
+import DateInput from "@/Components/Shared/DateInput";
 
 const Edit = () => {
     type OptionSelect = {
@@ -36,6 +38,10 @@ const Edit = () => {
         // thdaftar_permohonan: number;
         users: MultiValue<OptionSelect[]>;
         active: boolean;
+        cek_biaya: boolean;
+        period_cekbiaya: string;
+        periodCekbiayaOpt: OptionSelect | undefined;
+        date_cekbiaya: string;
         desa: OptionSelect | undefined;
         jenispermohonans: MultiValue<OptionSelectActive>;
         jenishak: OptionSelect | undefined;
@@ -47,6 +53,10 @@ const Edit = () => {
     const jenisTanahOptions: OptionSelect[] = [
         { label: "Pertanian", value: "pertanian" },
         { label: "Non Pertanian", value: "non_pertanian" },
+    ];
+    const periodCekbiayaOptions: OptionSelect[] = [
+        { label: "Forever", value: "forever" },
+        { label: "limited", value: "limited" },
     ];
 
     const {
@@ -63,6 +73,10 @@ const Edit = () => {
     const jenistanah = jenisTanahOptions.find(
         (v) => v.value === permohonan.jenis_tanah
     );
+    const periodCekbiaya = periodCekbiayaOptions.find(
+        (v) => v.value === permohonan.period_cekbiaya
+    );
+
     const { data, setData, errors, post, processing, transform } =
         useForm<FormValues>({
             nama_pelepas: permohonan.nama_pelepas || "",
@@ -78,6 +92,13 @@ const Edit = () => {
             desa_id: permohonan.desa_id || "",
             users: permohonanUsers,
             active: permohonan.active,
+            cek_biaya: permohonan.cek_biaya,
+            period_cekbiaya: permohonan.period_cekbiaya || "",
+            periodCekbiayaOpt: periodCekbiaya
+                ? periodCekbiaya
+                : periodCekbiayaOptions[0],
+            date_cekbiaya:
+                moment(permohonan.date_cekbiaya).format("YYYY-MM-DD") || "",
             jenishak: jenishak,
             jenispermohonans: permohonanJenispermohonans,
             desa: desa,
@@ -182,7 +203,6 @@ const Edit = () => {
         }
         setData("jenispermohonans", dts);
     };
-
     return (
         <AdminLayout>
             <div className="flex content-center items-center justify-center h-full">
@@ -421,6 +441,61 @@ const Edit = () => {
                                         </span>
                                     </label>
                                 </div>
+                                <div className="mb-4">
+                                    <label className="inline-flex items-center cursor-pointer">
+                                        <input
+                                            id="customCheckLogin1"
+                                            type="checkbox"
+                                            className="form-checkbox border-0 rounded text-blueGray-700 ml-1 w-5 h-5 ease-linear transition-all duration-150"
+                                            checked={data.cek_biaya}
+                                            onChange={(e) =>
+                                                setData(
+                                                    "cek_biaya",
+                                                    e.target.checked
+                                                )
+                                            }
+                                        />
+                                        <span className="ml-2 text-sm font-semibold text-blueGray-600">
+                                            Cek Biaya
+                                        </span>
+                                    </label>
+                                </div>
+                                <div className="mb-4 w-full flex flex-row justify-center gap-2 items-center ">
+                                    <SelectSearch
+                                        className="mb-0"
+                                        name="period_cekbiaya"
+                                        value={data.periodCekbiayaOpt}
+                                        isDisabled={data.cek_biaya}
+                                        options={periodCekbiayaOptions}
+                                        onChange={(e: any) =>
+                                            setData({
+                                                ...data,
+                                                periodCekbiayaOpt: e ? e : {},
+                                                period_cekbiaya: e
+                                                    ? e.value
+                                                    : "",
+                                            })
+                                        }
+                                        errors={errors.period_cekbiaya}
+                                    />
+                                    <DateInput
+                                        selected={data.date_cekbiaya}
+                                        value={data.date_cekbiaya}
+                                        name="Until"
+                                        disabled={
+                                            data.period_cekbiaya === "forever"
+                                        }
+                                        errors={errors.date_cekbiaya}
+                                        customDateFormat="DD-MMM-YYYY"
+                                        onChange={(e) =>
+                                            setData(
+                                                "date_cekbiaya",
+                                                moment(e).format("YYYY-MM-DD")
+                                            )
+                                        }
+                                    />
+                                </div>
+
                                 <div className="flex items-center justify-between">
                                     <LinkButton
                                         theme="blueGrey"

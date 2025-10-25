@@ -16,7 +16,8 @@ import ModalCetakLaporan from "@/Components/Modals/ModalCetakLaporan";
 import Button from "@/Components/Shared/Button";
 import MenuDropdown from "@/Components/Dropdowns/MenuDropdown";
 import SelectSearch from "@/Components/Shared/SelectSearch";
-
+import { copyToClipboard } from "@/utils";
+import { Tooltip } from "react-tooltip";
 // components
 export default function CardTableRincianbiayaperms({
     color = "light",
@@ -127,7 +128,7 @@ export default function CardTableRincianbiayaperms({
                             Rincian Biaya List
                         </h3>
                     </div>
-                    <div className="flex justify-center gap-2 flex-row items-start w-full md:w-3/4">
+                    <div className="flex flex-col justify-center gap-1 md:flex-row items-start w-full md:w-3/4">
                         {isAdmin ? (
                             <AsyncSelectSearch
                                 placeholder="Pilih User"
@@ -143,12 +144,12 @@ export default function CardTableRincianbiayaperms({
                                 isClearable
                                 optionLabels={["name"]}
                                 optionValue="id"
-                                className="text-blueGray-900 w-1/2"
+                                className="text-blueGray-900 w-full md:w-1/2"
                             />
                         ) : null}
                         <SelectSearch
                             name="status"
-                            className="text-gray-800 w-1/2"
+                            className="text-gray-800 w-full md:w-1/2"
                             value={curStatus}
                             options={statusOpts}
                             placeholder="Pilih Status"
@@ -161,7 +162,7 @@ export default function CardTableRincianbiayaperms({
                             }}
                         />
                         <InputSearch
-                            className="w-1/3"
+                            className="w-full md:w-1/3"
                             value={values.search ? values.search : ""}
                             onChange={(e: any) =>
                                 setValues((v) => ({
@@ -339,6 +340,7 @@ export default function CardTableRincianbiayaperms({
                                     permohonan,
                                     letak_obyek,
                                     nama_jenispermohonan,
+                                    no_daftar,
                                 },
                                 index
                             ) => (
@@ -363,7 +365,20 @@ export default function CardTableRincianbiayaperms({
                                     </td>
                                     <td className="border-t-0 px-2 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-2">
                                         <div className="flex flex-col items-start justify-start">
-                                            <div>{permohonan}</div>
+                                            <Tooltip id="my-tooltip" />
+                                            <div
+                                                data-tooltip-id="my-tooltip"
+                                                data-tooltip-content="Copy No Daftar"
+                                                data-tooltip-place="top"
+                                                className="hover:cursor-pointer hover:text-lightBlue-300"
+                                                onClick={(e) =>
+                                                    copyToClipboard(
+                                                        `${no_daftar}`
+                                                    )
+                                                }
+                                            >
+                                                {permohonan}
+                                            </div>
                                             <div>{letak_obyek}</div>
                                         </div>
                                     </td>

@@ -4,17 +4,17 @@ import React, {
     useEffect,
     ReactNode,
     createContext,
+    Dispatch,
+    SetStateAction,
 } from "react";
 import app, { auth, storage } from "../firebase";
 import {
     signInWithCustomToken,
-    signInWithEmailAndPassword,
+    UserCredential,
+    // signInWithEmailAndPassword,
 } from "firebase/auth";
 import myapp from "@/bootstrap";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
-import { deleteObject, ref } from "firebase/storage";
-import firebase from "firebase/compat/app";
-const AuthContext = createContext<any>(null);
 import {
     collection,
     collectionGroup,
@@ -28,6 +28,82 @@ import {
     Timestamp,
     where,
 } from "firebase/firestore";
+
+// const AuthContext = createContext<typeof value>(value);
+interface AuthContextType {
+    currentUser: any;
+    login: (fbtoken: string) => Promise<UserCredential>;
+    signup: (email: string, password: string) => void;
+    logout: () => Promise<void>;
+    resetPassword: (email: string) => void;
+    updateEmail: (email: string) => void;
+    updatePassword: (password: string) => void;
+    useMessaging: () => any;
+    getFcmToken: () => any;
+    sendMessage: (msg: { title: string; body: string }) => any;
+    requestForToken: () => any;
+    onMessageListener: () => any;
+    setCloseDialog: Dispatch<SetStateAction<boolean>>;
+    getFirestoreDocsRealTime: (
+        collectionName: string,
+        userId: number,
+        cb: (e: any) => void
+    ) => Promise<unknown>;
+    removeExpiredFirestoreDocuments: (collectionName: string) => void;
+    closeDialog: boolean;
+}
+
+const AuthContext = createContext<AuthContextType>({
+    closeDialog: false,
+    currentUser: undefined,
+    login: function (fbtoken: string): Promise<UserCredential> {
+        throw new Error("Function not implemented.");
+    },
+    signup: function (email: string, password: string): void {
+        throw new Error("Function not implemented.");
+    },
+    logout: function (): Promise<void> {
+        throw new Error("Function not implemented.");
+    },
+    resetPassword: function (email: string): void {
+        throw new Error("Function not implemented.");
+    },
+    updateEmail: function (email: string): void {
+        throw new Error("Function not implemented.");
+    },
+    updatePassword: function (password: string): void {
+        throw new Error("Function not implemented.");
+    },
+    useMessaging: function () {
+        throw new Error("Function not implemented.");
+    },
+    getFcmToken: function () {
+        throw new Error("Function not implemented.");
+    },
+    sendMessage: function (msg: { title: string; body: string }) {
+        throw new Error("Function not implemented.");
+    },
+    requestForToken: function () {
+        throw new Error("Function not implemented.");
+    },
+    onMessageListener: function () {
+        throw new Error("Function not implemented.");
+    },
+    setCloseDialog: function (value: React.SetStateAction<boolean>): void {
+        throw new Error("Function not implemented.");
+    },
+    getFirestoreDocsRealTime: function (
+        collectionName: string,
+        userId: number,
+        cb: (e: any) => void
+    ): Promise<unknown> {
+        throw new Error("Function not implemented.");
+    },
+    removeExpiredFirestoreDocuments: function (collectionName: string): void {
+        throw new Error("Function not implemented.");
+    },
+});
+
 export function useAuth() {
     return useContext(AuthContext);
 }
@@ -68,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const messaging = useMessaging();
         getToken(messaging, {
             vapidKey:
-                "BPjIFSQG3f64C7L6Xes4QEq83BhtraO1hg7tv4QqIM5w0_kK3duvVWf-tLlecHQkmp98m703PSzZytM3b_eUZks",
+                "BELRgc_WHeMyXH-Fmy7-K6CQxEGs2tyRuPA_D8WaiuP04XDwktfbrEUbwTG897ctBKc1zM3JzVCAJFZ3B67oMwU",
         })
             .then((currentToken) => {
                 if (currentToken) {
@@ -116,15 +192,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
         return getToken(messaging, {
             vapidKey:
-                "BPjIFSQG3f64C7L6Xes4QEq83BhtraO1hg7tv4QqIM5w0_kK3duvVWf-tLlecHQkmp98m703PSzZytM3b_eUZks",
+                "BELRgc_WHeMyXH-Fmy7-K6CQxEGs2tyRuPA_D8WaiuP04XDwktfbrEUbwTG897ctBKc1zM3JzVCAJFZ3B67oMwU",
         })
             .then((currentToken) => {
                 if (currentToken) {
-                    // updateFcmToken(currentToken)
-                    //     .then((e) => {
-                    //         console.log(e.data);
-                    //     })
-                    //     .catch((e) => console.log(e.data));
+                    console.log("update fcm token");
+                    updateFcmToken(currentToken)
+                        .then((e) => {
+                            console.log(e.data);
+                        })
+                        .catch((e) => console.log(e.data));
                     // Perform any other neccessary action with the token
                 } else {
                     // Show permission request UI
@@ -148,7 +225,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const getFirestoreDocsRealTime = async (
         collectionName: string,
-        userId: string,
+        userId: number,
         cb: (e: any) => void
     ) => {
         try {
@@ -172,7 +249,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     const removeExpiredFirestoreDocuments = (collectionName: string) => {
         const now = Timestamp.now();
-        const ts = Timestamp.fromMillis(now.toMillis() - 604800000); // 1 week (604800000) milliseconds (24 hours milliseconds = 86400000)
+        const ts = Timestamp.fromMillis(now.toMillis() - 86400000); // 1 week (604800000) milliseconds (24 hours milliseconds = 86400000)
         try {
             const q = query(
                 collection(db, collectionName),
@@ -191,16 +268,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return error;
         }
     };
-
-    useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged((user: any) => {
-            setCurrentUser(user);
-            setLoading(false);
-        });
-
-        return unsubscribe;
-    }, []);
-
     const value = {
         currentUser,
         login,
@@ -220,6 +287,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         closeDialog,
     };
 
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((user: any) => {
+            setCurrentUser(user);
+            setLoading(false);
+        });
+
+        return unsubscribe;
+    }, []);
     return (
         <AuthContext.Provider value={value}>
             {!loading && children}

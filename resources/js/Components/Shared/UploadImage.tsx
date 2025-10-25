@@ -11,6 +11,7 @@ import { storage } from "@/firebase";
 import { resizeImage } from "@/utils/images";
 import { useAuth } from "@/Contexts/AuthContext";
 import { usePage } from "@inertiajs/react";
+import ModalTakePicture from "../Modals/ModalTakePicture";
 
 // React.InputHTMLAttributes<HTMLInputElement>
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -30,7 +31,7 @@ export const UploadImage = React.forwardRef<HTMLInputElement, InputProps>(
     ) => {
         const [imageUpload, setImageUpload] = useState<File | null>(null);
         const [uploadProgress, setUploadProgress] = useState<number | null>();
-
+        const [showTakePicture, setShowTakePicture] = useState<boolean>(false);
         const uploadFile = async () => {
             if (imageUpload == null) return;
             const newImg = await resizeImage(imageUpload, 500, 500);
@@ -46,7 +47,7 @@ export const UploadImage = React.forwardRef<HTMLInputElement, InputProps>(
                 (snapshot) => {
                     const progress =
                         (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    console.log("Upload is " + progress + "% done");
+                    // console.log("Upload is " + progress + "% done");
                     setUploadProgress(progress);
                     switch (snapshot.state) {
                         case "paused":
@@ -97,13 +98,13 @@ export const UploadImage = React.forwardRef<HTMLInputElement, InputProps>(
                 login(fbtoken);
             }
 
-            // return () => {
-            //     if (currentUser) {
-            //         console.log("logout firebase");
-            //         logout();
-            //         // getFcmToken()
-            //     }
-            // };
+            return () => {
+                if (currentUser) {
+                    console.log("logout firebase");
+                    logout();
+                    // getFcmToken()
+                }
+            };
         }, []);
 
         return (
@@ -122,6 +123,16 @@ export const UploadImage = React.forwardRef<HTMLInputElement, InputProps>(
                 />
 
                 <div className="flex flex-col justify-start gap-1 items-start ">
+                    <Button
+                        tabIndex={-1}
+                        name="takePictureBtn"
+                        type="button"
+                        theme="blueGrey"
+                        className="h-9"
+                        onClick={() => setShowTakePicture(true)}
+                    >
+                        <i className="fas fa-camera"></i>
+                    </Button>
                     {imageUpload ? (
                         <Button
                             tabIndex={-1}
@@ -163,6 +174,11 @@ export const UploadImage = React.forwardRef<HTMLInputElement, InputProps>(
                         {uploadProgress}%
                     </progress>
                 )}
+                <ModalTakePicture
+                    showModal={showTakePicture}
+                    setShowModal={setShowTakePicture}
+                    uploadImage={setImageUpload}
+                />
             </div>
         );
     }

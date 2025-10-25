@@ -33,7 +33,12 @@ class Rincianbiayaperm extends Model
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {
             $query->where(function ($query) use ($search) {
-                $query->where('ket_rincianbiayaperm', 'like', '%' . $search . '%');
+                $query->where('rincianbiayaperms.id', 'like', '%' . $search . '%')
+                ->orWhere('ket_rincianbiayaperm', 'like', '%' . $search . '%')
+                ->orWhereHas('transpermohonan.permohonan', function($q) use($search){
+                    $q->where('nama_penerima','like', '%' . $search . '%');
+                    $q->orWhere('nomor_hak','like', '%' . $search . '%');
+                });
             });
             });
             $query->when($filters['status'] ?? null, function ($query, $status) {
@@ -74,6 +79,11 @@ class Rincianbiayaperm extends Model
         public function rekening()
         {
             return $this->belongsTo(Rekening::class);
+        }
+
+        public function biayaperms()
+        {
+            return $this->belongsToMany(Biayaperm::class, 'rincianbiayaperm_biayaperms', 'rincianbiayaperm_id', 'biayaperm_id');
         }
 
     public static function boot()

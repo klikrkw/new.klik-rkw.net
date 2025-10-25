@@ -107,7 +107,7 @@ export default function CardTableKasbons({
         >
             <div className="rounded-full mb-0 px-4 py-3 border-0 ">
                 <div className="flex justify-between w-full flex-col md:flex-row">
-                    <div className="relative w-full max-w-full flex-grow flex-1 ">
+                    <div className="relative w-full max-w-full flex-grow flex-1 mb-2">
                         <h3
                             className={
                                 "font-semibold text-lg " +
@@ -119,7 +119,7 @@ export default function CardTableKasbons({
                             Kasbon List
                         </h3>
                     </div>
-                    <div className="flex justify-center gap-2 flex-row items-start">
+                    <div className="flex flex-col justify-center gap-1 md:flex-row items-start">
                         {isAdmin ? (
                             <AsyncSelectSearch
                                 placeholder="Pilih User"
@@ -162,6 +162,35 @@ export default function CardTableKasbons({
                 <table className="items-center w-full bg-transparent border-collapse">
                     <thead>
                         <tr>
+                            <th
+                                className={
+                                    "px-4 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left " +
+                                    (color === "light"
+                                        ? "bg-blueGray-50 text-blueGray-500 border-blueGray-100"
+                                        : "bg-lightBlue-800 text-lightBlue-300 border-lightBlue-700")
+                                }
+                            >
+                                <Link
+                                    href="#"
+                                    onClick={(e) =>
+                                        handleSortLinkClick({
+                                            sortBy: "id",
+                                            sortDir:
+                                                values.sortDir === "asc"
+                                                    ? "desc"
+                                                    : "asc",
+                                        })
+                                    }
+                                >
+                                    <div className="flex flex-row justify-between">
+                                        <span>Id</span>
+                                        <IconSort
+                                            sortBy="id"
+                                            sortDir={values.sortDir || ""}
+                                        />
+                                    </div>
+                                </Link>
+                            </th>
                             <th
                                 className={
                                     "px-4 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left " +
@@ -304,6 +333,9 @@ export default function CardTableKasbons({
                                 index
                             ) => (
                                 <tr key={index}>
+                                    <td className="border-t-0 px-4 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-2">
+                                        {id}
+                                    </td>
                                     <td className="border-t-0 px-4 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-2">
                                         {tgl_kasbon}
                                     </td>

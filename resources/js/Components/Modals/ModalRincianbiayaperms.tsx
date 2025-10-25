@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { SyntheticEvent, useEffect, useState } from "react";
 import Modal from "./Modal";
 import apputils from "@/bootstrap";
 import { Rincianbiayaperm } from "@/types";
+import ModalCetakLaporan from "@/Components/Modals/ModalCetakLaporan";
+import { usePage } from "@inertiajs/react";
+import Button from "../Shared/Button";
 
 type Props = {
     showModal: boolean;
@@ -14,9 +17,12 @@ const ModalRincianbiayaperms = ({
     setShowModal,
     biayaperm_id,
 }: Props) => {
+    const { base_route } = usePage().props;
     const [rincianbiayaperms, setRincianbiayaperms] = useState<
         Rincianbiayaperm[]
     >([]);
+    const [showModalLaporan, setShowModalLaporan] = useState<boolean>(false);
+
     const getRincianbiayaperms = async (biayaperm_id: string) => {
         let xlink = `/transaksi/rincianbiayaperms/api/list?biayaperm_id=${biayaperm_id}`;
         const response = await apputils.backend.get(xlink);
@@ -80,6 +86,16 @@ const ModalRincianbiayaperms = ({
                                     <ul className="list-none container-snap max-h-80 overflow-x-hidden rounded-b-md shadow-md">
                                         <li className="w-full flex flex-col overflow-hidden bg-lightBlue-200">
                                             <div className="flex w-full gap-1 text-sm text-bold px-2 py-1 items-center justify-start text-lightBlue-900 border-b-2 border-lightBlue-200">
+                                                {rincianbiayaperm.id} -{" "}
+                                                {
+                                                    rincianbiayaperm.tgl_rincianbiayaperm
+                                                }
+                                            </div>
+                                        </li>
+                                    </ul>
+                                    <ul className="list-none container-snap max-h-80 overflow-x-hidden rounded-b-md shadow-md">
+                                        <li className="w-full flex flex-col overflow-hidden bg-lightBlue-200">
+                                            <div className="flex w-full gap-1 text-sm text-bold px-2 py-1 items-center justify-start text-lightBlue-900 border-b-2 border-lightBlue-200">
                                                 PEMASUKAN
                                             </div>
                                         </li>
@@ -133,6 +149,22 @@ const ModalRincianbiayaperms = ({
                                         <li className="w-full flex flex-col overflow-hidden bg-lightBlue-200">
                                             <div className="flex w-full gap-1 text-sm text-bold px-2 py-1 items-center justify-start text-lightBlue-900 border-b-2 border-lightBlue-200">
                                                 PENGELUARAN
+                                            </div>
+                                            <div className="absolute right-1 top-10">
+                                                <Button
+                                                    className="shadow-lg shadow-gray-500 border-white border-2"
+                                                    theme="blue"
+                                                    onClick={(
+                                                        e: SyntheticEvent
+                                                    ) => {
+                                                        e.preventDefault();
+                                                        setShowModalLaporan(
+                                                            true
+                                                        );
+                                                    }}
+                                                >
+                                                    <i className="fas fa-print"></i>
+                                                </Button>
                                             </div>
                                         </li>
                                     </ul>
@@ -282,6 +314,14 @@ const ModalRincianbiayaperms = ({
                                             </div>
                                         </li>
                                     </ul>
+                                    <ModalCetakLaporan
+                                        showModal={showModalLaporan}
+                                        setShowModal={setShowModalLaporan}
+                                        src={route(
+                                            "lap.rincianbiayaperms.staf",
+                                            rincianbiayaperm.id
+                                        )}
+                                    />
                                 </div>
                             )
                         )}

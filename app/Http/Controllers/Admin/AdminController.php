@@ -12,6 +12,8 @@ use App\Models\Transpermohonan;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Storage;
+use PhpParser\Node\Stmt\TryCatch;
 
 class AdminController extends Controller
 {
@@ -107,4 +109,47 @@ class AdminController extends Controller
             'baseRoute' =>$this->base_route,
         ]);
     }
+    public function backupDb(){
+    $directory = 'backup'; // e.g., 'public', 'storage/app/uploads'
+    $files = Storage::files($directory);
+    return Inertia::render('Admin/Utilities/Backupdb', [
+            'files' => $files,
+        ]);
+
+    }
+    public function downloadFile(String $filename)
+{
+    try {
+    if (file_exists(storage_path("app/backup/" . $filename))) {
+       return Storage::download(sprintf("backup/%s",$filename), $filename); // File path relative to the disk
+    }
+    else{
+        return abort(404);
+    }
+    } catch (\Throwable $th) {
+        throw $th;
+    }
+}
+public function deleteFilesByDate($date, $dir="app/backup")
+{
+    // Define the directory where files are stored
+    $directory = $dir;
+
+    // Get all files in the directory
+    $files = Storage::files($directory);
+
+    foreach ($files as $file) {
+        // Extract the file's last modified time
+        $lastModified = Storage::lastModified($file);
+
+        // Convert the specific date to a timestamp
+        $specificDate = strtotime($date);
+
+        // Compare and delete if the file matches the specific date
+        if (date('Y-m-d', $lastModified) === date('Y-m-d', $specificDate)) {
+            Storage::delete($file);
+        }
+    }
+}
+
 }

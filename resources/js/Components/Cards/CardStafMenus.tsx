@@ -42,9 +42,9 @@ export default function CardStafMenus({ baseRoute }: Props) {
                             <DashboardIcon
                                 url={
                                     baseRoute +
-                                    "transaksi.transpermohonans.tempatarsips.create"
+                                    "transaksi.transpermohonans.posisiberkas.create"
                                 }
-                                title="Tempat Arsip"
+                                title="Tempat Berkas"
                                 iconName="fa-archive"
                             />
                         </div>

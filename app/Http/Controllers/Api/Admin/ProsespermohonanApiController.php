@@ -142,7 +142,22 @@ class ProsespermohonanApiController extends BaseController
             'statusprosesperm_id' => ['required'],
             'catatan_statusprosesperm' => ['nullable'],
             'user_id' => ['nullable'],
+            'is_alert'=>['required'],
+            'start'=>['required'],
+            'end'=>['required'],
             ]);
+            $user = auth()->user();
+            $valid = [
+                'prosespermohonan_id' => $prosespermohonan->id,
+                'statusprosesperm_id' => $validated['statusprosesperm_id'],
+                'catatan_statusprosesperm' => $validated['catatan_statusprosesperm'],
+                'user_id' => $user->id,
+            ];
+
+        $prosespermohonan->is_alert = $validated['is_alert'];
+        $prosespermohonan->start = $validated['start'];
+        $prosespermohonan->end = $validated['end'];
+        $prosespermohonan->save();
 
         $prosespermohonan->statusprosesperms()->detach($validated['statusprosesperm_id']);
 
@@ -150,10 +165,9 @@ class ProsespermohonanApiController extends BaseController
         if (count($ids) > 0) {
             $prosespermohonan->statusprosesperms()->syncWithPivotValues($ids, ['active' => false]);
         }
-        $user = auth()->user();
         $validated['user_id'] = $user->id;
 
-        $prosespermohonan->statusprosesperms()->attach($prosespermohonan->id, $validated);
+        $prosespermohonan->statusprosesperms()->attach($prosespermohonan->id, $valid);
 
         return $this->sendResponse(['prosespermohonan'=>$prosespermohonan],'Sukses');
     }

@@ -11,6 +11,7 @@ import InputWithMask from "@/Components/Shared/InputWithMask";
 import { Jenispermohonan, OptionSelectActive, Permohonan } from "@/types";
 import ListCheckbox from "@/Components/Shared/ListCheckbox";
 import CardCatatanperm from "@/Components/Cards/Admin/CardCatatanperm";
+import useScreenSize from "@/Hooks/useScreenSize";
 
 declare const window: {
     parent: { parentCallback: (permohonan: Permohonan | undefined) => void };
@@ -204,19 +205,21 @@ const Edit = () => {
         }
         setData("jenispermohonans", dts);
     };
+    const screenSize = useScreenSize();
+    const isMobile = screenSize.width < 768;
 
     return (
-        <div className="flex content-center items-center justify-center h-full">
-            <div className="w-full lg:w-2/3 px-4">
-                <div className="relative flex flex-col min-w-0 break-words w-full border-0">
-                    <div className="rounded-t mb-0 px-4 py-1">
+        <div className="flex content-center items-center justify-center h-full p-4">
+            <div className="w-full">
+                <div className="relative flex flex-col min-w-0 break-words w-full border-0 md:px-2">
+                    <div className="rounded-t mb-0 px-4 py-2">
                         <div className="text-center mb-1">
                             <h6 className="text-blueGray-500 text-lg font-bold">
-                                UPDATE PERMOHONAN
+                                EDIT PERMOHONAN
                             </h6>
                         </div>
                     </div>
-                    <div className="flex-auto px-4 lg:px-10 py-4 pt-0">
+                    <div className="flex-auto px-2 lg:px-10 py-4 pt-0">
                         <form onSubmit={handleSubmit}>
                             <div className="flex gap-2">
                                 <Input
@@ -248,7 +251,7 @@ const Edit = () => {
                                     label="Jenis Hak"
                                     value={data.jenishak}
                                     options={jenishaks}
-                                    className="w-full lg:w-2/5 pr-2"
+                                    className="w-full lg:w-2/5 pr-1 md:pr-2"
                                     onChange={(e: any) =>
                                         setData({
                                             ...data,
@@ -266,17 +269,17 @@ const Edit = () => {
                                             : data.nomor_hak;
                                         setData("nomor_hak", dt);
                                     }}
-                                    label="Nomor Hak"
+                                    label={`${isMobile}` ? "No" : "Nomor"}
                                     errors={errors.nomor_hak}
                                     value={data.nomor_hak}
                                     type="text"
-                                    className="w-full lg:w-1/5 "
+                                    className="w-1/2 lg:w-1/5 pr-1"
                                 />
                                 {data.jenishak?.label.toLowerCase() ===
                                 "hak milik adat" ? (
-                                    <>
+                                    <div className="flex gap-1">
                                         <Input
-                                            className="w-full lg:w-1/5 px-1"
+                                            className="w-1/2 lg:w-1/5 "
                                             name="persil"
                                             label="Persil"
                                             errors={errors.persil}
@@ -291,7 +294,7 @@ const Edit = () => {
                                         />
                                         <InputWithMask
                                             mask={mask}
-                                            className="w-full lg:w-1/5 px-1"
+                                            className="w-1/2 lg:w-1/5 "
                                             name="klas"
                                             label="Klas"
                                             errors={errors.klas}
@@ -304,7 +307,7 @@ const Edit = () => {
                                                 setData("klas", e.target.value)
                                             }
                                         />
-                                    </>
+                                    </div>
                                 ) : null}
                                 {errors ? (
                                     <span className="text-sm text-red-500">
@@ -323,7 +326,7 @@ const Edit = () => {
                                             : data.luas_tanah;
                                         setData("luas_tanah", v);
                                     }}
-                                    label="Luas Tanah"
+                                    label="Luas (M2)"
                                     errors={errors.luas_tanah}
                                     value={data.luas_tanah}
                                     type="text"
@@ -362,18 +365,12 @@ const Edit = () => {
                                     label="Jenis Permohonan"
                                     value={data.jenispermohonans}
                                     options={jenispermohonans}
-                                    isClearable={false}
-                                    onChange={(e: any, option) => {
-                                        if (
-                                            option.removedValue &&
-                                            option.removedValue.isFixed
-                                        )
-                                            return;
+                                    onChange={(e: any) =>
                                         setData({
                                             ...data,
                                             jenispermohonans: e ? e : {},
-                                        });
-                                    }}
+                                        })
+                                    }
                                     errors={errors.jenispermohonans}
                                 />
                                 <SelectSearch
@@ -401,31 +398,35 @@ const Edit = () => {
                                     }}
                                 />
                             ) : null}
-                            <AsyncSelectSearch
-                                name="desa"
-                                url="/admin/desas/api/list/"
-                                isClearable
-                                label="Desa"
-                                onChange={(e: any) =>
-                                    setData({
-                                        ...data,
-                                        desa_id: e ? e.value : "",
-                                        desa: e ? e : {},
-                                    })
-                                }
-                                value={data.desa}
-                                optionLabels={["nama_desa", "nama_kecamatan"]}
-                                optionValue="id"
-                                errors={errors.desa_id}
-                            />
-                            <div className="flex gap-2">
+                            <div className="flex flex-col md:flex-row gap-1">
+                                <AsyncSelectSearch
+                                    name="desa"
+                                    url="/admin/desas/api/list/"
+                                    isClearable
+                                    className="w-full md:w-1/2"
+                                    label="Desa"
+                                    onChange={(e: any) =>
+                                        setData({
+                                            ...data,
+                                            desa_id: e ? e.value : "",
+                                            desa: e ? e : {},
+                                        })
+                                    }
+                                    value={data.desa}
+                                    optionLabels={[
+                                        "nama_desa",
+                                        "nama_kecamatan",
+                                    ]}
+                                    optionValue="id"
+                                    errors={errors.desa_id}
+                                />
                                 <SelectSearch
                                     name="user_id"
                                     label="Petugas"
                                     value={data.users}
                                     isMulti
                                     options={userOpts}
-                                    className="w-full lg:w-2/5 pr-1"
+                                    className="w-full md:w-1/2"
                                     onChange={(e: any) =>
                                         setData({
                                             ...data,
@@ -433,27 +434,25 @@ const Edit = () => {
                                         })
                                     }
                                 />
-                                <div className="flex flex-col justify-center">
-                                    <label className="inline-flex items-center cursor-pointer">
-                                        <input
-                                            id="customCheckLogin"
-                                            type="checkbox"
-                                            className="form-checkbox border-0 rounded text-blueGray-700 ml-1 w-5 h-5 ease-linear transition-all duration-150"
-                                            checked={data.active}
-                                            onChange={(e) =>
-                                                setData(
-                                                    "active",
-                                                    e.target.checked
-                                                )
-                                            }
-                                        />
-                                        <span className="ml-2 text-sm font-semibold text-blueGray-600">
-                                            Active
-                                        </span>
-                                    </label>
-                                </div>
                             </div>
-                            <div className="flex items-center justify-start">
+                            <div className="flex flex-row justify-between mb-2 w-full px-2">
+                                <label className="inline-flex items-center cursor-pointer">
+                                    <input
+                                        id="customCheckLogin"
+                                        type="checkbox"
+                                        className="form-checkbox border-0 rounded text-blueGray-700 ml-1 w-5 h-5 ease-linear transition-all duration-150"
+                                        checked={data.active}
+                                        disabled
+                                        onChange={(e) =>
+                                            setData("active", e.target.checked)
+                                        }
+                                    />
+                                    <span className="ml-2 text-sm font-semibold text-blueGray-600">
+                                        Active
+                                    </span>
+                                </label>
+                            </div>
+                            <div className="flex items-center justify-end mt-4">
                                 <LoadingButton
                                     theme="black"
                                     loading={processing}

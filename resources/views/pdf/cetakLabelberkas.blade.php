@@ -192,6 +192,42 @@
                             </ul>
                         </td>
                     </tr>
+                    @isset($tempatarsip)
+                        <tr>
+                            <td colspan="2">
+                                <ul style="list-style-type: none;margin: 0;padding: 0;">
+                                    <li style="width: 100%;">
+                                        <div style="margin-bottom: 4px;margin-top: 4px;font-weight: bold;">TEMPAT ARSIP
+                                        </div>
+                                    </li>
+                                    <li style="width: 100%;">
+                                        <div>
+                                            <table style="width: 100%;">
+                                                <tr>
+                                                    <td style="width:60%">{{ $tempatarsip->nama_tempatarsip }}</td>
+                                                    <td rowspan="4" style="width:40%;padding:0;">
+                                                        @if ($image_tempatarsip != null)
+                                                            <img src="{{ $image_tempatarsip }}" width="120"
+                                                                height="120" />
+                                                    </td>
+                                                    @endif
+                                                </tr>
+                                                <tr>
+                                                    <td>Ruang : {{ $tempatarsip->ruang->nama_ruang }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Baris : {{ $tempatarsip->baris }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Kolom : {{ $tempatarsip->kolom }}</td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </td>
+                        </tr>
+                    @endisset
                     <tr>
                         <td colspan="2">
                             <ul style="list-style-type: none;margin: 0;padding: 0;">

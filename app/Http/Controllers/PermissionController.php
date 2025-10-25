@@ -21,7 +21,7 @@ class PermissionController extends Controller
         if (request()->has(['sortBy', 'sortDir'])) {
             $permissions = $permissions->orderBy(request('sortBy'), request('sortDir'));
         }
-        $permissions = $permissions
+        $permissions = $permissions->with('roles')
             ->paginate(10)
             ->appends(Request::all());
 

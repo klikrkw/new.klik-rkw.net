@@ -29,6 +29,9 @@ class Permohonan extends Model
         'thdaftar_permohonan',
         'kode_unik',
         'active',
+        'cek_biaya',
+        'period_cekbiaya',
+        'date_cekbiaya',
     ];
 
     public function scopeFilter($query, array $filters)
@@ -193,6 +196,10 @@ class Permohonan extends Model
     {
         $persil = $this->jenishak->singkatan == 'C' ? sprintf(', Ps.%s, %s', $this->persil, $this->klas) : '';
         return sprintf('%s.%s%s, L.%s M2', $this->jenishak->singkatan, $this->nomor_hak, $persil, $this->luas_tanah);
+    }
+    public function getLetakObyekAttribute($value)
+    {
+        return sprintf('Ds.%s, Kc.%s', $this->desa->nama_desa, $this->desa->kecamatan->nama_kecamatan);
     }
     public function transpermohonans()
     {

@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Admin\TempatarsipCollection;
 use App\Models\Jenistempatarsip;
-use App\Models\Kantor;
 use App\Models\Ruang;
 use App\Models\Tempatarsip;
+use App\Models\Tempatberkas;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
@@ -176,13 +176,21 @@ class TempatarsipController extends Controller
             ->skip(0)->take(10)->get();
         return Response()->json(TempatarsipCollection::collection($tempatarsips));
     }
+    public function listByRuang(Ruang $ruang)
+    {
+        $tempatarsips = Tempatarsip::query();
+        $tempatarsips = $tempatarsips;
+        $tempatarsips = $tempatarsips->where('ruang_id', $ruang->id)->get();
+        return Response()->json(TempatarsipCollection::collection($tempatarsips));
+    }
+
     public function cetakQrcode(Tempatarsip $tempatarsip)
     {
         $row = request('row',1);
         $col = request('col',1);
         QrCode::format('png')->size(300)->generate($tempatarsip->kode_tempatarsip, public_path('qrcode_tmparsip.png'));
         $data = [
-            'qrcode' => 'qrcode_tmparsip.png',
+            'qrcode' => config('app.qrcodeurl',''). 'qrcode_tmparsip.png',
             'row'=>$row,
             'col'=>$col,
             'row_count'=>6,

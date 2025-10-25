@@ -52,7 +52,7 @@ const DateRangeInput = ({
     // }, [dates])
 
     return (
-        <div className={twMerge("relative w-full text-black ", className)}>
+        <div className={twMerge("relative w-full text-black", className)}>
             {label && (
                 <label
                     className={`block uppercase text-blueGray-600 text-sm font-bold ${
@@ -62,7 +62,7 @@ const DateRangeInput = ({
                     {label}
                 </label>
             )}
-            <div className="flex flex-row gap-0">
+            <div className="flex flex-row gap-0 ">
                 <ReactDatePicker
                     selected={moment(dates.date1).toDate()}
                     value={moment(dates.date1).format("DD-MMM-YYYY")}

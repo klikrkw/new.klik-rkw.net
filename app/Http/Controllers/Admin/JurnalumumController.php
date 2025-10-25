@@ -87,7 +87,7 @@ class JurnalumumController extends Controller
             ->join('kelompokakuns', 'akuns.kelompokakun_id', 'kelompokakuns.id')
             ->join('jenisakuns', 'kelompokakuns.jenisakun_id', 'jenisakuns.id')
             ->orderBy('akuns.kode_akun', 'asc')
-            ->groupBy('akuns.nama_akun')->groupBy('jenisakuns.kode_jenisakun');
+            ->groupBy('akuns.nama_akun','akuns.kode_akun')->groupBy('jenisakuns.kode_jenisakun');
 
         // if ($data['bulan'] > 0) {
         //     $pre = $pre->whereRaw('MONTH(tanggal_jurnal)<=?', $data['bulan']);
@@ -127,7 +127,7 @@ class JurnalumumController extends Controller
             ->join('kelompokakuns', 'akuns.kelompokakun_id', 'kelompokakuns.id')
             ->join('jenisakuns', 'kelompokakuns.jenisakun_id', 'jenisakuns.id')
             ->orderBy('akuns.kode_akun', 'asc')
-            ->groupBy('akuns.nama_akun')->groupBy('jenisakuns.kode_jenisakun');
+            ->groupBy('akuns.nama_akun','akuns.kode_akun')->groupBy('jenisakuns.kode_jenisakun');
 
         $result = $pre->get();
         $tot_debet = 0;

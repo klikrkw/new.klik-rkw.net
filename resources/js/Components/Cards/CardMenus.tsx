@@ -25,6 +25,11 @@ export default function CardMenus({ baseRoute }: Props) {
                                 iconName="fa-users"
                             />
                             <DashboardIcon
+                                url={baseRoute + "pengaturans.index"}
+                                title="Pengaturan"
+                                iconName="fa-cogs"
+                            />
+                            <DashboardIcon
                                 url={baseRoute + "permohonans.index"}
                                 title="Permohonan"
                                 iconName="fa-address-card"
@@ -45,8 +50,8 @@ export default function CardMenus({ baseRoute }: Props) {
                                 iconName="fa-list"
                             />
                             <DashboardIcon
-                                url={baseRoute + "tempatarsips.index"}
-                                title="Tempat Arsip"
+                                url={baseRoute + "tempatberkas.index"}
+                                title="Tempat Berkas"
                                 iconName="fa-book"
                             />
                         </div>
@@ -67,9 +72,9 @@ export default function CardMenus({ baseRoute }: Props) {
                             <DashboardIcon
                                 url={
                                     baseRoute +
-                                    "transaksi.transpermohonans.tempatarsips.create"
+                                    "transaksi.transpermohonans.posisiberkas.create"
                                 }
-                                title="Tempat Arsip"
+                                title="Tempat Berkas"
                                 iconName="fa-archive"
                             />
                             <DashboardIcon
@@ -182,6 +187,19 @@ export default function CardMenus({ baseRoute }: Props) {
                                 url={baseRoute + "permohonans.qrcode.create"}
                                 title="Label Berkas dan Qr Qode"
                                 iconName="fa-qrcode"
+                            />
+                        </div>
+                        <div className="w-full p-2 mb-2 bg-slate-400 shadow-md mt-3">
+                            <h1 className="font-bold text-blueGray-200">
+                                Utilities
+                            </h1>
+                        </div>
+
+                        <div className="grid grid-cols-3 md:grid-cols-6 gap-3 px-2 ">
+                            <DashboardIcon
+                                url={baseRoute + "utils.backupdb"}
+                                title="Backup"
+                                iconName="fa-floppy-disk"
                             />
                         </div>
                     </div>

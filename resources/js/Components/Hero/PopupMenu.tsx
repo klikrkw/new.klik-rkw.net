@@ -72,7 +72,7 @@ export default function PopupMenu({
                                     panelClass
                                 )}
                             >
-                                <div className="relative overflow-y-visible rounded-md shadow-slate-400 shadow-lg ring-1 ring-black/5">
+                                <div className="relative overflow-y-visible rounded-md shadow-slate-400 shadow-md ring-1 ring-black/5">
                                     <div
                                         className={`relative grid gap-2 bg-white p-7 z-50 rounded-md lg:grid-cols-${colNumbers}`}
                                     >

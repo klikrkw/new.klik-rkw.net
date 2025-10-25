@@ -16,11 +16,10 @@ export default function CardNotifications({ user }: { user: User }) {
     const {
         currentUser,
         login,
-        logout,
         getFirestoreDocsRealTime,
         removeExpiredFirestoreDocuments,
     } = useAuth();
-    const { fbtoken } = usePage().props;
+    const { fbtoken } = usePage<{ fbtoken: string }>().props;
     const [notifications, setNotifications] = useState<any>();
     useEffect(() => {
         if (!currentUser) {

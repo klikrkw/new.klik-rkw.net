@@ -23,7 +23,7 @@ class PermohonanCollection extends JsonResource
             'jenishak_id' => $this->jenishak_id,
             'nomor_hak' => strtoupper($this->jenishak->nama_jenishak) === "HAK MILIK ADAT" ? $this->jenishak->singkatan
                 . "." . $this->nomor_hak . ", Ps." . $this->persil . ", Klas " . $this->klas : $this->jenishak->singkatan . "." . $this->nomor_hak,
-            'tgl_daftar' => Carbon::parse($this->created_at)->format('d F Y'),
+            'tgl_daftar' => Carbon::parse($this->created_at)->format('d M Y'),
             'persil' => $this->persil,
             'klas' => $this->klas,
             'luas_tanah' => $this->luas_tanah,
@@ -42,6 +42,7 @@ class PermohonanCollection extends JsonResource
             'transpermohonans' => TranspermohonanMinCollection::collection($this->transpermohonans),
             'transpermohonan' => new TranspermohonanMinCollection($this->transpermohonan()),
             'active' => $this->active > 0 ? true : false,
+            'cek_biaya' => $this->cek_biaya > 0 ? true : false,
         ];
     }
 }

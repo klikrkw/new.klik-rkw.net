@@ -53,7 +53,7 @@ class KeluarbiayapermController extends Controller
             'rekening_id' => ['required'],
             'kasbon_id' => ['nullable'],
             'saldo_awal' => ['nullable'],
-            'jumlah_keluarbiayaperm' => ['nullable'],
+            'jumlah_keluarbiayaperm' => ['required'],
             'saldo_akhir' => ['nullable'],
             'itemkegiatan_id' => $val_itemkgt,
             'catatan_keluarbiayaperm' => ['nullable'],

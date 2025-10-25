@@ -33,6 +33,7 @@ class PermohonanResource extends JsonResource
             'letak_obyek' => $this->desa->nama_desa . ', ' . $this->desa->kecamatan->nama_kecamatan,
             'transpermohonan' => $this->transpermohonan(),
             'active' => $this->active > 0 ? true : false,
+            'cek_biaya' => $this->cek_biaya > 0 ? true : false,
             'users' => $this->users,
         ];
     }

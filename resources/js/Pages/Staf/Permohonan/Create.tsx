@@ -65,7 +65,7 @@ const Create = () => {
             desa_id: "",
             users: permohonanUsers,
             jenispermohonans: [],
-            active: true,
+            active: false,
             jenishak: jenishaks.length > 0 ? jenishaks[0] : "",
             desa: undefined,
             bidang: 1,
@@ -398,6 +398,7 @@ const Create = () => {
                                             type="checkbox"
                                             className="form-checkbox border-0 rounded text-blueGray-700 ml-1 w-5 h-5 ease-linear transition-all duration-150"
                                             checked={data.active}
+                                            disabled
                                             onChange={(e) =>
                                                 setData(
                                                     "active",

@@ -12,6 +12,7 @@ import { DateRange } from "react-number-format/types/types";
 import SelectSearch from "@/Components/Shared/SelectSearch";
 import DateRangeInput from "@/Components/Shared/DateRangeInput";
 import moment from "moment";
+import { Lightbox } from "react-modal-image";
 
 // components
 export default function CardTablePostingjurnals({
@@ -97,6 +98,8 @@ export default function CardTablePostingjurnals({
     const [periode, setPeriode] = useState<OptionSelect | null>(
         cperiod ? cperiod : null
     );
+    const [viewImage, setViewImage] = useState<boolean>(false);
+    const [image, setImage] = useState<string | null>(null);
 
     return (
         <>
@@ -123,8 +126,8 @@ export default function CardTablePostingjurnals({
                                 Posting Jurnal List
                             </h3>
                         </div>
-                        <div className="flex justify-center gap-2 flex-row items-start w-full md:w-2/3">
-                            <div className="w-4/5  text-blueGray-800 flex flex-col md:flex-row justify-between items-center gap-2">
+                        <div className="flex flex-col justify-center gap-2 md:flex-row items-start w-full md:w-2/3">
+                            <div className="w-full md:w-4/5  text-blueGray-800 flex flex-col md:flex-row justify-between items-center gap-2">
                                 {period === "tanggal" ? (
                                     <DateRangeInput
                                         className="w-3/5"
@@ -146,7 +149,7 @@ export default function CardTablePostingjurnals({
 
                                 <SelectSearch
                                     name="period"
-                                    className="w-1/3"
+                                    className="w-full md:w-1/3"
                                     value={periode}
                                     options={periodOpts}
                                     placeholder="Periode"
@@ -305,6 +308,18 @@ export default function CardTablePostingjurnals({
                                             : "bg-lightBlue-800 text-lightBlue-300 border-lightBlue-700")
                                     }
                                 >
+                                    <div className="flex flex-row justify-between">
+                                        <span>Image</span>
+                                    </div>
+                                </th>
+                                <th
+                                    className={
+                                        "px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left " +
+                                        (color === "light"
+                                            ? "bg-blueGray-50 text-blueGray-500 border-blueGray-100"
+                                            : "bg-lightBlue-800 text-lightBlue-300 border-lightBlue-700")
+                                    }
+                                >
                                     Options
                                 </th>
                             </tr>
@@ -312,7 +327,14 @@ export default function CardTablePostingjurnals({
                         <tbody>
                             {postingjurnals.map(
                                 (
-                                    { id, uraian, user, jumlah, created_at },
+                                    {
+                                        id,
+                                        uraian,
+                                        user,
+                                        jumlah,
+                                        created_at,
+                                        image,
+                                    },
                                     index
                                 ) => (
                                     <tr key={index}>
@@ -331,6 +353,22 @@ export default function CardTablePostingjurnals({
                                         </td>
                                         <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-2">
                                             {user.name}
+                                        </td>
+                                        <td className="border-t-0 px-3 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap py-2">
+                                            {image && (
+                                                <button
+                                                    onClick={() => {
+                                                        setImage(image);
+                                                        setViewImage(true);
+                                                    }}
+                                                >
+                                                    <i
+                                                        className={
+                                                            "fas fa-image mr-2 text-sm cursor-pointer"
+                                                        }
+                                                    ></i>
+                                                </button>
+                                            )}
                                         </td>
                                         <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-2 ">
                                             <div className="flex justify-start gap-1 ">
@@ -389,6 +427,15 @@ export default function CardTablePostingjurnals({
                         />
                     </div>
                 ) : null}
+                {viewImage && (
+                    <Lightbox
+                        small={image ? image : ""}
+                        medium={image ? image : ""}
+                        large={image ? image : ""}
+                        alt="View Image"
+                        onClose={() => setViewImage(false)}
+                    />
+                )}
             </div>
         </>
     );

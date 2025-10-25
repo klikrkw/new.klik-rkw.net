@@ -223,6 +223,12 @@ const Create = ({ baseRoute, ctranspermohonan, ctempatarsip }: Props) => {
                                                     <div>
                                                         {tempatarsip.kolom}
                                                     </div>
+                                                    <div>Kode</div>
+                                                    <div>
+                                                        {
+                                                            tempatarsip.kode_tempatarsip
+                                                        }
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

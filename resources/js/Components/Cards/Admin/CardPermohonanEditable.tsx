@@ -88,7 +88,7 @@ function CardPermohonanEditable({
                             <Link
                                 href="#"
                                 tabIndex={-1}
-                                className="z-30 w-8 h-8 px-2 py-2 text-center rounded-full bg-blue-600/20 shadow-xl mb-1 absolute -bottom-2 -right-2 "
+                                className="w-8 h-8 px-2 py-2 text-center rounded-full bg-blue-600/20 shadow-xl mb-1 absolute -bottom-2 -right-2 "
                                 onClick={(e) => {
                                     e.preventDefault();
                                     setPermohonanId(newpermohonan.id);

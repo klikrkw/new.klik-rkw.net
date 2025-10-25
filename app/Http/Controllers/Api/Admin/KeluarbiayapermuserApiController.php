@@ -10,6 +10,7 @@ use App\Models\Keluarbiayapermuser;
 use App\Models\User;
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Resources\Admin\DkeluarbiayapermuserStafCollection;
+use App\Http\Resources\Api\DkeluarbiayapermuserFullApiResource;
 use App\Http\Resources\Api\DkeluarbiayapermuserStafApiResource;
 use App\Models\Dkeluarbiayapermuser;
 use App\Models\Instansi;
@@ -64,13 +65,13 @@ class KeluarbiayapermuserApiController extends BaseController
     {
         $jsisa = $kasbon->sisa_penggunaan;
         //posting jurnalumum
-        if ($jsisa > 0) {
+        // if ($jsisa > 0) {
             $ids = $kasbon->jurnalumums;
             if (count($ids) == 2) {
                 $ids[0]->delete();
                 $ids[1]->delete();
             }
-        }
+        // }
 
         // if ($jsisa > 0) {
         //     $akunkas = Akun::getKodeAkun('kas');
@@ -155,13 +156,13 @@ class KeluarbiayapermuserApiController extends BaseController
             $id = $kasbons[0]->id;
             $kasbon = Kasbon::find($id);
             if ($keluarbiayapermuser->status_keluarbiayapermuser == 'approved') {
-                $kasbon->update(['status_kasbon' => 'finish']);
+                // $kasbon->update(['status_kasbon' => 'finish']);
             //     $this->returSisaKasbon($kasbon, 0);
             // } elseif ($keluarbiayapermuser->status_keluarbiayapermuser == 'wait_approval') {
-                if ($keluarbiayapermuser->saldo_akhir > 0) {
+                // if ($keluarbiayapermuser->saldo_akhir > 0) {
                     $kasbon->update(['status_kasbon' => 'used']);
                     $this->returSisaKasbon($kasbon, $keluarbiayapermuser->saldo_akhir);
-                }
+                // }
             }
         }
         return $this->sendResponse($data,"Update Sukses");
@@ -205,6 +206,37 @@ class KeluarbiayapermuserApiController extends BaseController
         return $this->sendResponse($data,"Sukses");
         // return $dkeluarbiayapermusers;
     }
+    public function infoDKeluarbiayapermuser()
+    {
+        $period = request('period', 'today');
+        $periods = $this->getPeriodTimes($period);
+        $dkeluarbiayas = Dkeluarbiayapermuser::query();
+        $dkeluarbiayas = $dkeluarbiayas->with('itemkegiatan:id,nama_itemkegiatan')
+        ->whereRaw('dkeluarbiayapermusers.created_at >= ? and dkeluarbiayapermusers.created_at <= ?',  [$periods]);
+        $search = request('search', '');
+        $itemkegiatan_id = request('itemkegiatan_id', '');
+        if(!empty($search)){
+            $dkeluarbiayas = $dkeluarbiayas->where('ket_biaya', 'like', '%'.$search.'%')
+            ->orWhereRelation('transpermohonan.permohonan','nama_penerima','like','%'.$search.'%')
+            ->orWhereRelation('transpermohonan.permohonan','nama_pelepas','like','%'.$search.'%')
+            ->orWhereRelation('transpermohonan.permohonan','nomor_hak','like','%'.$search.'%');
+        }
+        if(!empty($itemkegiatan_id)){
+            $dkeluarbiayas = $dkeluarbiayas->where('itemkegiatan_id', '=', $itemkegiatan_id);
+        }
+        // ->with('keluarbiaya', function ($q) {
+            //     $q->select('id', 'metodebayar_id', 'user_id', 'instansi_id')
+            //         ->with(['user:id,name', 'metodebayar:id,nama_metodebayar', 'instansi:id,nama_instansi']);
+            // })
+            // ->where('keluarbiaya_id', '=', $keluarbiaya_id);
+        $dkeluarbiayas = $dkeluarbiayas->orderBy('dkeluarbiayapermusers.id', 'desc')
+        ->simplePaginate(10)
+        ->appends(request()->all());
+    // return DkeluarbiayaStafCollection::collection($dkeluarbiayas);
+        $data['dkeluarbiayapermusers'] = new DkeluarbiayapermuserFullApiResource($dkeluarbiayas);
+        return $this->sendResponse($data,"Sukses");
+        // return $dkeluarbiayas;
+    }
 
     public function getOptions(){
         $metodebayars   = Metodebayar::all()->toArray();
@@ -219,6 +251,13 @@ class KeluarbiayapermuserApiController extends BaseController
         $periodOpts = $this->getPeriodOpts();
         return $this->sendResponse(['metodebayarOpts'=>$metodebayarOpts, 'instansiOpts'=>$instansiOpts, 'rekeningOpts'=>$rekeningOpts,
         'itemkegiatanOpts'=>$itemkegiatanOpts, 'periodOpts'=>$periodOpts], "sukses");
+    }
+
+    public function getItemkegiatanOptions(){
+        $itemkegiatans = Itemkegiatan::all()->toArray();
+        $itemkegiatanOpts = collect($itemkegiatans)->map(fn ($item) => ['value' => $item['id'], 'label' => $item['nama_itemkegiatan']])->toArray();
+        array_unshift($itemkegiatanOpts, ['value' => '', 'label' => 'Pilih Kegiatan']);
+        return $this->sendResponse(['itemkegiatanOpts'=>$itemkegiatanOpts], "sukses");
     }
 
     public function store(Request $request)

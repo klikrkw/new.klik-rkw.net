@@ -21,6 +21,7 @@ import SelectSearch from "@/Components/Shared/SelectSearch";
 import DateRangeInput from "@/Components/Shared/DateRangeInput";
 import moment from "moment";
 import { DateRange } from "react-number-format/types/types";
+import { Lightbox } from "react-modal-image";
 
 // components
 export default function CardTableInfoKeluarbiayas({
@@ -129,7 +130,9 @@ export default function CardTableInfoKeluarbiayas({
         // setDates((d: any) => ({ ...d, [field]: date }))
         setValues((v) => ({ ...v, date1: dates.date1, date2: dates.date2 }));
     };
-    console.log(dkeluarbiayas);
+    const [viewImage, setViewImage] = useState<boolean>(false);
+    const [image, setImage] = useState<string | null>(null);
+
     return (
         <>
             <div
@@ -326,6 +329,18 @@ export default function CardTableInfoKeluarbiayas({
                                     }
                                 >
                                     <div className="flex flex-row justify-between">
+                                        <span>Image</span>
+                                    </div>
+                                </th>
+                                <th
+                                    className={
+                                        "px-3 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left " +
+                                        (color === "light"
+                                            ? "bg-blueGray-50 text-blueGray-500 border-blueGray-100"
+                                            : "bg-lightBlue-800 text-lightBlue-300 border-lightBlue-700")
+                                    }
+                                >
+                                    <div className="flex flex-row justify-between">
                                         <span>User</span>
                                     </div>
                                 </th>
@@ -354,6 +369,7 @@ export default function CardTableInfoKeluarbiayas({
                                         keluarbiaya,
                                         ket_biaya,
                                         jumlah_biaya,
+                                        image_dkeluarbiaya,
                                     },
                                     index
                                 ) => (
@@ -372,6 +388,24 @@ export default function CardTableInfoKeluarbiayas({
                                         </td>
                                         <td className="border-t-0 px-3 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap py-2">
                                             {ket_biaya}
+                                        </td>
+                                        <td className="border-t-0 px-3 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap py-2">
+                                            {image_dkeluarbiaya && (
+                                                <button
+                                                    onClick={() => {
+                                                        setImage(
+                                                            image_dkeluarbiaya
+                                                        );
+                                                        setViewImage(true);
+                                                    }}
+                                                >
+                                                    <i
+                                                        className={
+                                                            "fas fa-image mr-2 text-sm cursor-pointer"
+                                                        }
+                                                    ></i>
+                                                </button>
+                                            )}
                                         </td>
                                         <td className="border-t-0 px-3 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap py-2">
                                             {keluarbiaya.user.name}
@@ -400,6 +434,15 @@ export default function CardTableInfoKeluarbiayas({
                         />
                     </div>
                 ) : null}
+                {viewImage && (
+                    <Lightbox
+                        small={image ? image : ""}
+                        medium={image ? image : ""}
+                        large={image ? image : ""}
+                        alt="View Image"
+                        onClose={() => setViewImage(false)}
+                    />
+                )}
             </div>
         </>
     );

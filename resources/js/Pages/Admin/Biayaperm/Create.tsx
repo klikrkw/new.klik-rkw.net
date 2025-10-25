@@ -5,11 +5,11 @@ import CardTableKeluarbiayaperms from "@/Components/Cards/Admin/CardTableKeluarb
 import ModalAddBiayaperm from "@/Components/Modals/ModalAddBiayaperm";
 import ModalAddPermohonan from "@/Components/Modals/ModalAddPermohonan";
 import LinkButton from "@/Components/Shared/LinkButton";
-import PermohonanSelect from "@/Components/Shared/PermohonanSelect";
 import SelectSearch from "@/Components/Shared/SelectSearch";
 import TranspermohonanSelect from "@/Components/Shared/TranspermohonanSelect";
 import { useAuth } from "@/Contexts/AuthContext";
 import AdminLayout from "@/Layouts/AdminLayout";
+
 import {
     Biayaperm,
     Itemprosesperm,
@@ -75,52 +75,59 @@ const Create = () => {
         catatan_biayaperm: string;
         _method: string;
     };
-    const { data, setData, errors, post, processing, reset } =
-        useForm<FormValues>({
-            permohonan_id: permohonan ? permohonan.id : "",
-            permohonan: null,
-            jumlah_biayaperm: "",
-            jumlah_bayar: "",
-            kurang_bayar: "",
-            catatan_biayaperm: "",
-            _method: "POST",
-        });
-    const [AddMode, setAddMode] = useState(false);
+    // const { data, setData, errors, post, processing, reset } =
+    //     useForm<FormValues>({
+    //         permohonan_id: permohonan ? permohonan.id : "",
+    //         permohonan: null,
+    //         jumlah_biayaperm: "",
+    //         jumlah_bayar: "",
+    //         kurang_bayar: "",
+    //         catatan_biayaperm: "",
+    //         _method: "POST",
+    //     });
+    // const [AddMode, setAddMode] = useState(false);
 
-    function handleSubmit(e: any) {
-        e.preventDefault();
-        useSwal
-            .confirm({
-                title: "Simpan Data",
-                text: "akan menyimpan perubahan?",
-            })
-            .then((result) => {
-                if (result.isConfirmed) {
-                    post(route("admin.transaksi.prosespermohonans.store"), {
-                        onSuccess: () => {
-                            // reset('itemprosesperm', 'itemprosesperm_id', 'catatan_prosesperm', 'active')
-                            setAddMode(false);
-                        },
-                    });
-                }
-            });
-    }
+    // function handleSubmit(e: any) {
+    //     e.preventDefault();
+    //     useSwal
+    //         .confirm({
+    //             title: "Simpan Data",
+    //             text: "akan menyimpan perubahan?",
+    //         })
+    //         .then((result) => {
+    //             if (result.isConfirmed) {
+    //                 post(route("admin.transaksi.prosespermohonans.store"), {
+    //                     onSuccess: () => {
+    //                         // reset('itemprosesperm', 'itemprosesperm_id', 'catatan_prosesperm', 'active')
+    //                         setAddMode(false);
+    //                     },
+    //                 });
+    //             }
+    //         });
+    // }
+    const [values, setValues] = useState({
+        permohonan_id: permohonan_id,
+        transpermohonan_id: transpermohonan_id,
+    });
+
     const setPermohonan = (permohonan: Permohonan | undefined) => {
         if (permohonan) {
-            setData({ ...data, permohonan_id: permohonan.id });
             setValues((prev) => ({
                 ...prev,
                 permohonan_id: permohonan.id,
                 transpermohonan_id: permohonan?.transpermohonan.id,
             }));
+        } else {
+            setValues((prev) => ({
+                ...prev,
+                permohonan_id: "",
+                transpermohonan_id: "",
+            }));
         }
         // router.get(route('admin.prosespermohonans.create', { permohonan_id: permohonan.permohonan.id }), {}, { preserveState: true, preserveScroll: true })
     };
     // const params = new URLSearchParams(window.location.search);
-    const [values, setValues] = useState({
-        permohonan_id: permohonan_id,
-        transpermohonan_id: transpermohonan_id,
-    });
+
     const prevValues = usePrevious(values);
     const override: CSSProperties = {
         display: "block",
@@ -146,30 +153,30 @@ const Create = () => {
             );
         }
     }, [values]);
-    const { currentUser, login, logout } = useAuth();
+    // const { currentUser, login, logout } = useAuth();
     const { fbtoken } = usePage().props;
-    useEffect(() => {
-        if (!currentUser) {
-            login(fbtoken);
-        }
+    // useEffect(() => {
+    //     if (!currentUser) {
+    //         login(fbtoken);
+    //     }
+    ///kjj
 
-        // return () => {
-        //     if (currentUser) {
-        //         console.log("logout firebase");
-        //         logout();
-        //         // getFcmToken()
-        //     }
-        // };
-    }, []);
+    // return () => {
+    //     if (currentUser) {
+    //         console.log("logout firebase");
+    //         logout();
+    //         // getFcmToken()
+    //     }
+    // };
+    // }, []);
     const inputRef = useRef<HTMLInputElement>(null);
-
     return (
         <AdminLayout>
-            {AddMode ? (
+            {/* {AddMode ? (
                 <div className="z-20 absolute h-full w-full left-0"></div>
-            ) : null}
+            ) : null} */}
             <div className="flex content-center items-center justify-center h-full">
-                <div className="w-full lg:w-10/12 px-4">
+                <div className="w-full lg:w-10/12 md:px-4 px-0">
                     <div className="relative flex flex-col min-w-0 break-words w-full mb-2 shadow-lg shadow-slate-400 rounded-lg bg-blueGray-200 border-0">
                         <div className="rounded-t mt-2 px-4">
                             <div className="text-center">
@@ -195,14 +202,11 @@ const Create = () => {
                                         inputRef={inputRef}
                                         isDisabledCheck={!allPermohonan}
                                         isChecked={true}
-                                        className={`w-full mr-2 ${
-                                            AddMode ? "z-10" : ""
-                                        }`}
+                                        className="w-full mr-2"
                                         value={transpermohonan}
                                         onValueChange={(e) =>
                                             setPermohonan(e?.permohonan)
                                         }
-                                        errors={errors.permohonan_id}
                                     />
                                     <a
                                         tabIndex={-1}
@@ -299,6 +303,7 @@ const Create = () => {
                 </div>
             </div>
             <ModalAddBiayaperm
+                transpermohonan_id={values.transpermohonan_id}
                 showModal={showModalBiayaperm}
                 setShowModal={setShowModalBiayaperm}
             />

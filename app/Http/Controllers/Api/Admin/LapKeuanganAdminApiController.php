@@ -72,11 +72,13 @@ class LapKeuanganAdminApiController extends BaseController
         // $last_day = $date2->daysInMonth;
         $now = Carbon::now();
         $prev = $date1->subDays(7);
+        $year = $prev->year;
         // $prev = $date1->setDay(1);
 
         if (request()->has(['date1']) && request()->has(['date2'])) {
             $now = Carbon::parse(request('date2'));
             $prev = Carbon::parse(request('date1'));
+            $year = $prev->year;
         }
 
         // ->selectRaw('price * ? as price_with_tax', [1.0825])
@@ -89,7 +91,7 @@ class LapKeuanganAdminApiController extends BaseController
 
         $akun_id = request('akun_id', 1);
         $page = request('page', 1);
-        $pre = Jurnalumum::whereRaw('YEAR(jurnalumums.created_at)=?', Carbon::now()->year)
+        $pre = Jurnalumum::whereRaw('YEAR(jurnalumums.created_at)=?', $year)
             ->where('jurnalumums.akun_id', $akun_id)
             ->whereRaw('jurnalumums.debet+jurnalumums.kredit>0')
             ->whereRaw('jurnalumums.created_at >= ? and jurnalumums.created_at <= ?',  [$periods])
@@ -104,7 +106,7 @@ class LapKeuanganAdminApiController extends BaseController
         $saldo = 0;
         $prev_saldo = 0;
         if (count($result) > 0) {
-            $prev_q = Jurnalumum::whereRaw('YEAR(jurnalumums.created_at)=?', Carbon::now()->year)
+            $prev_q = Jurnalumum::whereRaw('YEAR(jurnalumums.created_at)=?', $year)
                 ->where('jurnalumums.akun_id', $akun_id)
                 ->whereRaw('jurnalumums.no_urut < ?',  [$result[0]->no_urut])->selectRaw('if(jenisakuns.kode_jenisakun>1 and jenisakuns.kode_jenisakun<5,
             sum(kredit)-sum(debet),sum(debet)-sum(kredit)) as saldo')
@@ -172,6 +174,7 @@ class LapKeuanganAdminApiController extends BaseController
         if (request()->has(['date1']) && request()->has(['date2'])) {
             $now = Carbon::parse(request('date2'));
             $prev = Carbon::parse(request('date1'));
+            $year = $now->year;
         }
 
         $transpermohonan_id = request('transpermohonan_id');

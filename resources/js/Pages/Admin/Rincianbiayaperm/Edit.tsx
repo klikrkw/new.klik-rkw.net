@@ -5,6 +5,7 @@ import AdminLayout from "@/Layouts/AdminLayout";
 import { Link, router, useForm, usePage } from "@inertiajs/react";
 import MoneyInput from "@/Components/Shared/MoneyInput";
 import {
+    Biayaperm,
     Drincianbiayaperm,
     OptionSelect,
     Permohonan,
@@ -19,6 +20,8 @@ import SelectSearch from "@/Components/Shared/SelectSearch";
 import CardDrincianbiayapermList from "@/Components/Cards/Admin/CardDrincianbiayapermList";
 import ModalCetakLaporan from "@/Components/Modals/ModalCetakLaporan";
 import Button from "@/Components/Shared/Button";
+import useSwal from "@/utils/useSwal";
+import Modal from "@/Components/Modal";
 
 type Props = {
     itemrincianbiayapermOpts: OptionSelect[];
@@ -26,6 +29,8 @@ type Props = {
     isAdmin: boolean;
     rincianbiayaperm: Rincianbiayaperm;
     permohonan: Permohonan;
+    biayapermOpts: OptionSelect[] | [];
+    selbiayapermOpts: OptionSelect[] | [];
 };
 const Edit = ({
     itemrincianbiayapermOpts,
@@ -33,6 +38,7 @@ const Edit = ({
     isAdmin,
     rincianbiayaperm,
     permohonan,
+    biayapermOpts,
 }: Props) => {
     type OptionSelectExt = {
         jenis_itemrincianbiayaperm: string;
@@ -82,9 +88,34 @@ const Edit = ({
         );
     }
     const [showModalLaporan, setShowModalLaporan] = useState<boolean>(false);
+    const [showStatusDialog, setShowStatusDialog] = useState(false);
+    const [biayaperm, setBiayaperm] = useState<OptionSelect | null>();
     function prosesLaporan(e: any) {
         e.preventDefault();
         setShowModalLaporan(true);
+    }
+
+    function handleUpdateStatus(e: any) {
+        e.preventDefault();
+        const data = {
+            biayaperms: biayaperm ? [biayaperm.value] : [],
+        };
+        router.put(
+            route(
+                base_route + "transaksi.rincianbiayaperms.biayaperms.update",
+                rincianbiayaperm.id
+            ),
+            data,
+            {
+                onSuccess: (e) => {
+                    setShowStatusDialog(false);
+                    useSwal.info({
+                        title: "Informasi",
+                        text: "Biaya berhasil diupdate",
+                    });
+                },
+            }
+        );
     }
 
     return (
@@ -107,7 +138,7 @@ const Edit = ({
                             </div>
                         </div>
                         <div className="flex-auto px-4 lg:px-4 py-4 pt-0">
-                            <div className="w-full grid grid-cols-2 gap-2">
+                            <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-2">
                                 <div className="w-full flex flex-col gap-2 mt-2">
                                     <div className="flex flex-row items-start w-full gap-2">
                                         <div className="flex flex-col md:flex-row gap-2 justify-start items-center w-full bg-gray-300 py-1 px-2 rounded-md shadow-md">
@@ -151,7 +182,7 @@ const Edit = ({
                                     {rincianbiayaperm.status_rincianbiayaperm ===
                                     "wait_approval" ? (
                                         <form onSubmit={handleSubmit}>
-                                            <div className="grid grid-cols-2 gap-2">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                                 <div className="w-full flex flex-col mb-2">
                                                     <SelectSearch
                                                         xref={firstInput}
@@ -208,7 +239,7 @@ const Edit = ({
                                                     }
                                                 />
                                             </div>
-                                            <div className="grid grid-cols-2 gap-2">
+                                            <div className="flex flex-row items-start justify-between gap-2">
                                                 <MoneyInput
                                                     name="jumlah_biaya"
                                                     disabled={
@@ -227,7 +258,8 @@ const Edit = ({
                                                         }))
                                                     }
                                                 />
-                                                <div className="h-full">
+
+                                                <div className="w-full flex justify-around items-center ">
                                                     <LoadingButton
                                                         theme="red"
                                                         loading={processing}
@@ -236,6 +268,25 @@ const Edit = ({
                                                     >
                                                         <span>Simpan</span>
                                                     </LoadingButton>
+                                                    {rincianbiayaperm.total_pemasukan >
+                                                        0 && (
+                                                        <LinkButton
+                                                            tabIndex={-1}
+                                                            href="#"
+                                                            theme="blue"
+                                                            className="py-2 text-xs"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                setShowStatusDialog(
+                                                                    true
+                                                                );
+                                                            }}
+                                                        >
+                                                            <span>
+                                                                Set Biaya
+                                                            </span>
+                                                        </LinkButton>
+                                                    )}
                                                 </div>
                                             </div>
                                         </form>
@@ -244,7 +295,7 @@ const Edit = ({
                                 </div>
 
                                 <div className="w-full flex flex-col items-start mt-2">
-                                    <div className="flex flex-col md:flex-row gap-2 justify-start items-center w-full bg-gray-300 py-1 px-2 rounded-md shadow-md">
+                                    <div className="flex flex-row gap-2 justify-start items-center w-full bg-gray-300 py-1 px-2 rounded-md shadow-md">
                                         <label>Transaksi : </label>
                                         <InputLabel
                                             value={
@@ -291,11 +342,42 @@ const Edit = ({
             <ModalCetakLaporan
                 showModal={showModalLaporan}
                 setShowModal={setShowModalLaporan}
-                src={route(
-                    base_route + "transaksi.rincianbiayaperms.lap.admin",
-                    rincianbiayaperm.id
-                )}
+                src={route("rincianbiayaperms.lap.staf", rincianbiayaperm.id)}
             />
+            {showStatusDialog ? (
+                <Modal
+                    closeable={true}
+                    show={showStatusDialog}
+                    maxWidth="md"
+                    onClose={() => setShowStatusDialog(false)}
+                >
+                    <div className="w-full p-4 flex flex-col gap-2">
+                        <h1>Update Biaya Permohonan</h1>
+                        <SelectSearch
+                            placeholder="Biaya Permohonan"
+                            name="biayaperm"
+                            value={biayaperm}
+                            options={biayapermOpts}
+                            onChange={(e: any) => setBiayaperm(e)}
+                        />
+                        <div className="flex justify-end gap-2">
+                            <Button
+                                disabled={!biayaperm}
+                                theme="blue"
+                                onClick={(e) => handleUpdateStatus(e)}
+                            >
+                                <span>Update</span>
+                            </Button>
+                            <Button
+                                theme="blueGrey"
+                                onClick={(e) => setShowStatusDialog(false)}
+                            >
+                                <span>Batal</span>
+                            </Button>
+                        </div>
+                    </div>
+                </Modal>
+            ) : null}
         </AdminLayout>
     );
 };

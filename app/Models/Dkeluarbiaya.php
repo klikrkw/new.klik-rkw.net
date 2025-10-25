@@ -66,9 +66,8 @@ class Dkeluarbiaya extends Model
             $query->where('itemkegiatan_id', '=', $itemkegiatan_id);
         });
         $query->when($filters['user_id'] ?? null, function ($query, $user_id) {
-            $query->where('keluarbiayas.user_id', '=', $user_id);
+            $query->whereHas('keluarbiaya', fn ($q) => $q->where('user_id', '=', $user_id));
         });
-
     }
 
 }

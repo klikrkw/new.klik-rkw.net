@@ -25,6 +25,9 @@ class ProsespermohonanCollection extends JsonResource
             'user' => $this->user,
             'statusprosesperms' => $this->statusprosesperms,
             'active' => $this->active > 0 ? true : false,
+            'is_alert' => $this->is_alert > 0 ? true : false,
+            'start' => $this->start,
+            'end' => $this->end,
         ];
     }
 }

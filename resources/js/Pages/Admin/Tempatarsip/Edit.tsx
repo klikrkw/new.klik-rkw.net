@@ -1,4 +1,5 @@
 import ModalCetakLaporan from "@/Components/Modals/ModalCetakLaporan";
+import PrintDialog from "@/Components/Modals/PrintDialog";
 import Input from "@/Components/Shared/Input";
 import LinkButton from "@/Components/Shared/LinkButton";
 import { LoadingButton } from "@/Components/Shared/LoadingButton";
@@ -6,7 +7,7 @@ import NumberInput from "@/Components/Shared/NumberInput";
 import SelectSearch from "@/Components/Shared/SelectSearch";
 import UploadImage from "@/Components/Shared/UploadImage";
 import AdminLayout from "@/Layouts/AdminLayout";
-import { OptionSelect, Tempatarsip } from "@/types";
+import { OptionSelect, PrintData, Tempatarsip } from "@/types";
 import { Link, router, useForm, usePage } from "@inertiajs/react";
 import { SyntheticEvent, useState } from "react";
 import Select, { MultiValue, OnChangeValue } from "react-select";
@@ -40,21 +41,21 @@ const Edit = ({
         image_tempatarsip: string | null;
         ruang: OptionSelect | undefined;
         ruang_id: string;
-        baris: string;
-        kolom: string;
+        baris: number;
+        kolom: number;
         jenistempatarsip_id: string;
         jenistempatarsip: OptionSelect | undefined;
         _method: string;
     };
 
     const { data, setData, errors, post, processing } = useForm<FormValues>({
-        id: tempatarsip.id,
+        id: tempatarsip.id || "",
         nama_tempatarsip: tempatarsip.nama_tempatarsip || "",
         kode_tempatarsip: tempatarsip.kode_tempatarsip || "",
         image_tempatarsip: tempatarsip.image_tempatarsip || "",
         ruang_id: tempatarsip.ruang.id || "",
-        baris: tempatarsip.baris || "0",
-        kolom: tempatarsip.kolom || "0",
+        baris: tempatarsip.baris || 0,
+        kolom: tempatarsip.kolom || 0,
         ruang: selRuangOpt || undefined,
         jenistempatarsip_id: tempatarsip.jenistempatarsip.id || "",
         jenistempatarsip: selJenistempatarsipOpt || undefined,
@@ -69,6 +70,11 @@ const Edit = ({
         post(route("admin.tempatarsips.update", tempatarsip.id));
     }
     const [showModalLaporan, setShowModalLaporan] = useState<boolean>(false);
+    const [showModalPrint, setShowModalPrint] = useState<boolean>(false);
+    const [printData, setPrintData] = useState<PrintData>({
+        row: "1",
+        col: "1",
+    });
 
     // function restore() {
     //     if (confirm('Are you sure you want to restore this user?')) {
@@ -138,7 +144,10 @@ const Edit = ({
                                     errors={errors.baris}
                                     value={data.baris}
                                     onChange={(e) =>
-                                        setData("baris", e.target.value)
+                                        setData(
+                                            "baris",
+                                            parseInt(e.target.value)
+                                        )
                                     }
                                 />
                                 <NumberInput
@@ -147,7 +156,10 @@ const Edit = ({
                                     errors={errors.kolom}
                                     value={data.kolom}
                                     onChange={(e) =>
-                                        setData("kolom", e.target.value)
+                                        setData(
+                                            "kolom",
+                                            parseInt(e.target.value)
+                                        )
                                     }
                                 />
                                 <UploadImage
@@ -172,7 +184,7 @@ const Edit = ({
                                         href="#"
                                         onClick={(e: SyntheticEvent) => {
                                             e.preventDefault();
-                                            setShowModalLaporan(true);
+                                            setShowModalPrint(true);
                                         }}
                                     >
                                         <i className="fas fa-qrcode" />
@@ -193,13 +205,23 @@ const Edit = ({
                     </div>
                 </div>
             </div>
+            <PrintDialog
+                showModal={showModalPrint}
+                setShowModal={(e) => setShowModalPrint(e)}
+                onCommit={(e: PrintData) => {
+                    setPrintData(e);
+                    setShowModalPrint(false);
+                    setShowModalLaporan(true);
+                }}
+            />
             <ModalCetakLaporan
                 showModal={showModalLaporan}
                 setShowModal={setShowModalLaporan}
-                src={route(
-                    base_route + "tempatarsips.qrcode.cetak",
-                    tempatarsip.id
-                )}
+                src={route(base_route + "tempatarsips.qrcode.cetak", {
+                    tempatarsip: tempatarsip.id,
+                    row: printData.row,
+                    col: printData.col,
+                })}
             />
         </AdminLayout>
     );

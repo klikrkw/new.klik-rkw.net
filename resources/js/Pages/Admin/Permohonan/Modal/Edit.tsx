@@ -12,6 +12,9 @@ import InputWithMask from "@/Components/Shared/InputWithMask";
 import { Jenispermohonan, OptionSelectActive, Permohonan } from "@/types";
 import ListCheckbox from "@/Components/Shared/ListCheckbox";
 import CardCatatanperm from "@/Components/Cards/Admin/CardCatatanperm";
+import useScreenSize from "@/Hooks/useScreenSize";
+import moment from "moment";
+import DateInput from "@/Components/Shared/DateInput";
 
 declare const window: {
     parent: { parentCallback: (permohonan: Permohonan | undefined) => void };
@@ -41,6 +44,10 @@ const Edit = () => {
         users: MultiValue<OptionSelect[]>;
         jenispermohonans: MultiValue<OptionSelectActive>;
         active: boolean;
+        cek_biaya: boolean;
+        period_cekbiaya: string;
+        periodCekbiayaOpt: OptionSelect | undefined;
+        date_cekbiaya: string;
         desa: OptionSelect | undefined;
         jenishak: OptionSelect | undefined;
         kode_unik: string;
@@ -50,6 +57,10 @@ const Edit = () => {
     const jenisTanahOptions: OptionSelect[] = [
         { label: "Pertanian", value: "pertanian" },
         { label: "Non Pertanian", value: "non_pertanian" },
+    ];
+    const periodCekbiayaOptions: OptionSelect[] = [
+        { label: "Forever", value: "forever" },
+        { label: "limited", value: "limited" },
     ];
 
     const {
@@ -66,6 +77,10 @@ const Edit = () => {
     const jenistanah = jenisTanahOptions.find(
         (v) => v.value === permohonan.jenis_tanah
     );
+    const periodCekbiaya = periodCekbiayaOptions.find(
+        (v) => v.value === permohonan.period_cekbiaya
+    );
+
     const [transpermohonanId, setTranspermohonanId] = useState<
         string | null | undefined
     >(transpermohonan_id);
@@ -85,6 +100,13 @@ const Edit = () => {
             desa_id: permohonan.desa_id || "",
             users: permohonanUsers,
             active: permohonan.active,
+            cek_biaya: permohonan.cek_biaya,
+            period_cekbiaya: permohonan.period_cekbiaya || "",
+            periodCekbiayaOpt: periodCekbiaya
+                ? periodCekbiaya
+                : periodCekbiayaOptions[0],
+            date_cekbiaya:
+                moment(permohonan.date_cekbiaya).format("YYYY-MM-DD") || "",
             jenishak: jenishak,
             jenispermohonans: permohonanJenispermohonans,
             desa: desa,
@@ -206,19 +228,21 @@ const Edit = () => {
         }
         setData("jenispermohonans", dts);
     };
+    const screenSize = useScreenSize();
+    const isMobile = screenSize.width < 768;
 
     return (
-        <div className="flex content-center items-center justify-center h-full">
-            <div className="w-full lg:w-2/3 px-4">
-                <div className="relative flex flex-col min-w-0 break-words w-full border-0">
-                    <div className="rounded-t mb-0 px-2 py-1">
+        <div className="flex content-center items-center justify-center h-full ">
+            <div className="w-full">
+                <div className="relative flex flex-col min-w-0 break-words w-full border-0 md:px-2">
+                    <div className="rounded-t mb-0 px-4 py-2">
                         <div className="text-center mb-1">
                             <h6 className="text-blueGray-500 text-lg font-bold">
-                                UPDATE PERMOHONAN
+                                EDIT PERMOHONAN
                             </h6>
                         </div>
                     </div>
-                    <div className="flex-auto px-4 lg:px-10 py-4 pt-0">
+                    <div className="flex-auto px-2 lg:px-10 py-4 pt-0">
                         <form onSubmit={handleSubmit}>
                             <div className="flex gap-2">
                                 <Input
@@ -250,7 +274,7 @@ const Edit = () => {
                                     label="Jenis Hak"
                                     value={data.jenishak}
                                     options={jenishaks}
-                                    className="w-full lg:w-2/5 pr-2"
+                                    className="w-full lg:w-2/5 pr-1 md:pr-2"
                                     onChange={(e: any) =>
                                         setData({
                                             ...data,
@@ -268,17 +292,17 @@ const Edit = () => {
                                             : data.nomor_hak;
                                         setData("nomor_hak", dt);
                                     }}
-                                    label="Nomor Hak"
+                                    label={`${isMobile}` ? "No" : "Nomor"}
                                     errors={errors.nomor_hak}
                                     value={data.nomor_hak}
                                     type="text"
-                                    className="w-full lg:w-1/5 "
+                                    className="w-1/2 lg:w-1/5 pr-1"
                                 />
                                 {data.jenishak?.label.toLowerCase() ===
                                 "hak milik adat" ? (
-                                    <>
+                                    <div className="flex gap-1">
                                         <Input
-                                            className="w-full lg:w-1/5 px-1"
+                                            className="w-1/2 lg:w-1/5 "
                                             name="persil"
                                             label="Persil"
                                             errors={errors.persil}
@@ -293,7 +317,7 @@ const Edit = () => {
                                         />
                                         <InputWithMask
                                             mask={mask}
-                                            className="w-full lg:w-1/5 px-1"
+                                            className="w-1/2 lg:w-1/5 "
                                             name="klas"
                                             label="Klas"
                                             errors={errors.klas}
@@ -306,7 +330,7 @@ const Edit = () => {
                                                 setData("klas", e.target.value)
                                             }
                                         />
-                                    </>
+                                    </div>
                                 ) : null}
                                 {errors ? (
                                     <span className="text-sm text-red-500">
@@ -325,7 +349,7 @@ const Edit = () => {
                                             : data.luas_tanah;
                                         setData("luas_tanah", v);
                                     }}
-                                    label="Luas Tanah"
+                                    label="Luas (M2)"
                                     errors={errors.luas_tanah}
                                     value={data.luas_tanah}
                                     type="text"
@@ -364,18 +388,12 @@ const Edit = () => {
                                     label="Jenis Permohonan"
                                     value={data.jenispermohonans}
                                     options={jenispermohonans}
-                                    isClearable={false}
-                                    onChange={(e: any, option) => {
-                                        if (
-                                            option.removedValue &&
-                                            option.removedValue.isFixed
-                                        )
-                                            return;
+                                    onChange={(e: any) =>
                                         setData({
                                             ...data,
                                             jenispermohonans: e ? e : {},
-                                        });
-                                    }}
+                                        })
+                                    }
                                     errors={errors.jenispermohonans}
                                 />
                                 <SelectSearch
@@ -403,32 +421,35 @@ const Edit = () => {
                                     }}
                                 />
                             ) : null}
-                            <AsyncSelectSearch
-                                name="desa"
-                                url="/admin/desas/api/list/"
-                                isClearable
-                                className="w-full md:w-1/2"
-                                label="Desa"
-                                onChange={(e: any) =>
-                                    setData({
-                                        ...data,
-                                        desa_id: e ? e.value : "",
-                                        desa: e ? e : {},
-                                    })
-                                }
-                                value={data.desa}
-                                optionLabels={["nama_desa", "nama_kecamatan"]}
-                                optionValue="id"
-                                errors={errors.desa_id}
-                            />
-                            <div className="flex gap-2 mb-2">
+                            <div className="flex flex-col md:flex-row gap-1">
+                                <AsyncSelectSearch
+                                    name="desa"
+                                    url="/admin/desas/api/list/"
+                                    isClearable
+                                    className="w-full md:w-1/2"
+                                    label="Desa"
+                                    onChange={(e: any) =>
+                                        setData({
+                                            ...data,
+                                            desa_id: e ? e.value : "",
+                                            desa: e ? e : {},
+                                        })
+                                    }
+                                    value={data.desa}
+                                    optionLabels={[
+                                        "nama_desa",
+                                        "nama_kecamatan",
+                                    ]}
+                                    optionValue="id"
+                                    errors={errors.desa_id}
+                                />
                                 <SelectSearch
                                     name="user_id"
                                     label="Petugas"
                                     value={data.users}
                                     isMulti
                                     options={userOpts}
-                                    className="w-full lg:w-1/2 pr-1"
+                                    className="w-full md:w-1/2"
                                     onChange={(e: any) =>
                                         setData({
                                             ...data,
@@ -436,27 +457,75 @@ const Edit = () => {
                                         })
                                     }
                                 />
-                                <div className="flex flex-col justify-center items-center">
-                                    <label className="inline-flex items-center cursor-pointer">
-                                        <input
-                                            id="customCheckLogin"
-                                            type="checkbox"
-                                            className="form-checkbox border-0 rounded text-blueGray-700 ml-1 w-5 h-5 ease-linear transition-all duration-150"
-                                            checked={data.active}
-                                            onChange={(e) =>
-                                                setData(
-                                                    "active",
-                                                    e.target.checked
-                                                )
-                                            }
-                                        />
-                                        <span className="ml-2 text-sm font-semibold text-blueGray-600">
-                                            Active
-                                        </span>
-                                    </label>
-                                </div>
                             </div>
-                            <div className="flex items-center justify-start">
+                            <div className="flex flex-row justify-between mb-2 w-full px-2">
+                                <label className="inline-flex items-center cursor-pointer">
+                                    <input
+                                        id="customCheckLogin"
+                                        type="checkbox"
+                                        className="form-checkbox border-0 rounded text-blueGray-700 ml-1 w-5 h-5 ease-linear transition-all duration-150"
+                                        checked={data.active}
+                                        onChange={(e) =>
+                                            setData("active", e.target.checked)
+                                        }
+                                    />
+                                    <span className="ml-2 text-sm font-semibold text-blueGray-600">
+                                        Active
+                                    </span>
+                                </label>
+                                <label className="inline-flex items-center cursor-pointer">
+                                    <input
+                                        id="customCheckLogin1"
+                                        type="checkbox"
+                                        className="form-checkbox border-0 rounded text-blueGray-700 ml-1 w-5 h-5 ease-linear transition-all duration-150"
+                                        checked={data.cek_biaya}
+                                        onChange={(e) =>
+                                            setData(
+                                                "cek_biaya",
+                                                e.target.checked
+                                            )
+                                        }
+                                    />
+                                    <span className="ml-2 text-sm font-semibold text-blueGray-600">
+                                        Cek Biaya
+                                    </span>
+                                </label>
+                            </div>
+                            <div className="mb-4 w-full flex flex-row justify-center gap-2 items-center ">
+                                <SelectSearch
+                                    className="mb-0"
+                                    name="period_cekbiaya"
+                                    value={data.periodCekbiayaOpt}
+                                    isDisabled={data.cek_biaya}
+                                    options={periodCekbiayaOptions}
+                                    onChange={(e: any) =>
+                                        setData({
+                                            ...data,
+                                            periodCekbiayaOpt: e ? e : {},
+                                            period_cekbiaya: e ? e.value : "",
+                                        })
+                                    }
+                                    errors={errors.period_cekbiaya}
+                                />
+                                <DateInput
+                                    selected={data.date_cekbiaya}
+                                    value={data.date_cekbiaya}
+                                    name="Until"
+                                    disabled={
+                                        data.period_cekbiaya === "forever"
+                                    }
+                                    errors={errors.date_cekbiaya}
+                                    customDateFormat="DD-MMM-YYYY"
+                                    onChange={(e) =>
+                                        setData(
+                                            "date_cekbiaya",
+                                            moment(e).format("YYYY-MM-DD")
+                                        )
+                                    }
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-end mt-4">
                                 <LoadingButton
                                     theme="black"
                                     loading={processing}
@@ -467,6 +536,7 @@ const Edit = () => {
                             </div>
                         </form>
                         <div className="w-full lg:w-full pr-2 mt-2">
+                            User
                             <CardCatatanperm
                                 transpermohonan_id={transpermohonanId}
                             />

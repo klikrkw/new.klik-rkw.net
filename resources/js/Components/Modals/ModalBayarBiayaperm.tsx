@@ -17,6 +17,7 @@ import {
 import { storage } from "@/firebase";
 import { resizeImage } from "@/utils/images";
 import Button from "../Shared/Button";
+import UploadImage from "../Shared/UploadImage";
 
 type Props = {
     showModal: boolean;
@@ -104,80 +105,6 @@ const ModalBayarBiayaperm = ({ showModal, setShowModal, biayaperm }: Props) => {
     }, [biayaperm]);
     const fileRef = useRef<any>();
     const [imageUpload, setImageUpload] = useState<File | null>(null);
-    const [uploadProgress, setUploadProgress] = useState<number | null>();
-    // const [imageUrls, setImageUrls] = useState<string[]>([]);
-
-    // const imagesListRef = ref(storage, "/images/biayaperms/");
-
-    const uploadFile = async () => {
-        if (imageUpload == null) return;
-        const newImg = await resizeImage(imageUpload, 500, 500);
-        let rand = Math.random() * 100000;
-        const imageRef = ref(
-            storage,
-            `/images/bayarbiayaperms/${rand}_${imageUpload.name}`
-        );
-        const uploadTask = uploadBytesResumable(imageRef, newImg);
-
-        // Register three observers:
-        // 1. 'state_changed' observer, called any time the state changes
-        // 2. Error observer, called on failure
-        // 3. Completion observer, called on successful completion
-        uploadTask.on(
-            "state_changed",
-            (snapshot) => {
-                //         // Observe state change events such as progress, pause, and resume
-                //         // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-                const progress =
-                    (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                console.log("Upload is " + progress + "% done");
-                setUploadProgress(progress);
-                switch (snapshot.state) {
-                    case "paused":
-                        console.log("Upload is paused");
-                        break;
-                    case "running":
-                        console.log("Upload is running");
-                        break;
-                }
-            },
-            (error) => {
-                // Handle unsuccessful uploads
-            },
-            () => {
-                // Handle successful uploads on complete
-                // For instance, get the download URL: https://firebasestorage.googleapis.com/...
-                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                    //   console.log('File available at', downloadURL);
-                    setData("image_bayarbiayaperm", downloadURL);
-                    setUploadProgress(null);
-                    fileRef.current.value = null;
-                    setImageUpload(null);
-                });
-            }
-        );
-    };
-
-    const deleteFile = async (imageUrl: string) => {
-        // setLoading(true);
-        // const start = imageUrl.lastIndexOf("biayaperms%2F");
-        // const end = imageUrl.lastIndexOf("?alt=media");
-        // const fbimg = imageUrl.substring(start + 13, end);
-        // const imgDir = "/images/biayaperms/";
-        const imageRef = ref(storage, imageUrl);
-        // Delete the file
-        deleteObject(imageRef)
-            .then(() => {
-                setImageUpload(null);
-                setData("image_bayarbiayaperm", "");
-                console.log("image deleted from firebase");
-                // File deleted successfully
-            })
-            .catch((error) => {
-                console.log("error delete : ", error);
-                // Uh-oh, an error occurred!
-            });
-    };
 
     useEffect(() => {
         return () => {
@@ -288,67 +215,14 @@ const ModalBayarBiayaperm = ({ showModal, setShowModal, biayaperm }: Props) => {
                             setData("catatan_bayarbiayaperm", e.target.value)
                         }
                     />
-                    <div className="font-[sans-serif] max-w-md mx-auto">
-                        <label className="text-md text-gray-500 font-semibold mb-2 block">
-                            Upload file
-                        </label>
-                        <input
-                            type="file"
-                            ref={fileRef}
-                            name="image_bayarbiayaperm"
-                            className="w-full text-gray-400 font-semibold text-sm bg-white border file:cursor-pointer cursor-pointer file:border-0 file:py-3 file:px-4 file:mr-4 file:bg-gray-100 file:hover:bg-gray-200 file:text-gray-500 rounded"
-                            onChange={
-                                (e: BaseSyntheticEvent) =>
-                                    setImageUpload(e.target.files[0])
-                                // setData("image_bayarbiayaperm", e.target.files[0])
-                            }
-                        />
-                        <p className="text-xs text-gray-400 mt-2">
-                            PNG, JPG SVG, WEBP, and GIF are Allowed.
-                        </p>
-                    </div>
-                    <div className="flex flex-row justify-start gap-1 items-start">
-                        {imageUpload ? (
-                            <Button
-                                name="upload"
-                                type="button"
-                                theme="blueGrey"
-                                className="mt-2"
-                                onClick={uploadFile}
-                            >
-                                <i className="fas fa-upload"></i>
-                            </Button>
-                        ) : null}
-                        {data.image_bayarbiayaperm ? (
-                            <div className="flex flex-row justify-between items-start p-2">
-                                <div className="flex flex-wrap justify-center ">
-                                    <div className="w-6/12 sm:w-4/12 p-4 group rounded-lg bg-gray-400 overflow-hidden border-2 cursor-pointer">
-                                        <img
-                                            src={data.image_bayarbiayaperm}
-                                            alt="..."
-                                            className="shadow rounded max-w-full h-auto align-middle border-none transition-all group-hover:scale-110 group-hover:bg-gray-600"
-                                        />
-                                    </div>
-                                </div>
-                                <Button
-                                    name="upload"
-                                    type="button"
-                                    theme="black"
-                                    onClick={() =>
-                                        deleteFile(data.image_bayarbiayaperm)
-                                    }
-                                >
-                                    <i className="fas fa-trash"></i>
-                                </Button>
-                            </div>
-                        ) : null}
-                    </div>
-                    {uploadProgress && (
-                        <progress value={uploadProgress} max="100">
-                            {uploadProgress}%
-                        </progress>
-                    )}
-
+                    <UploadImage
+                        name={"image_biayaperm"}
+                        image={data.image_bayarbiayaperm}
+                        imagePath={"/images/dkeluarbiayapermusers/"}
+                        setImage={(imgfile) =>
+                            setData("image_bayarbiayaperm", imgfile)
+                        }
+                    />
                     <div className="mt-4 w-full flex justify-between items-center">
                         <LoadingButton
                             theme="black"

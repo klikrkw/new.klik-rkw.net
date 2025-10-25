@@ -20,7 +20,7 @@ class Kasbon extends Model
         'keperluan',
         'status_kasbon',
         'instansi_id',
-        'jenis_kasbon'
+        'jenis_kasbon',
     ];
 
     public function scopeFilter($query, array $filters)

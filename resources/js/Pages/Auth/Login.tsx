@@ -1,9 +1,8 @@
 import { useEffect, FormEventHandler, useState, useCallback } from "react";
 import { Head, Link, useForm } from "@inertiajs/react";
-import BlankLayout from "@/Layouts/BlankLayout";
 import Input from "@/Components/Shared/Input";
-import LinkButton from "@/Components/Shared/LinkButton";
 import { LoadingButton } from "@/Components/Shared/LoadingButton";
+import { useAuth } from "@/Contexts/AuthContext";
 
 export default function Login({
     status,
@@ -18,6 +17,7 @@ export default function Login({
         remember: false,
     });
 
+    const { requestForToken } = useAuth();
     useEffect(() => {
         return () => {
             reset("password");
@@ -27,7 +27,11 @@ export default function Login({
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
 
-        post(route("login"));
+        post(route("login"), {
+            onSuccess: () => {
+                requestForToken();
+            },
+        });
     };
     const [showEffect, setShowEffect] = useState<boolean>(false);
 

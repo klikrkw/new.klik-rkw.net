@@ -34,7 +34,7 @@ function CardTranspermohonanEditable({
 
     return (
         <>
-            {newpermohonan ? (
+            {newpermohonan && newpermohonan.permohonan ? (
                 <div className="relative flex flex-col min-w-0 break-words w-full mb-2 shadow-lg rounded-lg bg-blueGray-50 border-0 text-xs mt-2">
                     <div className="flex-auto px-2 lg:px-4 py-4 pt-0">
                         <div className="relative w-full mt-2 grid grid-cols-2 md:grid-cols-4">

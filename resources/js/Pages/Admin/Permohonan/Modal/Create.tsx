@@ -14,6 +14,9 @@ import {
     Permohonan,
 } from "@/types";
 import ListCheckbox from "@/Components/Shared/ListCheckbox";
+import useScreenSize from "@/Hooks/useScreenSize";
+import moment from "moment";
+import DateInput from "@/Components/Shared/DateInput";
 
 declare const window: {
     parent: { parentCallback: (permohonan: Permohonan | undefined) => void };
@@ -43,6 +46,10 @@ const Create = () => {
         users: MultiValue<OptionSelect[]>;
         jenispermohonans: MultiValue<OptionSelectActive>;
         active: boolean;
+        cek_biaya: boolean;
+        period_cekbiaya: string;
+        periodCekbiayaOpt: OptionSelect | undefined;
+        date_cekbiaya: string;
         desa: OptionSelect | undefined;
         jenishak: OptionSelect | undefined;
         kode_unik: string;
@@ -52,6 +59,10 @@ const Create = () => {
     const jenisTanahOptions: OptionSelect[] = [
         { label: "Pertanian", value: "pertanian" },
         { label: "Non Pertanian", value: "non_pertanian" },
+    ];
+    const periodCekbiayaOptions: OptionSelect[] = [
+        { label: "Forever", value: "forever" },
+        { label: "limited", value: "limited" },
     ];
 
     const { permohonanUsers, jenishaks, jenispermohonans, flash, userOpts } =
@@ -72,6 +83,10 @@ const Create = () => {
             users: permohonanUsers,
             jenispermohonans: [],
             active: true,
+            cek_biaya: false,
+            period_cekbiaya: periodCekbiayaOptions[0].value,
+            periodCekbiayaOpt: periodCekbiayaOptions[0],
+            date_cekbiaya: moment().format("YYYY-MM-DD"),
             jenishak: jenishaks.length > 0 ? jenishaks[0] : "",
             desa: undefined,
             bidang: 1,
@@ -173,18 +188,21 @@ const Create = () => {
         }
         setData("jenispermohonans", dts);
     };
+    const screenSize = useScreenSize();
+    const isMobile = screenSize.width < 768;
+
     return (
         <div className="flex content-center items-center justify-center h-full ">
             <div className="w-full">
-                <div className="relative flex flex-col min-w-0 break-words w-full border-0">
+                <div className="relative flex flex-col min-w-0 break-words w-full border-0 md:px-2">
                     <div className="rounded-t mb-0 px-4 py-2">
-                        <div className="text-center mb-2">
+                        <div className="text-center mb-1">
                             <h6 className="text-blueGray-500 text-lg font-bold">
                                 PERMOHONAN BARU
                             </h6>
                         </div>
                     </div>
-                    <div className="flex-auto px-4 lg:px-10 py-4 pt-0">
+                    <div className="flex-auto px-2 lg:px-10 py-4 pt-0">
                         <form onSubmit={handleSubmit}>
                             <div className="flex gap-2">
                                 <Input
@@ -216,7 +234,7 @@ const Create = () => {
                                     label="Jenis Hak"
                                     value={data.jenishak}
                                     options={jenishaks}
-                                    className="w-full lg:w-2/5 pr-2"
+                                    className="w-full lg:w-2/5 pr-1 md:pr-2"
                                     onChange={(e: any) =>
                                         setData({
                                             ...data,
@@ -234,17 +252,17 @@ const Create = () => {
                                             : data.nomor_hak;
                                         setData("nomor_hak", dt);
                                     }}
-                                    label="Nomor Hak"
+                                    label={`${isMobile}` ? "No" : "Nomor"}
                                     errors={errors.nomor_hak}
                                     value={data.nomor_hak}
                                     type="text"
-                                    className="w-full lg:w-1/5 "
+                                    className="w-1/2 lg:w-1/5 pr-1"
                                 />
                                 {data.jenishak?.label.toLowerCase() ===
                                 "hak milik adat" ? (
-                                    <>
+                                    <div className="flex gap-1">
                                         <Input
-                                            className="w-full lg:w-1/5 px-1"
+                                            className="w-1/2 lg:w-1/5 "
                                             name="persil"
                                             label="Persil"
                                             errors={errors.persil}
@@ -259,7 +277,7 @@ const Create = () => {
                                         />
                                         <InputWithMask
                                             mask={mask}
-                                            className="w-full lg:w-1/5 px-1"
+                                            className="w-1/2 lg:w-1/5 "
                                             name="klas"
                                             label="Klas"
                                             errors={errors.klas}
@@ -272,7 +290,7 @@ const Create = () => {
                                                 setData("klas", e.target.value)
                                             }
                                         />
-                                    </>
+                                    </div>
                                 ) : null}
                                 {errors ? (
                                     <span className="text-sm text-red-500">
@@ -291,7 +309,7 @@ const Create = () => {
                                             : data.luas_tanah;
                                         setData("luas_tanah", v);
                                     }}
-                                    label="Luas Tanah"
+                                    label="Luas (M2)"
                                     errors={errors.luas_tanah}
                                     value={data.luas_tanah}
                                     type="text"
@@ -362,12 +380,12 @@ const Create = () => {
                                     }
                                 />
                             ) : null}
-                            <div className="flex flex-row gap-1">
+                            <div className="flex flex-col md:flex-row gap-1">
                                 <AsyncSelectSearch
                                     name="desa"
                                     url="/admin/desas/api/list/"
                                     isClearable
-                                    className="w-1/2"
+                                    className="w-full md:w-1/2"
                                     label="Desa"
                                     onChange={(e: any) =>
                                         setData({
@@ -390,7 +408,7 @@ const Create = () => {
                                     value={data.users}
                                     isMulti
                                     options={userOpts}
-                                    className="w-1/2"
+                                    className="w-full md:w-1/2"
                                     onChange={(e: any) =>
                                         setData({
                                             ...data,
@@ -399,7 +417,7 @@ const Create = () => {
                                     }
                                 />
                             </div>
-                            <div className="flex flex-col justify-center mb-2">
+                            <div className="flex flex-row justify-between mb-2 w-full px-2">
                                 <label className="inline-flex items-center cursor-pointer">
                                     <input
                                         id="customCheckLogin"
@@ -414,8 +432,59 @@ const Create = () => {
                                         Active
                                     </span>
                                 </label>
+                                <label className="inline-flex items-center cursor-pointer">
+                                    <input
+                                        id="customCheckLogin1"
+                                        type="checkbox"
+                                        className="form-checkbox border-0 rounded text-blueGray-700 ml-1 w-5 h-5 ease-linear transition-all duration-150"
+                                        checked={data.cek_biaya}
+                                        onChange={(e) =>
+                                            setData(
+                                                "cek_biaya",
+                                                e.target.checked
+                                            )
+                                        }
+                                    />
+                                    <span className="ml-2 text-sm font-semibold text-blueGray-600">
+                                        Cek Biaya
+                                    </span>
+                                </label>
                             </div>
-                            <div className="flex items-center justify-start">
+                            <div className="mb-4 w-full flex flex-row justify-center gap-2 items-center ">
+                                <SelectSearch
+                                    className="mb-0"
+                                    name="period_cekbiaya"
+                                    value={data.periodCekbiayaOpt}
+                                    isDisabled={data.cek_biaya}
+                                    options={periodCekbiayaOptions}
+                                    onChange={(e: any) =>
+                                        setData({
+                                            ...data,
+                                            periodCekbiayaOpt: e ? e : {},
+                                            period_cekbiaya: e ? e.value : "",
+                                        })
+                                    }
+                                    errors={errors.period_cekbiaya}
+                                />
+                                <DateInput
+                                    selected={data.date_cekbiaya}
+                                    value={data.date_cekbiaya}
+                                    name="Until"
+                                    disabled={
+                                        data.period_cekbiaya === "forever"
+                                    }
+                                    errors={errors.date_cekbiaya}
+                                    customDateFormat="DD-MMM-YYYY"
+                                    onChange={(e) =>
+                                        setData(
+                                            "date_cekbiaya",
+                                            moment(e).format("YYYY-MM-DD")
+                                        )
+                                    }
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-end mt-4">
                                 <LoadingButton
                                     theme="black"
                                     loading={processing}

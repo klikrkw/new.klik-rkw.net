@@ -45,12 +45,12 @@ export default function Navbar() {
                         </div>
                     </form> */}
                     {/* User */}
-                    <ul className="flex-col md:flex-row list-none items-center hidden md:flex">
+                    <ul className="flex-col md:flex-row list-none items-center hidden md:flex ">
                         <UserDropdown />
                     </ul>
                 </div>
             </nav>
-            <Notification />
+            {/* <Notification /> */}
             {/* End Navbar */}
         </>
     );

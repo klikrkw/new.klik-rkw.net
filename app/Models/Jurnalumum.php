@@ -20,6 +20,8 @@ class Jurnalumum extends Model
         'uraian',
         'parent_id',
         'no_urut',
+        'created_at',
+        'updated_at',
     ];
 
     public static function getPrimaryId()

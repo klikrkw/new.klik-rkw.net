@@ -6,6 +6,13 @@ export interface User {
     email: string;
     email_verified_at: string;
 }
+export interface Pengaturan {
+    id: number;
+    nama_pengaturan: string;
+    tipe_data: string;
+    grup: string;
+    nilai: string;
+}
 
 export interface Kecamatan {
     id: string;
@@ -60,9 +67,24 @@ export interface Tempatarsip {
     image_tempatarsip: string;
     kode_tempatarsip: string;
     ruang: Ruang;
-    baris: string;
-    kolom: string;
+    baris: number;
+    kolom: number;
     jenistempatarsip: Jenistempatarsip;
+}
+export interface Tempatberkas {
+    id: string;
+    nama_tempatberkas: string;
+    image_tempatberkas: string;
+    ruang: Ruang;
+    row_count: number;
+    col_count: number;
+    jenistempatarsip: Jenistempatarsip;
+}
+export interface Posisiberkas {
+    id: string;
+    tempatberkas: Tempatberkas;
+    row: number;
+    col: number;
 }
 
 export interface Jenisakun {
@@ -138,6 +160,8 @@ export interface Itemkegiatan {
     itemrincianbiayaperms: Itemrincianbiayaperm[];
     isunique: boolean;
     checkbiaya: boolean;
+    is_alert: boolean;
+    start_alert: number;
 }
 export interface Rekening {
     id: string;
@@ -191,6 +215,7 @@ export interface Rincianbiayaperm {
     created_at: string;
     metodebayar: Metodebayar;
     drincianbiayaperms: Drincianbiayaperm[];
+    no_daftar: string;
 }
 
 export interface JenispermohonanPivotePerm extends Jenispermohonan {
@@ -316,6 +341,7 @@ export interface Dkeluarbiaya {
     ket_biaya: string;
     keluarbiaya: Keluarbiaya;
     itemkegiatan: Itemkegiatan;
+    image_dkeluarbiaya: string;
 }
 
 export interface DkeluarbiayapermuserStaf {
@@ -381,6 +407,9 @@ export interface Permohonan {
     transpermohonan: Transpermohonan;
     jenishak: Jenishak;
     desa: Desa;
+    cek_biaya: boolean;
+    period_cekbiaya: string;
+    date_cekbiaya: string;
 }
 
 export interface Transpermohonan {
@@ -431,6 +460,9 @@ export interface Prosespermohonan {
     catatan_prosesperm: string;
     statusprosesperms: StatusprosespermProsespermohonan[];
     active: boolean;
+    is_alert: boolean;
+    start: string;
+    end: string;
 }
 export interface Kategorievent {
     id: string;

@@ -15,8 +15,10 @@ const CardFilterProsespermohonan = ({ itemprosespermsOpts }: Props) => {
         statusprosesperms,
         statusprosesperm_id,
         transpermohonan_id,
+        user_id,
         permohonan,
         user,
+        userOpts,
     } = usePage<any>().props;
     // const params = new URLSearchParams(window.location.search);
 
@@ -25,6 +27,7 @@ const CardFilterProsespermohonan = ({ itemprosespermsOpts }: Props) => {
         statusprosesperm_id: statusprosesperm_id,
         transpermohonan_id: transpermohonan_id,
         permohonan: permohonan,
+        user_id: user_id,
     });
 
     const prevValues = usePrevious(values);
@@ -34,6 +37,7 @@ const CardFilterProsespermohonan = ({ itemprosespermsOpts }: Props) => {
     const statusprosesperm = statusprosesperms.find(
         (e: any) => e.id == statusprosesperm_id
     );
+    const [cUser, setCUser] = useState(user);
     useEffect(() => {
         // https://reactjs.org/docs/hooks-faq.html#how-to-get-the-previous-props-or-state
 
@@ -58,7 +62,7 @@ const CardFilterProsespermohonan = ({ itemprosespermsOpts }: Props) => {
                 setValues(v => ({ ...v, 'permohonan': e.id, 'transpermohonan_id': e.transpermohonan.id }))
             }} />
             <Button theme='blue' onClick={(e) => setValues(v => ({ ...v, 'permohonan': null, 'transpermohonan_id': null }))}>Semua Permohonan</Button> */}
-            <AsyncSelectSearch
+            {/* <AsyncSelectSearch
                 placeholder="Pilih User"
                 value={user}
                 name="users"
@@ -73,12 +77,28 @@ const CardFilterProsespermohonan = ({ itemprosespermsOpts }: Props) => {
                 optionLabels={["name"]}
                 optionValue="id"
                 className="text-blueGray-900"
+            /> */}
+            <SelectSearch
+                name="user"
+                value={cUser}
+                options={userOpts}
+                placeholder="Pilih Petugas"
+                onChange={(e: any) => {
+                    setValues((prev) => ({
+                        ...prev,
+                        user_id: e.value,
+                    }));
+                    setCUser(e);
+                }}
             />
             <SelectSearch
                 options={itemprosespermsOpts}
                 value={itemprosesperm}
                 onChange={(e) => {
-                    setValues((v) => ({ ...v, itemprosesperm_id: e.value }));
+                    setValues((v) => ({
+                        ...v,
+                        itemprosesperm_id: e.value,
+                    }));
                 }}
                 className="mb-2"
             />
@@ -86,7 +106,10 @@ const CardFilterProsespermohonan = ({ itemprosespermsOpts }: Props) => {
                 statusprosesperms={statusprosesperms}
                 statusprosesperm={statusprosesperm}
                 setStatusprosesperm={(e) => {
-                    setValues((v) => ({ ...v, statusprosesperm_id: e.id }));
+                    setValues((v) => ({
+                        ...v,
+                        statusprosesperm_id: e.id,
+                    }));
                 }}
             />
         </div>

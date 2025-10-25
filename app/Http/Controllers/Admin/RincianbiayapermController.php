@@ -23,6 +23,8 @@ use Inertia\Inertia;
 use App\Traits\FirebaseTrait;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Closure;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class RincianbiayapermController extends Controller
 {
@@ -149,6 +151,8 @@ class RincianbiayapermController extends Controller
             'transpermohonan_id' => $transpermohonan_id,
             'isAdmin' => $this->is_admin,
             'allPermohonan' =>$this->all_permohonan,
+            'userOpts' => User::userOpts(),
+            'userId' => auth()->user()->id,
         ],
         );
     }
@@ -171,7 +175,14 @@ class RincianbiayapermController extends Controller
             // 'status_rincianbiayaperm' => ['required'],
             'transpermohonan_id' => ['required'],
             'metodebayar_id' => ['required'],
-            'rekening_id' => ['required'],
+            // 'rekening_id' => ['required'],
+            'rekening_id' => ['required',  function (string $attribute, mixed $value, Closure $fail) {
+                $rek = Rekening::find($value);
+                if($rek){
+                    if($rek->metodebayar_id != request('metodebayar_id'))
+                    $fail("Rekening tidak sesuai metode bayar");
+                }
+            }],
         ]);
 
         $rincianbiayaperm = Rincianbiayaperm::create(
@@ -208,7 +219,9 @@ class RincianbiayapermController extends Controller
         $permohonan = PermohonanListResource::collection([$rincianbiayaperm->transpermohonan->permohonan]);
         $drincianbiayaperms = Drincianbiayaperm::query();
         $drincianbiayaperms = $drincianbiayaperms->with('itemrincianbiayaperm')->where('rincianbiayaperm_id',$rincianbiayaperm->id)->paginate(20)->appends(Request::all());
-
+        $sel_biayaperms = $rincianbiayaperm->biayaperms;
+        $transperm = $rincianbiayaperm->transpermohonan;
+        $biayaperms = Biayaperm::where('transpermohonan_id',$transperm->id)->doesnthave('rincianbiayaperms')->get();
         return Inertia::render('Admin/Rincianbiayaperm/Edit', [
             'rincianbiayaperm' => $rincianbiayaperm,
             'itemrincianbiayapermOpts' => collect($itemrincianbiayaperms)->map(fn ($o) => ['label' => $o['nama_itemrincianbiayaperm'], 'value' => $o['id'],'jenis_itemrincianbiayaperm'=>$o['jenis_itemrincianbiayaperm']]),
@@ -216,7 +229,9 @@ class RincianbiayapermController extends Controller
             'isAdmin' => $this->is_admin,
             'permohonan' => count($permohonan)>0?$permohonan[0]:null,
             'drincianbiayaperms' => DrincianbiayapermCollection::collection($drincianbiayaperms),
-        ]);
+            'biayapermOpts' => collect($biayaperms)->map(fn ($o) => ['label' => sprintf('%s - %s %s',$o->id, $o->catatan_biayaperm, number_format($o->jumlah_biayaperm)), 'value' => $o->id])->toArray(),
+            'selbiayapermOpts' => collect($sel_biayaperms)->map(fn ($v, $k) => ["label" => $v["catatan_biayaperm"], "value" => $v["id"]])->toArray(),
+            ]);
     }
 
     /**
@@ -239,6 +254,22 @@ class RincianbiayapermController extends Controller
         $sisa_saldo = $total_pemasukan - $total_pengeluaran - $total_piutang;
         $rincianbiayaperm->update(['total_pemasukan'=>$total_pemasukan, 'total_pengeluaran'=>$total_pengeluaran,'total_piutang'=>$total_piutang, 'sisa_saldo'=>$sisa_saldo]);
          return to_route('admin.transaksi.rincianbiayaperms.edit',$rincianbiayaperm->id)->with('success', 'Rincianbiayaperm Added');
+
+    }
+
+    public function updateBiayaperm(Request $request, Rincianbiayaperm $rincianbiayaperm)
+    {
+        $validated =  request()->validate([
+            'biayaperms' => ['required'],
+        ]);
+         if($validated['biayaperms']){
+            $rincianbiayaperm->status_rincianbiayaperm = 'approved';
+            $rincianbiayaperm->save();
+            $rincianbiayaperm->biayaperms()->sync($validated['biayaperms']);
+        }
+        // $biayaperms = $rincianbiayaperm->biayaperms;
+        // return json_encode(['biayaperms'=>$biayaperms]);
+        return redirect()->back()->with('Rincian biaya telah diupdate');
     }
 
     /**
@@ -277,12 +308,14 @@ class RincianbiayapermController extends Controller
             'total_piutang' => number_format($rec->total_piutang),
             'sisa_saldo' => number_format($rec->sisa_saldo),
             'ket_rincianbiayaperm' => $rec->ket_rincianbiayaperm,
+            'status_rincianbiayaperm' => $rec->status_rincianbiayaperm,
         ];
     }
 
     public function lapRincianbiayaperm(Rincianbiayaperm $rincianbiayaperm)
     {
 
+        set_time_limit(300);
         $rincianbiayaperm->tanggal = Carbon::parse($rincianbiayaperm->created_at)->format('d M Y');
         $tanggal = Carbon::now()->format('d M Y');
         $rincianbiayaperms = Rincianbiayaperm::query();
@@ -298,21 +331,36 @@ class RincianbiayapermController extends Controller
             ->orderBy('rincianbiayaperms.id', 'asc')
             ->take(1)->skip(0)->first();
         $rincianbiayaperms = $this->toArray($rincianbiayaperms);
-
         $drincianbiayaperms = Drincianbiayaperm::query();
         $drincianbiayaperms = $drincianbiayaperms->with('itemrincianbiayaperm')->where('rincianbiayaperm_id',$rincianbiayaperm->id)->paginate(20)->appends(Request::all());
+        $bayarbiayaperms =[];
+
+        $biayaperm = $rincianbiayaperm->biayaperms->first();
+        if($biayaperm){
+            $bayarbiayaperms = $biayaperm->bayarbiayaperms;
+        }
+        $media = request('media','print');
+        $qr_kode = sprintf("laprincianbiaya_%s.png",$this->user->id);
+        // $xpath = route('admin.transaksi.rincianbiayaperms.lap.admin',['rincianbiayaperm'=>$rincianbiayaperm->id,'media'=>'screen']);
+        $xpath = url()->current().'/?media=screen';
+        QrCode::format('png')->size(100)->generate($xpath, public_path($qr_kode));
 
         $data = [
             'judul_lap' => 'RINCIAN BIAYA PERMOHONAN',
             'tanggal' => $tanggal,
+            'qrcode' => config('app.qrcodeurl',''). $qr_kode,
             'rincianbiayaperm'=>$rincianbiayaperms,
             'drincianbiayaperms' => $drincianbiayaperms,
+            'bayarbiayaperms' => $bayarbiayaperms,
         ];
-        $pdf = Pdf::loadView('pdf.lapRincianbiayaperm', $data)->setPaper(array(0, 0, 609.4488, 935.433), 'portrait');
-        // return view('pdf.lapKeluarbiayauser', compact('judul_lap', 'subjudul_lap'));
-        // return $pdf->stream('lapKeluarbiayauser.pdf');
-        return 'data:application/pdf;base64,' . base64_encode($pdf->stream());
+        if($media == 'print'){
+            $pdf = Pdf::loadView('pdf.lapRincianbiayaperm', $data)->setPaper(array(0, 0, 609.4488, 935.433), 'portrait');
+            return 'data:application/pdf;base64,' . base64_encode($pdf->stream());
+        }else{
+            return view('lapRincianbiayaperm', $data);
+        }
     }
+
     public function list()
     {
         $biayaperm_id = request('biayaperm_id');

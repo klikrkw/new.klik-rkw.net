@@ -21,6 +21,7 @@ import ModalAddPermohonan from "@/Components/Modals/ModalAddPermohonan";
 import { usePrevious } from "react-use";
 import { pickBy } from "lodash";
 import TranspermohonanSelect from "@/Components/Shared/TranspermohonanSelect";
+import apputils from "@/bootstrap";
 
 type Props = {
     transpermohonan_id: string;
@@ -95,10 +96,52 @@ const Create = ({
     };
     const [showModalAddPermohonan, setShowModalAddPermohonan] =
         useState<boolean>(false);
+    const sendMessageToMobileRole = async (
+        title: string,
+        body: string,
+        datas: {
+            navigationId: string;
+            param1_name: string;
+            param1_value: string;
+        } & object
+    ) => {
+        let xlink = `/admin/messages/api/sendmessagetomobilerole`;
+        const response = await apputils.backend.post(xlink, {
+            title,
+            role: "admin",
+            body,
+            datas,
+        });
+        const data = response.data;
+    };
 
     function handleSubmit(e: any) {
         e.preventDefault();
-        post(route(base_route + "transaksi.rincianbiayaperms.store"));
+        post(route(base_route + "transaksi.rincianbiayaperms.store"), {
+            onSuccess: () => {
+                const pmh: string = data.permohonan
+                    ? data.ket_rincianbiayaperm +
+                      ", " +
+                      data.permohonan.transpermohonan.jenispermohonan
+                          .nama_jenispermohonan +
+                      ", " +
+                      data.permohonan?.nama_penerima +
+                      ", " +
+                      data.permohonan?.nomor_hak +
+                      "/" +
+                      data.permohonan?.letak_obyek +
+                      " " +
+                      "(" +
+                      data.permohonan.users.map((u: any) => u.name).join(", ") +
+                      ")"
+                    : data.ket_rincianbiayaperm;
+                sendMessageToMobileRole("Rincian Baru", pmh, {
+                    navigationId: "BiayaPerm",
+                    param1_name: "transpermohonanId",
+                    param1_value: data.transpermohonan_id,
+                });
+            },
+        });
     }
 
     const setPermohonan = (permohonan: Permohonan | undefined) => {
@@ -137,6 +180,7 @@ const Create = ({
     });
 
     const prevValues = usePrevious(values);
+
     useEffect(() => {
         if (prevValues) {
             const query = Object.keys(pickBy(values)).length
@@ -192,7 +236,7 @@ const Create = ({
                                         }
                                         errors={errors.jenis_itemrincianbiaya}
                                     /> */}
-                                <div className="w-full grid grid-cols-2 gap-2">
+                                <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-2">
                                     <div className="w-full grid grid-cols-1">
                                         {/* <MoneyInput name='jumlah_kasbon' label='Jumlah Kasbon' errors={errors.ket}
                                         autoComplete='off'

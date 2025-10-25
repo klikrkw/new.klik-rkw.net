@@ -20,7 +20,7 @@ const CardListProsesbyPermohonan = ({
                 {data &&
                     data.map((p, i: number) => (
                         <li key={i}>
-                            <div className="relative w-full flex flex-row justify-between rounded-t-md mt-2 px-2 pt-2 bg-white text-lightBlue-700 font-bold text-xs">
+                            <div className="relative w-full flex flex-col md:flex-row justify-between rounded-t-md mt-2 px-2 pt-2 bg-white text-lightBlue-700 font-bold text-xs">
                                 <span>
                                     {p.itemprosesperm.nama_itemprosesperm}
                                 </span>

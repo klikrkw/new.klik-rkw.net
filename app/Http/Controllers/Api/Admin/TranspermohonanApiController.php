@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Http\Resources\Admin\PosisiberkasCollection;
 use App\Http\Resources\Admin\TempatarsipCollection;
 use App\Http\Resources\Api\TempatarsipWithPageResource;
 use App\Http\Resources\Api\TranspermohonanApiResource;
+use App\Http\Resources\Api\TranspermohonanMiniResource;
 use App\Http\Resources\Api\TranspermohonanNoPageResource;
 use App\Models\Tempatarsip;
 use App\Models\Transpermohonan;
@@ -125,6 +127,44 @@ class TranspermohonanApiController extends BaseController
             ->appends(request()->all());
         $data = ['tempatarsips'=>new TempatarsipWithPageResource($tempatarsips)];
         return $this->sendResponse($data,"Sukses");
+    }
+    public function list(){
+        $nama_penerima = request('nama_penerima')??null;
+        $nama_pelepas = request('nama_pelepas')??null;
+        $nama_desa = request('nama_desa')??null;
+        $nomor_hak = request('nomor_hak')??null;
+        $nama_kecamatan = request('nama_kecamatan')??null;
+        $transpermohonans = Transpermohonan::query();
+        $transpermohonans = $transpermohonans->with('permohonan')->where('active',true);
+        if($nomor_hak){
+            $transpermohonans = $transpermohonans->where('nomor_haktp','like','%'.$nomor_hak.'%');
+        }
+        if($nama_penerima){
+            $transpermohonans = $transpermohonans->whereHas('permohonan',function($query) use($nama_penerima){
+                $query->where('nama_penerima','like','%'.$nama_penerima.'%');
+            });
+        }
+        if($nama_pelepas){
+            $transpermohonans = $transpermohonans->whereHas('permohonan',function($query) use($nama_pelepas){
+                $query->where('nama_pelepas','like','%'.$nama_pelepas.'%');
+            });
+        }
+        if($nama_desa){
+            $transpermohonans = $transpermohonans->whereHas('permohonan.desa',function($query) use($nama_desa){
+                $query->where('nama_desa','like','%'.$nama_desa.'%');
+            });
+        }
+        if($nama_kecamatan){
+            $transpermohonans = $transpermohonans->whereHas('permohonan.desa.kecamatan',function($query) use($nama_kecamatan){
+                $query->where('nama_kecamatan','like','%'.$nama_kecamatan.'%');
+            });
+        }
+        $transpermohonans = $transpermohonans->skip(0)->take(50)->get();
+        return response()->json(new TranspermohonanMiniResource($transpermohonans),200);
+    }
+        public function posisiberkas(Transpermohonan $transpermohonan){
+        $posisiberkases = $transpermohonan->posisiberkases()->get();
+        return response()->json(['data'=>PosisiberkasCollection::collection($posisiberkases),200]);
     }
 
 }

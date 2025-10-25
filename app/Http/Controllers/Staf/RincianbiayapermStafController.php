@@ -21,6 +21,8 @@ use Inertia\Inertia;
 use App\Traits\FirebaseTrait;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Closure;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class RincianbiayapermStafController extends Controller
@@ -178,7 +180,14 @@ class RincianbiayapermStafController extends Controller
             // 'status_rincianbiayaperm' => ['required'],
             'transpermohonan_id' => ['required'],
             'metodebayar_id' => ['required'],
-            'rekening_id' => ['required'],
+            // 'rekening_id' => ['required'],
+            'rekening_id' => ['required',  function (string $attribute, mixed $value, Closure $fail) {
+                $rek = Rekening::find($value);
+                if($rek){
+                    if($rek->metodebayar_id != request('metodebayar_id'))
+                    $fail("Rekening tidak sesuai metode bayar");
+                }
+            }],
         ]);
 
         $rincianbiayaperm = Rincianbiayaperm::create(
@@ -292,12 +301,13 @@ class RincianbiayapermStafController extends Controller
             'total_piutang' => number_format($rec->total_piutang),
             'sisa_saldo' => number_format($rec->sisa_saldo),
             'ket_rincianbiayaperm' => $rec->ket_rincianbiayaperm,
+            'status_rincianbiayaperm' => $rec->status_rincianbiayaperm,
         ];
     }
 
     public function lapRincianbiayaperm(Rincianbiayaperm $rincianbiayaperm)
     {
-
+        set_time_limit(300);
         $rincianbiayaperm->tanggal = Carbon::parse($rincianbiayaperm->created_at)->format('d M Y');
         $tanggal = Carbon::now()->format('d M Y');
         $rincianbiayaperms = Rincianbiayaperm::query();
@@ -313,20 +323,35 @@ class RincianbiayapermStafController extends Controller
             ->orderBy('rincianbiayaperms.id', 'asc')
             ->take(1)->skip(0)->first();
         $rincianbiayaperms = $this->toArray($rincianbiayaperms);
-
         $drincianbiayaperms = Drincianbiayaperm::query();
         $drincianbiayaperms = $drincianbiayaperms->with('itemrincianbiayaperm')->where('rincianbiayaperm_id',$rincianbiayaperm->id)->paginate(20)->appends(Request::all());
+        $bayarbiayaperms =[];
+
+        $biayaperm = $rincianbiayaperm->biayaperms->first();
+        if($biayaperm){
+            $bayarbiayaperms = $biayaperm->bayarbiayaperms;
+        }
+        $media = request('media','print');
+        $qr_kode = sprintf("laprincianbiaya_%s.png", $this->user->id);
+        $xpath = url()->current().'/?media=screen';
+        QrCode::format('png')->size(100)->generate($xpath, public_path($qr_kode));
 
         $data = [
             'judul_lap' => 'RINCIAN BIAYA PERMOHONAN',
             'tanggal' => $tanggal,
+            'qrcode' => config('app.qrcodeurl',''). $qr_kode,
             'rincianbiayaperm'=>$rincianbiayaperms,
             'drincianbiayaperms' => $drincianbiayaperms,
+            'bayarbiayaperms' => $bayarbiayaperms,
         ];
-        $pdf = Pdf::loadView('pdf.lapRincianbiayaperm', $data)->setPaper(array(0, 0, 609.4488, 935.433), 'portrait');
-        // return view('pdf.lapKeluarbiayauser', compact('judul_lap', 'subjudul_lap'));
-        // return $pdf->stream('lapKeluarbiayauser.pdf');
-        return 'data:application/pdf;base64,' . base64_encode($pdf->stream());
+        if($media == 'print'){
+            $pdf = Pdf::loadView('pdf.lapRincianbiayaperm', $data)->setPaper(array(0, 0, 609.4488, 935.433), 'portrait');
+            // return view('pdf.lapKeluarbiayauser', compact('judul_lap', 'subjudul_lap'));
+            // return $pdf->stream('lapKeluarbiayauser.pdf');
+            return 'data:application/pdf;base64,' . base64_encode($pdf->stream());
+        }else{
+            $pdf = Pdf::loadView('pdf.lapRincianbiayaperm', $data)->setPaper(array(0, 0, 609.4488, 935.433), 'portrait');
+            return view('lapRincianbiayaperm', $data);
+        }
     }
-
 }

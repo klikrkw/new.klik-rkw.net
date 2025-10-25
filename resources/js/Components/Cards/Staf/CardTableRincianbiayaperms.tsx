@@ -115,7 +115,7 @@ export default function CardTableRincianbiayaperms({
         >
             <div className="rounded-full mb-0 px-4 py-3 border-0 ">
                 <div className="flex justify-between w-full flex-col md:flex-row">
-                    <div className="relative w-full max-w-full flex-grow flex-1 ">
+                    <div className="relative w-full max-w-full flex-grow flex-1 mb-2">
                         <h3
                             className={
                                 "font-semibold text-lg " +
@@ -127,7 +127,7 @@ export default function CardTableRincianbiayaperms({
                             Rincian Biaya List
                         </h3>
                     </div>
-                    <div className="flex justify-center gap-2 flex-row items-start w-full md:w-1/2">
+                    <div className="flex flex-col justify-center gap-1 md:flex-row items-start w-full md:w-1/2">
                         {isAdmin ? (
                             <AsyncSelectSearch
                                 placeholder="Pilih User"
@@ -143,12 +143,12 @@ export default function CardTableRincianbiayaperms({
                                 isClearable
                                 optionLabels={["name"]}
                                 optionValue="id"
-                                className="text-blueGray-900 w-1/2"
+                                className="text-blueGray-900 w-full md:w-1/2"
                             />
                         ) : null}
                         <SelectSearch
                             name="status"
-                            className="text-gray-800 w-1/2"
+                            className="text-gray-800 w-full md:w-1/2"
                             value={curStatus}
                             options={statusOpts}
                             placeholder="Pilih Status"
@@ -161,7 +161,7 @@ export default function CardTableRincianbiayaperms({
                             }}
                         />
                         <InputSearch
-                            className="w-1/3"
+                            className="w-full md:w-1/3"
                             value={values.search ? values.search : ""}
                             onChange={(e: any) =>
                                 setValues((v) => ({

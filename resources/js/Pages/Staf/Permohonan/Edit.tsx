@@ -411,6 +411,7 @@ const Edit = () => {
                                             type="checkbox"
                                             className="form-checkbox border-0 rounded text-blueGray-700 ml-1 w-5 h-5 ease-linear transition-all duration-150"
                                             checked={data.active}
+                                            disabled
                                             onChange={(e) =>
                                                 setData(
                                                     "active",

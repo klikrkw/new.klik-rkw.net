@@ -53,6 +53,7 @@ class LapKeuanganAdminController extends Controller
         if (request()->has(['date1']) && request()->has(['date2'])) {
             $now = Carbon::parse(request('date2'));
             $prev = Carbon::parse(request('date1'));
+            $year = $prev->year;
         }
 
         // ->selectRaw('price * ? as price_with_tax', [1.0825])
@@ -173,8 +174,6 @@ class LapKeuanganAdminController extends Controller
         $tot_debet = 0;
         $tot_kredit = 0;
         $neracas = [];
-        $aktiva = null;
-        $pasiva = null;
         $modal = 0;
         $pendapatan = 0;
         $biaya = 0;

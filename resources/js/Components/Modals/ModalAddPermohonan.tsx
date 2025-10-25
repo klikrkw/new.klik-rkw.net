@@ -81,7 +81,7 @@ const ModalAddPermohonan = ({
             onClose={() => setShowModal(false)}
         >
             <div className="p-2 bg-white rounded-md text-xs z-40 h-full">
-                <div className="w-full h-full relative flex flex-col m-auto justify-center items-center rounded-md mt-3 ">
+                <div className="w-full h-full relative flex flex-col m-auto justify-center items-center rounded-md mt-4">
                     {loadingIframe || isLoading ? (
                         <div className="absolute top-7">
                             <ThreeDots

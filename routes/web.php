@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\KeluarbiayapermController;
 use App\Http\Controllers\Admin\KeluarbiayapermuserController;
 use App\Http\Controllers\Admin\LapKeuanganAdminController;
 use App\Http\Controllers\Admin\PemohonController;
+use App\Http\Controllers\Admin\PengaturanController;
 use App\Http\Controllers\Admin\PermohonanController;
 use App\Http\Controllers\Admin\PostingjurnalController;
 use App\Http\Controllers\Admin\ProsespermohonanController;
@@ -31,7 +32,9 @@ use App\Http\Controllers\Admin\RuangController;
 use App\Http\Controllers\Admin\StatusprosespermController;
 use App\Http\Controllers\Admin\TempatarsipController;
 use App\Http\Controllers\Admin\TempatarsipStafController;
+use App\Http\Controllers\Admin\TempatberkasController;
 use App\Http\Controllers\Admin\TransPermohonanController;
+use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
@@ -45,8 +48,10 @@ use App\Http\Controllers\Staf\ProsespermohonanStafController;
 use App\Http\Controllers\Staf\RincianbiayapermStafController;
 use App\Http\Controllers\Staf\StafController;
 use App\Http\Controllers\TestController;
+use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\User\UserMainController;
 use App\Http\Controllers\UserController;
+use App\Models\Rincianbiayaperm;
 use App\Models\Transpermohonan;
 use Illuminate\Support\Facades\Route;
 
@@ -81,20 +86,27 @@ Route::get('/dashboard', function () {
     return redirect()->intended(request()->user()->getRedirectRoute());
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// Route::get('/statusbiayaperms', [BiayapermController::class,'statusBiayaperm'])->name('statusbiayaperms');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth','twofactor'])->group(function () {
+    // Route::get('/testapp/{transpermohonan}', [BiayapermController::class,'RincianbiayaOpts'])->name('testapp');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    // Route::get('/test/pdf', [TestController::class, 'pdf'])->name('test.pdf');
+    Route::get('/test', [TestController::class, 'index'])->name('test.index');
+    Route::get('/test/show', [TestController::class, 'show'])->name('test.show');
     Route::patch('/update_fcmtoken', [FirebaseController::class, 'updateFcmtoken'])->name('update.fcmtoken');
     Route::post('/send_message', [FirebaseController::class, 'sendMessage'])->name('send.message');
     Route::post('/send_message_mobile', [FirebaseController::class, 'sendMessageMobile'])->name('send.message.mobile');
+    Route::get('/rincianbiayaperms/lap/{rincianbiayaperm}/staf', [RincianbiayapermStafController::class, 'lapRincianbiayaperm'])->name('lap.rincianbiayaperms.staf');
+    Route::get('/keluarbiayapermusers/lap/staf/{keluarbiayapermuser}', [KeluarbiayapermuserStafController::class, 'lapKeluarbiayapermstaf'])->name('keluarbiayapermusers.lap.staf');
+    Route::get('/keluarbiayas/lap/staf/{keluarbiaya}', [KeluarbiayaStafController::class, 'lapKeluarbiayastaf'])->name('keluarbiayas.lap.staf');
+    Route::get('/rincianbiayaperms/lap/staf/{rincianbiayaperm}', [RincianbiayapermController::class, 'lapRincianbiayaperm'])->name('rincianbiayaperms.lap.staf');
+    Route::get('/tempatarsips/listbyruang/{ruang}', [TempatarsipController::class,'listByRuang'])->name('tempatarsips.listbyruang');
+    Route::get('/posisiberkas/listbytempatberkas/{tempatberkas}', [TempatberkasController::class,'listByTempatberkas'])->name('posisiberkas.listbytempatberkas');
 });
 // Users
-Route::middleware(['auth', 'role:admin|staf'])->prefix('/admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:admin|staf','twofactor'])->prefix('/admin')->name('admin.')->group(function () {
     Route::get('/users/api/list', [UserController::class, 'userList'])->name('users.api.list');
     Route::get('/desas/api/list', [DesaController::class, 'desaList'])->name('desas.api.list');
     Route::get('/permohonans/api/list', [PermohonanController::class, 'List'])->name('permohonans.api.list');
@@ -102,14 +114,20 @@ Route::middleware(['auth', 'role:admin|staf'])->prefix('/admin')->name('admin.')
     Route::get('/permohonans/api/list', [PermohonanController::class, 'List'])->name('permohonans.api.list');
     Route::get('/transpermohonans/api/list', [TransPermohonanController::class, 'List'])->name('transpermohonans.api.list');
     Route::post('/messages/api/sendmessagetomobile', [FirebaseController::class, 'sendMessageToMobile'])->name('messages.api.sendmessagetomobile');
+    Route::post('/messages/api/sendmessagetomobilerole', [FirebaseController::class, 'sendMessageToMobileRole'])->name('messages.api.sendmessagetomobilerole');
+    Route::post('/messages/api/senddatatomobilerole', [FirebaseController::class, 'sendDataToMobileRole'])->name('messages.api.senddatatomobilerole');
+    Route::post('/messages/api/senddatatomobileruser', [FirebaseController::class, 'sendDataToMobileUser'])->name('messages.api.senddatatomobileruser');
+    Route::post('/messages/api/senddatatowebuser', [FirebaseController::class, 'sendDataToWebUser'])->name('messages.api.senddatatowebuser');
     Route::get('/tempatarsips/api/list', [TempatarsipController::class, 'list'])->name('tempatarsips.api.list');
+    Route::get('/tempatberkas/api/list', [TempatarsipController::class, 'list'])->name('tempatberkas.api.list');
     Route::get('/transpermohonans/api/{transpermohonan}/show', [TransPermohonanController::class, 'show'])->name('transpermohonans.api.show');
     Route::get('/catatanperms/api/list', [CatatanpermController::class, 'list'])->name('catatanperms.api.list');
     Route::post('/catatanperms/store', [CatatanpermController::class, 'store'])->name('catatanperms.store');
     Route::delete('/catatanperms/{catatanperm}/destroy', [CatatanpermController::class, 'destroy'])->name('catatanperms.destroy');
+    Route::post('/notifikasis/api/sendwhatsapp', [NotifikasiController::class, 'sendWhatsapp'])->name('notifikasis.api.sendwhatsapp');
 });
 
-Route::middleware(['auth', 'role:staf'])->prefix('/staf')->name('staf.')->group(function () {
+Route::middleware(['auth', 'role:staf', 'twofactor'])->prefix('/staf')->name('staf.')->group(function () {
     Route::get('/', [StafController::class, 'index'])->name('index');
     Route::resource('/permohonans', PermohonanStafController::class);
     Route::get('/permohonans/modal/create', [PermohonanStafController::class,'modalCreate'])->name('permohonans.modal.create');
@@ -119,15 +137,15 @@ Route::middleware(['auth', 'role:staf'])->prefix('/staf')->name('staf.')->group(
     Route::get('/permohonans/api/show/{id}', [PermohonanStafController::class, 'show'])->name('permohonans.api.show');
     Route::get('/permohonans/qrcode/create', [PermohonanStafController::class,'createQrcode'])->name('permohonans.qrcode.create');
     Route::get('/permohonans/qrcode/{transpermohonan}/cetak', [PermohonanStafController::class, 'cetakQrcode'])->name('permohonans.qrcode.cetak');
-    Route::get('/permohonans/labelberkas/{transpermohonan}/cetak', [PermohonanStafController::class, 'cetakLabelberkas'])->name('permohonans.labelberkas.cetak');
+    Route::get('/permohonans/labelberkas/{transpermohonan}/cetak', [PermohonanStafController::class, 'printLabelberkas'])->name('permohonans.labelberkas.cetak');
     Route::get('/tempatarsips/qrcode/{tempatarsip}/cetak', [TempatarsipStafController::class, 'cetakQrcode'])->name('tempatarsips.qrcode.cetak');
 
 });
-Route::middleware(['auth', 'role:user'])->prefix('/user')->name('user.')->group(function () {
+Route::middleware(['auth', 'role:user','twofactor'])->prefix('/user')->name('user.')->group(function () {
     Route::get('/', [UserMainController::class, 'index'])->name('index');
 });
 
-Route::middleware(['auth', 'role:admin'])->prefix('/admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:admin','twofactor'])->prefix('/admin')->name('admin.')->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('index');
     Route::resource('/users', UserController::class);
     Route::resource('/permissions', PermissionController::class);
@@ -141,6 +159,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('/admin')->name('admin.')->gro
     Route::resource('/itemkegiatans', ItemkegiatanController::class);
     Route::resource('/rekenings', RekeningController::class);
     Route::resource('/kantors', KantorController::class);
+    Route::resource('/pengaturans', PengaturanController::class);
     Route::resource('/ruangs', RuangController::class);
     Route::resource('/tempatarsips', TempatarsipController::class);
     Route::get('/users/extra/pesan/{user}', [UserController::class, 'pesan'])->name('user.extra.pesan');
@@ -151,13 +170,19 @@ Route::middleware(['auth', 'role:admin'])->prefix('/admin')->name('admin.')->gro
     Route::resource('/itemrincianbiayaperms', ItemrincianbiayapermController::class);
     Route::get('/permohonans/qrcode/create', [PermohonanController::class,'createQrcode'])->name('permohonans.qrcode.create');
     Route::get('/permohonans/qrcode/{transpermohonan}/cetak', [PermohonanController::class, 'cetakQrcode'])->name('permohonans.qrcode.cetak');
-    Route::get('/permohonans/labelberkas/{transpermohonan}/cetak', [PermohonanController::class, 'cetakLabelberkas'])->name('permohonans.labelberkas.cetak');
     Route::get('/tempatarsips/qrcode/{tempatarsip}/cetak', [TempatarsipController::class, 'cetakQrcode'])->name('tempatarsips.qrcode.cetak');
+
+    Route::resource('/tempatberkas', TempatberkasController::class);
+    Route::get('/permohonans/labelberkas/{transpermohonan}/cetak', [PermohonanController::class, 'printLabelberkas'])->name('permohonans.labelberkas.cetak');
+    Route::get('/tempatarsips/qrcode/{tempatberkas}/cetak', [TempatberkasController::class, 'cetakQrcode'])->name('tempatberkas.qrcode.cetak');
+    Route::get('/utils/backupdb', [AdminController::class, 'backupDb'])->name('utils.backupdb');
+    Route::get('/utils/backupdb/{filename}/download', [AdminController::class, 'downloadFile'])->name('utils.backupdb.download');
+    // Route::get('/permohonans/labelberkas/{transpermohonan}/print', [PermohonanController::class, 'printLabelberkas'])->name('permohonans.labelberkas.print');
 
     // Route::get('/transpermohonans/api/list', [TransPermohonanController::class, 'List'])->name('transpermohonans.api.list');
 
 });
-Route::middleware(['auth', 'role:admin|staf'])->prefix('/transaksi')->name('transaksi.')->group(function () {
+Route::middleware(['auth', 'role:admin|staf','twofactor'])->prefix('/transaksi')->name('transaksi.')->group(function () {
     Route::get('/prosespermohonans/api/listbypermohonanid', [ProsespermohonanController::class, 'listByPermohonanId'])->name('prosespermohonans.api.listbypermohonanid');
     Route::get('/transpermohonans/api/list', [TransPermohonanController::class, 'List'])->name('transpermohonans.api.list');
     Route::get('/biayaperms/create', [BiayapermController::class, 'create'])->name('biayaperms.create');
@@ -177,13 +202,14 @@ Route::middleware(['auth', 'role:admin|staf'])->prefix('/transaksi')->name('tran
     Route::delete('/dkeluarbiayapermusers/{dkeluarbiayapermuser}/destroy', [KeluarbiayapermuserStafController::class, 'destroyDkeluarbiayapermuser'])->name('dkeluarbiayapermusers.destroy');
     Route::get('/keluarbiayapermusers/api/updatekasbon/{id}', [KeluarbiayapermuserStafController::class, 'updateKasbon'])->name('keluarbiayapermusers.api.updatekasbon');
     Route::get('/rincianbiayaperms/api/list', [RincianbiayapermController::class, 'list'])->name('rincianbiayaperms.api.list');
+    Route::get('/biayaperms/{transpermohonan}/api/rincianbiayapermopts', [BiayapermController::class,'RincianbiayaOpts'])->name('biayaperms.api.rincianbiayapermopts');
     Route::get('/dkasbons/api/list', [KasbonController::class, 'list'])->name('dkasbons.api.list');
     Route::get('/dkasbons/api/totalpengeluaran', [KasbonController::class, 'getTotalKasbon'])->name('dkasbons.api.totalkasbon');
     Route::delete('/dkasbons/{dkasbon}/destroy', [KasbonController::class, 'destroyDkasbon'])->name('dkasbons.destroy');
     Route::get('/jurnalumums/neracapermohonan/{transpermohonan}/cetak', [JurnalumumController::class, 'NeracaPermohonanPdf'])->name('jurnalumums.neracapermohonan.cetak');
 });
 
-Route::middleware(['auth', 'role:staf'])->prefix('/staf/transaksi')->name('staf.transaksi.')->group(function () {
+Route::middleware(['auth', 'role:staf', 'twofactor'])->prefix('/staf/transaksi')->name('staf.transaksi.')->group(function () {
     Route::get('/keluarbiayapermusers', [KeluarbiayapermuserStafController::class, 'index'])->name('keluarbiayapermusers.index');
     Route::get('/keluarbiayapermusers/create', [KeluarbiayapermuserStafController::class, 'create'])->name('keluarbiayapermusers.create');
     Route::get('/keluarbiayapermusers/{keluarbiayapermuser}/edit', [KeluarbiayapermuserStafController::class, 'edit'])->name('keluarbiayapermusers.edit');
@@ -224,8 +250,13 @@ Route::middleware(['auth', 'role:staf'])->prefix('/staf/transaksi')->name('staf.
     Route::get('/transpermohonans/tempatarsips/create', [TransPermohonanController::class, 'createTempatarsip'])->name('transpermohonans.tempatarsips.create');
     Route::put('/transpermohonans/tempatarsips/{transpermohonan}/store', [TransPermohonanController::class, 'storeTempatarsip'])->name('transpermohonans.tempatarsips.store');
     Route::resource('/events', EventStafController::class);
+    Route::delete('/dkasbons/{dkasbon}/destroy', [KasbonStafController::class, 'destroyDkasbon'])->name('dkasbons.destroy');
+    Route::delete('/dkasbonnoperms/{dkasbonnoperm}/destroy', [KasbonStafController::class, 'destroyDkasbonnoperm'])->name('dkasbonnoperms.destroy');
+
+    Route::get('/transpermohonans/posisiberkas/create', [TransPermohonanController::class, 'createPosisiberkas'])->name('transpermohonans.posisiberkas.create');
+    Route::put('/transpermohonans/posisiberkas/{transpermohonan}/store', [TransPermohonanController::class, 'storePosisiberkas'])->name('transpermohonans.posisiberkas.store');
 });
-Route::middleware(['auth', 'role:admin'])->prefix('/admin/transaksi')->name('admin.transaksi.')->group(function () {
+Route::middleware(['auth', 'role:admin','twofactor'])->prefix('/admin/transaksi')->name('admin.transaksi.')->group(function () {
     Route::get('/keluarbiayapermusers', [KeluarbiayapermuserController::class, 'index'])->name('keluarbiayapermusers.index');
     Route::get('/keluarbiayapermusers/create', [KeluarbiayapermuserController::class, 'create'])->name('keluarbiayapermusers.create');
     Route::get('/keluarbiayapermusers/{keluarbiayapermuser}/edit', [KeluarbiayapermuserController::class, 'edit'])->name('keluarbiayapermusers.edit');
@@ -248,12 +279,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('/admin/transaksi')->name('adm
 
     Route::get('/kasbons', [KasbonController::class, 'index'])->name('kasbons.index');
     Route::get('/kasbons/create', [KasbonController::class, 'create'])->name('kasbons.create');
+    Route::delete('/kasbons/{kasbon}/destroy', [KasbonController::class, 'destroy'])->name('kasbons.destroy');
     Route::get('/kasbons/{kasbon}/edit', [KasbonController::class, 'edit'])->name('kasbons.edit');
     Route::post('/kasbons/store', [KasbonController::class, 'store'])->name('kasbons.store');
     Route::put('/kasbons/update/{kasbon}', [KasbonController::class, 'update'])->name('kasbons.update');
     Route::put('/kasbons/status/update/{kasbon}', [KasbonController::class, 'updateStatus'])->name('kasbons.status.update');
     Route::get('/transpermohonans/tempatarsips/create', [TransPermohonanController::class, 'createTempatarsip'])->name('transpermohonans.tempatarsips.create');
     Route::put('/transpermohonans/tempatarsips/{transpermohonan}/store', [TransPermohonanController::class, 'storeTempatarsip'])->name('transpermohonans.tempatarsips.store');
+
+    Route::get('/transpermohonans/posisiberkas/create', [TransPermohonanController::class, 'createPosisiberkas'])->name('transpermohonans.posisiberkas.create');
+    Route::put('/transpermohonans/posisiberkas/{transpermohonan}/store', [TransPermohonanController::class, 'storePosisiberkas'])->name('transpermohonans.posisiberkas.store');
 
     // keluar biaya umums
     Route::get('/keluarbiayas', [KeluarbiayaController::class, 'index'])->name('keluarbiayas.index');
@@ -277,10 +312,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('/admin/transaksi')->name('adm
     Route::delete('/dkasbons/{dkasbon}/destroy', [KasbonController::class, 'destroyDkasbon'])->name('dkasbons.destroy');
     Route::delete('/dkasbonnoperms/{dkasbonnoperm}/destroy', [KasbonController::class, 'destroyDkasbonnoperm'])->name('dkasbonnoperms.destroy');
     Route::get('/kasbons/lap/staf/{kasbon}', [KasbonController::class, 'lapKasbonstaf'])->name('kasbons.lap.staf');
+    Route::put('/rincianbiayaperms/biayaperms/update/{rincianbiayaperm}', [RincianbiayapermController::class, 'updateBiayaperm'])->name('rincianbiayaperms.biayaperms.update');
 
 });
 
-Route::middleware(['auth', 'role:admin'])->prefix('/admin/informasi')->name('admin.informasi.')->group(function () {
+Route::middleware(['auth', 'role:admin','twofactor'])->prefix('/admin/informasi')->name('admin.informasi.')->group(function () {
     Route::get('/prosespermohonans', [ProsespermohonanController::class, 'index'])->name('prosespermohonans.index');
     Route::get('/prosespermohonans/bypermohonan', [ProsespermohonanController::class, 'byPermohonan'])->name('prosespermohonans.bypermohonan');
     Route::get('/transpermohonans/api/list', [TransPermohonanController::class, 'List'])->name('transpermohonans.api.list');
@@ -290,12 +326,18 @@ Route::middleware(['auth', 'role:admin'])->prefix('/admin/informasi')->name('adm
     Route::get('/keluarbiayas', [KeluarbiayaController::class,'infoKeluarbiaya'])->name('keuangans.keluarbiayas');
     Route::get('/keluarbiayapermusers', [KeluarbiayapermuserController::class,'infoKeluarbiayapermuser'])->name('keuangans.keluarbiayapermusers');
 });
-Route::middleware(['auth', 'role:staf'])->prefix('/staf/informasi')->name('staf.informasi.')->group(function () {
+Route::middleware(['auth', 'role:staf', 'twofactor'])->prefix('/staf/informasi')->name('staf.informasi.')->group(function () {
     Route::get('/prosespermohonans', [ProsespermohonanStafController::class, 'index'])->name('prosespermohonans.index');
     Route::get('/prosespermohonans/bypermohonan', [ProsespermohonanStafController::class, 'byPermohonan'])->name('prosespermohonans.bypermohonan');
     Route::get('/transpermohonans/api/list', [TransPermohonanController::class, 'List'])->name('transpermohonans.api.list');
     Route::get('/keluarbiayas', [KeluarbiayaStafController::class,'infoKeluarbiayaStaf'])->name('keuangans.keluarbiayas');
     Route::get('/keluarbiayapermusers', [KeluarbiayapermuserStafController::class,'infoKeluarbiayapermuser'])->name('keuangans.keluarbiayapermusers');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/two-factor', [TwoFactorController::class, 'index' ])->name('two-factor.index');
+    Route::post ('/two-factor', [TwoFactorController::class, 'verify' ])->name('two-factor.verify');
+    Route::get ('/two-factor/logout', [TwoFactorController::class, 'logout' ])->name('two-factor.logout');
 });
 
 require __DIR__ . '/auth.php';

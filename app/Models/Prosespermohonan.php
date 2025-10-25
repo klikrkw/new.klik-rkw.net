@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,6 +19,9 @@ class Prosespermohonan extends Model
         'itemprosesperm_id',
         'catatan_prosesperm',
         'active',
+        'is_alert',
+        'start',
+        'end'
     ];
     public function scopeFilter($query, array $filters)
     {
@@ -138,6 +142,13 @@ class Prosespermohonan extends Model
     public function statusprosesperms()
     {
         return $this->belongsToMany(Statusprosesperm::class, 'statusprosesperm_prosespermohonans', 'prosespermohonan_id', 'statusprosesperm_id')
-            ->withTimestamps()->withPivot('catatan_statusprosesperm', 'user_id', 'active')->orderByPivot('active', 'desc');
+            ->withTimestamps()->withPivot('catatan_statusprosesperm', 'user_id', 'active','updated_at')->orderByPivot('active', 'desc');
     }
+    // protected function isalert(): Attribute
+    // {
+    //     return Attribute::make(
+    //         get: fn () => $this->is_alert == 1
+    //     );
+    // }
+
 }

@@ -13,13 +13,15 @@ const CardDkasbonList = ({ kasbon }: { kasbon: Kasbon }) => {
                 links: any;
             };
         };
+        base_route: string;
     };
     const {
         dkasbons: { data, links, meta },
+        base_route,
     } = usePage<Props>().props;
 
     const handleRemoveData = (id: string) => {
-        router.delete(route("admin.transaksi.dkasbons.destroy", id));
+        router.delete(route(base_route + "transaksi.dkasbons.destroy", id));
     };
 
     return (

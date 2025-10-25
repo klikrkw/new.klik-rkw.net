@@ -12,6 +12,7 @@ import MoneyInput from "@/Components/Shared/MoneyInput";
 import PermohonanSelect from "@/Components/Shared/PermohonanSelect";
 import SelectSearch from "@/Components/Shared/SelectSearch";
 import TranspermohonanSelect from "@/Components/Shared/TranspermohonanSelect";
+import { useAuth } from "@/Contexts/AuthContext";
 import AdminLayout from "@/Layouts/AdminLayout";
 import StafLayout from "@/Layouts/StafLayout";
 import { Instansi, Kasbon, OptionSelect, Permohonan, User } from "@/types";
@@ -19,7 +20,7 @@ import { Link, router, useForm, usePage } from "@inertiajs/react";
 import moment from "moment";
 import { useEffect, useRef, useState } from "react";
 import Select, { MultiValue, OnChangeValue } from "react-select";
-
+import apputils from "@/bootstrap";
 const Edit = () => {
     type UserOption = {
         label: string;
@@ -90,7 +91,18 @@ const Edit = () => {
             jmlKasbon > jmlPenggunaan ? jmlKasbon - jmlPenggunaan : 0;
         return xsisaPenggunaan.toString();
     };
+    const sendDataToMobileRole = async (
+        datas: { navigationId: string } & object
+    ) => {
+        let xlink = `/admin/messages/api/senddatatomobilerole`;
+        const response = await apputils.backend.post(xlink, {
+            role: "admin",
+            datas,
+        });
+        const data = response.data;
+    };
 
+    const firstInput = useRef<any>();
     function handleSubmit(e: any) {
         e.preventDefault();
         // post(route("transaksi.kasbons.update", kasbon.id));
@@ -99,13 +111,24 @@ const Edit = () => {
                 reset();
                 firstInput.current.value = "";
                 firstInput.current.focus();
+                sendDataToMobileRole({
+                    navigationId: "kasbon",
+                });
             },
         });
     }
-    const firstInput = useRef<any>();
 
     const [showModalAddPermohonan, setShowModalAddPermohonan] =
         useState<boolean>(false);
+
+    const { onMessageListener } = useAuth();
+
+    onMessageListener().then((payload: any) => {
+        router.reload({
+            only: ["kasbon"],
+        });
+    });
+
     useEffect(() => {
         if (kasbon.jenis_kasbon === "permohonan") {
             if (firstInput.current) {
@@ -284,26 +307,61 @@ const Edit = () => {
                                                 </div>
                                             )}
                                             <div className="grid grid-cols-2 gap-2">
-                                                <SelectSearch
-                                                    placeholder="Pilih Kegiatan"
-                                                    name="itemkegiatan_id"
-                                                    value={data.itemkegiatan}
-                                                    options={itemkegiatanOpts}
-                                                    onChange={(e: any) =>
-                                                        setData({
-                                                            ...data,
-                                                            itemkegiatan: e
-                                                                ? e
-                                                                : {},
-                                                            itemkegiatan_id: e
-                                                                ? e.value
-                                                                : "",
-                                                        })
-                                                    }
-                                                    errors={
-                                                        errors.itemkegiatan_id
-                                                    }
-                                                />
+                                                {kasbon.jenis_kasbon ===
+                                                "permohonan" ? (
+                                                    <SelectSearch
+                                                        placeholder="Pilih Kegiatan"
+                                                        name="itemkegiatan_id"
+                                                        value={
+                                                            data.itemkegiatan
+                                                        }
+                                                        options={
+                                                            itemkegiatanOpts
+                                                        }
+                                                        onChange={(e: any) =>
+                                                            setData({
+                                                                ...data,
+                                                                itemkegiatan: e
+                                                                    ? e
+                                                                    : {},
+                                                                itemkegiatan_id:
+                                                                    e
+                                                                        ? e.value
+                                                                        : "",
+                                                            })
+                                                        }
+                                                        errors={
+                                                            errors.itemkegiatan_id
+                                                        }
+                                                    />
+                                                ) : (
+                                                    <SelectSearch
+                                                        xref={firstInput}
+                                                        placeholder="Pilih Kegiatan"
+                                                        name="itemkegiatan_id"
+                                                        value={
+                                                            data.itemkegiatan
+                                                        }
+                                                        options={
+                                                            itemkegiatanOpts
+                                                        }
+                                                        onChange={(e: any) =>
+                                                            setData({
+                                                                ...data,
+                                                                itemkegiatan: e
+                                                                    ? e
+                                                                    : {},
+                                                                itemkegiatan_id:
+                                                                    e
+                                                                        ? e.value
+                                                                        : "",
+                                                            })
+                                                        }
+                                                        errors={
+                                                            errors.itemkegiatan_id
+                                                        }
+                                                    />
+                                                )}
                                                 <Input
                                                     name="ket_biaya"
                                                     placeholder="Keterangan"

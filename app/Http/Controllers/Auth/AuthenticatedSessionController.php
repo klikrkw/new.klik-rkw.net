@@ -4,16 +4,19 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Mail\sendMailOtp;
+use App\Models\User;
 use App\Models\UserFirebase;
 use App\Providers\RouteServiceProvider;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Session;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -120,10 +123,21 @@ class AuthenticatedSessionController extends Controller
         }
 
 
+        $user = auth()->user();
+        if($user && $user->two_factor_enabled == true){
+        $code = rand(100000, 999999);
+        $user->two_factor_code = $code;
+        $user->expires_at = Carbon::now()->addMinutes(5);
+        $user->save();
+        // Mail::to(request()->user())->queue(new sendMailOtp($code));
+        //     return redirect()->route('two-factor.index');
+        // }
+        Mail::to(request()->user())->queue(new sendMailOtp($code));
+            return redirect()->route('two-factor.index');
+        }
         return redirect()->intended(request()->user()->getRedirectRoute());
         // return redirect()->intended(RouteServiceProvider::HOME);
     }
-
 
     /**
      * Destroy an authenticated session.

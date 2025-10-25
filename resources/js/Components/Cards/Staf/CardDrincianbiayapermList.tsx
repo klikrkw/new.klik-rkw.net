@@ -21,23 +21,27 @@ const CardDrincianbiayapermList = ({
             meta: { links: []; per_page: number; total: number };
             links: { first: string; last: string; next: string; prev: string };
         };
+        base_route: string;
     };
     const {
         drincianbiayaperms: { data, links, meta },
+        base_route,
     } = usePage<Props>().props;
 
     const handleRemoveData = (id: string) => {
-        router.delete(route("admin.transaksi.drincianbiayaperms.destroy", id));
+        router.delete(
+            route(base_route + "transaksi.drincianbiayaperms.destroy", id)
+        );
     };
     return (
         <div className="w-full mt-4 flex flex-col">
             <ul className="list-none container-snap max-h-56 overflow-x-hidden">
                 <li className="flex uppercase gap-1 flex-row w-full items-center rounded-t-md text-xs border justify-start bg-lightBlue-600 border-blueGray-400 px-2 py-2  text-lightBlue-50 font-semibold">
                     <div className="w-[5%]">No</div>
-                    <div className="w-[35%] md:w-[35%]">Nama Kegiatan</div>
+                    <div className="w-[55%] md:w-[35%]">Nama Kegiatan</div>
                     <div className="hidden md:block w-[40%]">Keterangan</div>
-                    <div className="w-[15%] text-right pr-2">Jumlah</div>
-                    <div className="w-[5%] text-center">Menu</div>
+                    <div className="w-[25%] md:w-[15%] text-right">Jumlah</div>
+                    <div className="w-[15%] md:w-[5%] text-center">Menu</div>
                 </li>
             </ul>
             <ul className="list-none container-snap max-h-80 overflow-x-hidden rounded-b-md shadow-md">
@@ -63,7 +67,7 @@ const CardDrincianbiayapermList = ({
                                         <div className="pb-0 w-[5%]">
                                             {index + 1}.
                                         </div>
-                                        <div className="pb-0 w-[35%] md:w-[35%]">
+                                        <div className="pb-0 w-[55%] md:w-[35%]">
                                             {
                                                 item.itemrincianbiayaperm
                                                     .nama_itemrincianbiayaperm
@@ -72,10 +76,10 @@ const CardDrincianbiayapermList = ({
                                         <div className="pb-0 hidden md:block md:w-[40%]">
                                             {item.ket_biaya}
                                         </div>
-                                        <div className="pb-0 w-[15%] text-right pr-2">
+                                        <div className="pb-0 w-[25%] md:w-[15%] text-right ">
                                             {item.jumlah_biaya}
                                         </div>
-                                        <div className="pb-0 w-[5%] flex justify-center items-center gap-2">
+                                        <div className="pb-0 w-[15%] md:w-[5%] flex justify-center items-center">
                                             <button
                                                 disabled={
                                                     rincianbiayaperm.status_rincianbiayaperm ==
@@ -135,7 +139,7 @@ const CardDrincianbiayapermList = ({
                                         <div className="pb-0 w-[5%]">
                                             {index + 1}.
                                         </div>
-                                        <div className="pb-0 w-[35%] md:w-[35%]">
+                                        <div className="pb-0 w-[55%] md:w-[35%]">
                                             {
                                                 item.itemrincianbiayaperm
                                                     .nama_itemrincianbiayaperm
@@ -144,10 +148,10 @@ const CardDrincianbiayapermList = ({
                                         <div className="pb-0 hidden md:block md:w-[40%]">
                                             {item.ket_biaya}
                                         </div>
-                                        <div className="pb-0 w-[15%] text-right pr-2">
+                                        <div className="pb-0 w-[25%] md:w-[15%] text-right ">
                                             {item.jumlah_biaya}
                                         </div>
-                                        <div className="pb-0 w-[5%] flex justify-center items-center gap-2">
+                                        <div className="pb-0 w-[15%] md:w-[5%] flex justify-center items-center">
                                             <button
                                                 disabled={
                                                     rincianbiayaperm.status_rincianbiayaperm ==
@@ -207,7 +211,7 @@ const CardDrincianbiayapermList = ({
                                         <div className="pb-0 w-[5%]">
                                             {index + 1}.
                                         </div>
-                                        <div className="pb-0 w-[35%] md:w-[35%]">
+                                        <div className="pb-0 w-[55%] md:w-[35%]">
                                             {
                                                 item.itemrincianbiayaperm
                                                     .nama_itemrincianbiayaperm
@@ -216,10 +220,10 @@ const CardDrincianbiayapermList = ({
                                         <div className="pb-0 hidden md:block md:w-[40%]">
                                             {item.ket_biaya}
                                         </div>
-                                        <div className="pb-0 w-[15%] text-right pr-2">
+                                        <div className="pb-0 w-[25%] md:w-[15%] text-right ">
                                             {item.jumlah_biaya}
                                         </div>
-                                        <div className="pb-0 w-[5%] flex justify-center items-center gap-2">
+                                        <div className="pb-0 w-[15%] md:w-[5%] flex justify-center items-center">
                                             <button
                                                 disabled={
                                                     rincianbiayaperm.status_rincianbiayaperm ==
@@ -259,44 +263,44 @@ const CardDrincianbiayapermList = ({
             <ul className="list-none container-snap max-h-80 overflow-x-hidden rounded-b-md shadow-md">
                 <li className="w-full flex flex-col overflow-hidden bg-lightBlue-600 px-2 py-1  font-semibold text-lightBlue-50">
                     <div className="flex w-full gap-1 text-xs px-2 py-1 items-center justify-start border-b-2 border-lightBlue-500">
-                        <div className="w-[60%]"></div>
-                        <div className="hidden md:block md:w-[20%] text-right">
+                        <div className="w-[10%] md:w-[60%]"></div>
+                        <div className="w-[40%] md:w-[20%] text-right">
                             Total Pemasukan
                         </div>
-                        <div className="w-[15%] text-right">
+                        <div className="w-[35%] md:w-[15%] text-right">
                             {toRupiah(rincianbiayaperm.total_pemasukan)}
                         </div>
-                        <div className="w-[5%] flex justify-start items-center gap-2"></div>
+                        <div className="w-[15%] md:w-[5%] flex justify-start items-center gap-2"></div>
                     </div>
                     <div className="flex w-full gap-1 text-xs px-2 py-1 items-center justify-start border-b-2 border-lightBlue-500">
-                        <div className="w-[60%]"></div>
-                        <div className="hidden md:block md:w-[20%] text-right">
+                        <div className="w-[10%] md:w-[60%]"></div>
+                        <div className="w-[40%] md:w-[20%] text-right">
                             Total Pengeluaran
                         </div>
-                        <div className="w-[15%] text-right">
+                        <div className="w-[35%] md:w-[15%] text-right">
                             {toRupiah(rincianbiayaperm.total_pengeluaran)}
                         </div>
-                        <div className="w-[5%] flex justify-start items-center gap-2"></div>
+                        <div className="w-[15%] md:w-[5%] flex justify-start items-center gap-2"></div>
                     </div>
                     <div className="flex w-full gap-1 text-xs px-2 py-1 items-center justify-start border-b-2 border-lightBlue-500">
-                        <div className="w-[60%]"></div>
-                        <div className="hidden md:block md:w-[20%] text-right">
+                        <div className="w-[10%] md:w-[60%]"></div>
+                        <div className="w-[40%] md:w-[20%] text-right">
                             Total Piutang
                         </div>
-                        <div className="w-[15%] text-right">
+                        <div className="w-[35%] md:w-[15%] text-right">
                             {toRupiah(rincianbiayaperm.total_piutang)}
                         </div>
-                        <div className="w-[5%] flex justify-start items-center gap-2"></div>
+                        <div className="w-[15%] md:w-[5%] flex justify-start items-center gap-2"></div>
                     </div>
                     <div className="flex w-full gap-1 text-xs px-2 py-1 items-center justify-start border-b-2 border-lightBlue-500">
-                        <div className="w-[60%]"></div>
-                        <div className="hidden md:block md:w-[20%] text-right">
+                        <div className="w-[10%] md:w-[60%]"></div>
+                        <div className="w-[40%] md:w-[20%] text-right">
                             Total Bayar
                         </div>
-                        <div className="w-[15%] text-right">
+                        <div className="w-[35%] md:w-[15%] text-right">
                             {toRupiah(rincianbiayaperm.sisa_saldo)}
                         </div>
-                        <div className="w-[5%] flex justify-start items-center gap-2"></div>
+                        <div className="w-[15%] md:w-[5%] flex justify-start items-center gap-2"></div>
                     </div>
                 </li>
             </ul>

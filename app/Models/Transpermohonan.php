@@ -82,14 +82,6 @@ class Transpermohonan extends Model
 
     public function scopeFilter($query, array $filters)
     {
-        // $query->when($filters['search'] ?? null, function ($query, $search) {
-        //     $query->where(function ($query) use ($search) {
-        //         $query->where('nama_pelepas', 'like', '%' . $search . '%')
-        //             ->orWhere('nama_penerima', 'like', '%' . $search . '%')
-        //             ->orWhere('nomor_hak', 'like', '%' . $search . '%');
-        //     });
-        // })
-
         $query->when($filters['search'] ?? null, function ($query, $search) {
             if (request()->has('search_key')) {
                 $skey = request()->get('search_key');
@@ -127,12 +119,69 @@ class Transpermohonan extends Model
                     });
                 }
             } else {
-                $query->whereHas('permohonan', function ($query) use ($search) {
-                    $query->where('nama_pelepas', 'like', '%' . $search . '%')
-                        ->orWhere('nama_penerima', 'like', '%' . $search . '%')
-                        ->orWhere('atas_nama', 'like', '%' . $search . '%')
-                        ->orWhere('nomor_hak', 'like', '%' . $search . '%');
-                });
+                // $query->whereHas('permohonan', function ($query) use ($search) {
+                    $pattern1 = "/^\:/";
+                    $string = $search;
+                    $pattern2 = "/^(\:)(desa|no|nohak)\s(.+)$/i";
+                    if (preg_match($pattern1, $string, $matches)) {
+                            if ($matches && count($matches) === 1) {
+                            if (preg_match($pattern2, $string, $matches)) {
+                                if ($matches && count($matches) === 4) {
+                                    $mkey = strtolower($matches[2]);
+                                    if($mkey === 'desa'){
+                                        $query->whereHas('permohonan', function ($query) use ($matches) {
+                                        $query->whereHas('desa', fn ($q) => $q
+                                        ->where('nama_desa', 'like', '%' . $matches[3] . '%'));
+                                        });
+                                    }
+                                    elseif($mkey === 'no'){
+                                        $pattern = "/^(\d{1,})\/(\d{4})$/";
+                                        $string = $matches[3];
+                                        if (preg_match($pattern, $string, $matches)) {
+                                            if ($matches && count($matches) === 3) {
+                                                $query->where('nodaftar_transpermohonan', '=', $matches[1])
+                                                    ->where('thdaftar_transpermohonan', '=', $matches[2]);
+                                            }
+                                        }
+                                    }
+                                    elseif($mkey === 'nohak'){
+                                        $pattern = "/^(\d{1,})\/(.+)$/";
+                                        $string = $matches[3];
+                                        if (preg_match($pattern, $string, $matches)) {
+                                            if ($matches && count($matches) === 3) {
+                                                    $query->whereHas('permohonan', function ($query) use ($matches) {
+                                                    $query->where('nomor_hak', 'like', '%' .$matches[1].'%')
+                                                    ->whereHas('desa', fn ($q) => $q
+                                                    ->where('nama_desa', 'like', '%' . $matches[2] . '%'));
+                                                    });
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                        else{
+                        $string = $search;
+                        $pattern = "/^(\d{1,})\/(\d{4})$/";
+                        if (preg_match($pattern, $string, $matches)) {
+                            if ($matches && count($matches) === 3) {
+                                $query->where('nodaftar_transpermohonan', '=', $matches[1])
+                                    ->where('thdaftar_transpermohonan', '=', $matches[2]);
+                            }
+                        }else{
+                            $query
+                            ->where('id', '=', $search)
+                            ->orWhereHas('permohonan', function ($query) use ($search) {
+                                $query->where('nama_pelepas', 'like', '%' . $search . '%')
+                                ->orWhere('nama_penerima', 'like', '%' . $search . '%')
+                                ->orWhere('atas_nama', 'like', '%' . $search . '%')
+                                ->orWhere('nomor_hak', 'like', '%' . $search . '%');
+                            });
+
+                        }
+                        }
+                // });
             }
         })
             // ->when($filters['active'] ?? null, function ($query, $active) {
@@ -176,5 +225,9 @@ class Transpermohonan extends Model
     public function dkeluarbiayapermusers()
     {
         return $this->hasMany(Dkeluarbiayapermuser::class)->orderBy('id','desc');
+    }
+    public function posisiberkases()
+    {
+        return $this->belongsToMany(Posisiberkas::class, 'posisiberkas_transpermohonans', 'transpermohonan_id', 'posisiberkas_id');
     }
 }

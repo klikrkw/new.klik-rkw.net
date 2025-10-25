@@ -18,6 +18,7 @@ class UserCollection extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
+            'telp_user' => $this->telp_user,
         ];
     }
 }

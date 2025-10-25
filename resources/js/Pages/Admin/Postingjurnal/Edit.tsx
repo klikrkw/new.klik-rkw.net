@@ -1,13 +1,23 @@
 import AsyncSelectSearch from "@/Components/Shared/AsyncSelectSearch";
+import Button from "@/Components/Shared/Button";
 import Input from "@/Components/Shared/Input";
 import LinkButton from "@/Components/Shared/LinkButton";
 import { LoadingButton } from "@/Components/Shared/LoadingButton";
 import MoneyInput from "@/Components/Shared/MoneyInput";
 import SelectSearch from "@/Components/Shared/SelectSearch";
+import UploadImage from "@/Components/Shared/UploadImage";
+import { storage } from "@/firebase";
 import AdminLayout from "@/Layouts/AdminLayout";
 import { OptionSelect, Postingjurnal } from "@/types";
+import { resizeImage } from "@/utils/images";
 import { Link, router, useForm, usePage } from "@inertiajs/react";
-import { useRef } from "react";
+import {
+    deleteObject,
+    getDownloadURL,
+    ref,
+    uploadBytesResumable,
+} from "firebase/storage";
+import { BaseSyntheticEvent, useRef, useState } from "react";
 import Select, { MultiValue, OnChangeValue } from "react-select";
 
 const Edit = () => {
@@ -45,6 +55,82 @@ const Edit = () => {
         image: postingjurnal.image || "",
         _method: "PUT",
     });
+    const [imageUpload, setImageUpload] = useState<File | null>(null);
+    const [uploadProgress, setUploadProgress] = useState<number | null>();
+    // const [imageUrls, setImageUrls] = useState<string[]>([]);
+    // const imagesListRef = ref(storage, "/images/biayaperms/");
+    const fileRef = useRef<any>();
+
+    const uploadFile = async () => {
+        if (imageUpload == null) return;
+        const newImg = await resizeImage(imageUpload, 500, 500);
+        let rand = Math.random() * 100000;
+        const imageRef = ref(
+            storage,
+            `/images/postingjurnals/${rand}_${imageUpload.name}`
+        );
+
+        const uploadTask = uploadBytesResumable(imageRef, newImg);
+
+        // Register three observers:
+        // 1. 'state_changed' observer, called any time the state changes
+        // 2. Error observer, called on failure
+        // 3. Completion observer, called on successful completion
+        uploadTask.on(
+            "state_changed",
+            (snapshot) => {
+                //         // Observe state change events such as progress, pause, and resume
+                //         // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+                const progress =
+                    (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                console.log("Upload is " + progress + "% done");
+                setUploadProgress(progress);
+                switch (snapshot.state) {
+                    case "paused":
+                        console.log("Upload is paused");
+                        break;
+                    case "running":
+                        console.log("Upload is running");
+                        break;
+                }
+            },
+            (error) => {
+                // Handle unsuccessful uploads
+            },
+            () => {
+                // Handle successful uploads on complete
+                // For instance, get the download URL: https://firebasestorage.googleapis.com/...
+                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                    //   console.log('File available at', downloadURL);
+                    setData("image", downloadURL);
+                    setUploadProgress(null);
+                    fileRef.current.value = null;
+                    setImageUpload(null);
+                });
+            }
+        );
+    };
+
+    const deleteFile = async (imageUrl: string) => {
+        // setLoading(true);
+        // const start = imageUrl.lastIndexOf("biayaperms%2F");
+        // const end = imageUrl.lastIndexOf("?alt=media");
+        // const fbimg = imageUrl.substring(start + 13, end);
+        // const imgDir = "/images/biayaperms/";
+        const imageRef = ref(storage, imageUrl);
+        // Delete the file
+        deleteObject(imageRef)
+            .then(() => {
+                setImageUpload(null);
+                setData("image", "");
+                console.log("image deleted from firebase");
+                // File deleted successfully
+            })
+            .catch((error) => {
+                console.log("error delete : ", error);
+                // Uh-oh, an error occurred!
+            });
+    };
 
     function handleSubmit(e: any) {
         e.preventDefault();
@@ -121,7 +207,16 @@ const Edit = () => {
                                         }))
                                     }
                                 />
-                                <div className="flex items-center justify-between">
+                                <UploadImage
+                                    name={"image_biayaperm"}
+                                    image={data.image}
+                                    imagePath={"/images/postingjurnals/"}
+                                    setImage={(imgfile) =>
+                                        setData("image", imgfile)
+                                    }
+                                />
+
+                                <div className="flex items-center justify-between mt-4">
                                     <LinkButton
                                         theme="blueGrey"
                                         href={route(

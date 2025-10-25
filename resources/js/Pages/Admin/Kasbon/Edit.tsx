@@ -5,22 +5,20 @@ import InputLabel from "@/Components/InputLabel";
 import Modal from "@/Components/Modal";
 import ModalAddPermohonan from "@/Components/Modals/ModalAddPermohonan";
 import ModalCetakLaporan from "@/Components/Modals/ModalCetakLaporan";
-import AsyncSelectSearch from "@/Components/Shared/AsyncSelectSearch";
 import Button from "@/Components/Shared/Button";
 import Input from "@/Components/Shared/Input";
 import LinkButton from "@/Components/Shared/LinkButton";
 import { LoadingButton } from "@/Components/Shared/LoadingButton";
 import MoneyInput from "@/Components/Shared/MoneyInput";
-import PermohonanSelect from "@/Components/Shared/PermohonanSelect";
 import SelectSearch from "@/Components/Shared/SelectSearch";
 import TranspermohonanSelect from "@/Components/Shared/TranspermohonanSelect";
 import AdminLayout from "@/Layouts/AdminLayout";
-import StafLayout from "@/Layouts/StafLayout";
 import { Instansi, Kasbon, OptionSelect, Permohonan, User } from "@/types";
+import useSwal from "@/utils/useSwal";
 import { Link, router, useForm, usePage } from "@inertiajs/react";
 import moment from "moment";
 import { useEffect, useRef, useState } from "react";
-import Select, { MultiValue, OnChangeValue } from "react-select";
+import apputils from "@/bootstrap";
 
 const Edit = () => {
     type UserOption = {
@@ -54,6 +52,7 @@ const Edit = () => {
         itemkegiatanOpts,
         base_route,
         allPermohonan,
+        user_id,
     } = usePage<{
         kasbon: Kasbon;
         statuskasbonOpts: OptionSelect[];
@@ -62,6 +61,7 @@ const Edit = () => {
         is_admin: boolean;
         base_route: string;
         allPermohonan: boolean;
+        user_id: string;
     }>().props;
 
     const [showStatusDialog, setShowStatusDialog] = useState(false);
@@ -93,6 +93,29 @@ const Edit = () => {
             jmlKasbon > jmlPenggunaan ? jmlKasbon - jmlPenggunaan : 0;
         return xsisaPenggunaan.toString();
     };
+    const sendDataToMobileRole = async (
+        datas: { navigationId: string } & object
+    ) => {
+        let xlink = `/admin/messages/api/senddatatomobilerole`;
+        const response = await apputils.backend.post(xlink, {
+            role: "admin",
+            datas,
+        });
+        const data = response.data;
+    };
+    const sendMessageToWebUser = async (
+        user_id: number,
+        datas: { navigationId: string } & object
+    ) => {
+        let xlink = `/send_message`;
+        const response = await apputils.backend.post(xlink, {
+            user_ids: [user_id],
+            title: "Permohonan Kasbon",
+            body: "Permohonan Kasbon Telah Dibuat",
+            datas,
+        });
+        const data = response.data;
+    };
 
     function handleSubmit(e: any) {
         e.preventDefault();
@@ -106,6 +129,9 @@ const Edit = () => {
                 } else {
                     secondInput.current.focus();
                 }
+                sendDataToMobileRole({
+                    navigationId: "kasbon",
+                });
             },
         });
     }
@@ -152,6 +178,15 @@ const Edit = () => {
             {
                 onSuccess: (e) => {
                     setShowStatusDialog(false);
+                    if (user_id !== kasbon.user_id) {
+                        sendMessageToWebUser(kasbon.user.id, {
+                            navigationId: "kasbon",
+                        });
+                    }
+                    useSwal.info({
+                        title: "Informasi",
+                        text: "Status Kasbon Updated",
+                    });
                 },
             }
         );

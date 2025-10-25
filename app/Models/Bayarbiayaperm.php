@@ -71,7 +71,7 @@ class Bayarbiayaperm extends Model
     protected function tglBayarbiayaperm(): Attribute
     {
         return Attribute::make(
-            get: fn () => Carbon::parse($this->created_at)->format('d F Y')
+            get: fn () => Carbon::parse($this->created_at)->format('d m Y')
         );
     }
 

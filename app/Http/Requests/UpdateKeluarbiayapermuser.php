@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Itemkegiatan;
+use App\Rules\checkBiayaRule;
 use App\Rules\checkRincianbiayapermRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -34,7 +35,7 @@ class UpdateKeluarbiayapermuser extends FormRequest
             // 'keluarbiayapermuser_id' => ['required'],
             'jumlah_biaya' => ['required', 'numeric', 'min:1'],
             'ket_biaya' => ['nullable'],
-            'transpermohonan_id' => ['required'],
+            'transpermohonan_id' => ['required', new checkBiayaRule()],
             'itemkegiatan_id' => $val_itemkgt,
             'image_dkeluarbiayapermuser' => ['nullable'],
         ];

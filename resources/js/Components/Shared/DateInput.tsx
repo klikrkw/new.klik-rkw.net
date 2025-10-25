@@ -52,6 +52,7 @@ export default function DateInput(props: Props) {
                 }
                 showTimeSelect={props.showTimeSelect}
                 dateFormat="DD/MM/yyyy"
+                disabled={props.disabled}
                 // renderMonthContent={renderMonthContent}
                 // showMonthYearPicker
                 // dateFormat={

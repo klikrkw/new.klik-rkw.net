@@ -1,3 +1,4 @@
+import ModalCariTempatarsip from "@/Components/Modals/ModalCariTempatarsip";
 import Input from "@/Components/Shared/Input";
 import LinkButton from "@/Components/Shared/LinkButton";
 import { LoadingButton } from "@/Components/Shared/LoadingButton";
@@ -62,7 +63,6 @@ const Create = ({
 
     // const onChange = (selectedOptions: OnChangeValue<Permission[], true>) =>
     //     setData('permissions', selectedOptions);
-
     return (
         <AdminLayout>
             <div className="flex content-center items-center justify-center h-full">

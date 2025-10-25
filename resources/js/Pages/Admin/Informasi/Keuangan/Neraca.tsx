@@ -55,11 +55,11 @@ const Neraca = ({ neracas, totDebet, totKredit, year, yearOpts }: Props) => {
                 <div className="w-full px-2">
                     <div className="relative flex flex-col min-w-0 break-words w-full mb-2 shadow-lg shadow-slate-400 rounded-lg bg-blueGray-100 border-0">
                         <div className="rounded-t mb-2 px-4 pt-4 ">
-                            <div className="w-full flex  justify-between bg-lightBlue-800 text-lightBlue-100 px-2 py-2 shadow-md rounded-lg">
-                                <div className="text-left">
+                            <div className="w-full flex flex-col gap-2 md:flex-row justify-between bg-lightBlue-800 text-lightBlue-100 px-2 py-2 shadow-md rounded-lg">
+                                <div className="text-left w-full md:w-1/3">
                                     <h1 className="font-semibold">NERACA</h1>
                                 </div>
-                                <div className="w-1/2 lg:w-1/6 text-blueGray-800 flex flex-col md:flex-row justify-between items-center gap-2">
+                                <div className="w-full md:w-1/2 text-blueGray-800 flex flex-row justify-between items-center gap-2">
                                     <SelectSearch
                                         name="year"
                                         value={curYear}

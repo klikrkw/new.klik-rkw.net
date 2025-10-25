@@ -20,7 +20,8 @@ class DkeluarbiayapermuserInfoCollection extends JsonResource
         return [
             'id' => $this->id,
             'permohonan' => sprintf(
-                '%s, %s - %s.%s, L.%sM2, Ds.%s - %s',
+                '%s - %s, %s - %s.%s, L.%sM2, Ds.%s - %s',
+                $this->transpermohonan->no_daftar,
                 $this->transpermohonan->permohonan->nama_penerima,
                 $this->transpermohonan->jenispermohonan->nama_jenispermohonan,
                 $this->transpermohonan->permohonan->jenishak->singkatan,
@@ -29,11 +30,11 @@ class DkeluarbiayapermuserInfoCollection extends JsonResource
                 $this->transpermohonan->permohonan->desa->nama_desa,
                 $this->transpermohonan->permohonan->desa->kecamatan->nama_kecamatan,
             ),
-            'created_at' => Carbon::parse($this->created_at)->format('d F Y'),
+            'created_at' => Carbon::parse($this->created_at)->format('d M Y'),
             'nama_itemkegiatan' => $this->nama_itemkegiatan,
             'jumlah_biaya' => number_format($this->jumlah_biaya),
             'ket_biaya' => $this->ket_biaya,
-            'image_dkeluarbiaya' => $this->image_dkeluarbiaya,
+            'image_dkeluarbiayapermuser' => $this->image_dkeluarbiayapermuser,
             'keluarbiayapermuser'=>new KeluarbiayapermuserCollection($this->keluarbiayapermuser),
             'itemkegiatan' => $this->itemkegiatan,
         ];

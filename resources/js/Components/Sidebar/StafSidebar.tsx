@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import NotificationDropdown from "../Dropdowns/NotificationDropdown";
 import UserDropdown from "../Dropdowns/UserDropdown";
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import MenuItem from "./MenuItem";
 
 export default function StafSidebar() {
@@ -10,9 +10,12 @@ export default function StafSidebar() {
     const currentRoute = route().current();
     // const isTransaksiRoute = currentRoute ? currentRoute.includes('transaksi') : false;
     // const isInformasiRoute = currentRoute ? currentRoute.includes('informasi') : false;
+    const {
+        auth: { user },
+    } = usePage<any>().props;
     return (
         <>
-            <nav className="container-snap md:left-0 md:block md:fixed md:top-0 md:bottom-0 md:overflow-y-auto md:flex-row md:flex-nowrap md:overflow-hidden shadow-xl bg-white flex flex-wrap items-center justify-between relative md:w-64 z-10 py-4 px-6">
+            <nav className="container-snap md:left-0 md:block md:fixed md:top-0 md:bottom-0 md:overflow-y-auto md:flex-row md:flex-nowrap md:overflow-hidden shadow-xl bg-white flex flex-wrap items-center justify-between relative md:w-64 z-[55] py-4 px-6">
                 <div className="md:flex-col md:items-stretch md:min-h-full md:flex-nowrap px-0 flex flex-wrap items-center justify-between w-full mx-auto">
                     {/* Toggler */}
                     <button
@@ -26,11 +29,14 @@ export default function StafSidebar() {
                     </button>
                     {/* Brand */}
                     <Link
-                        className="md:block text-left md:pb-2 text-blueGray-600 mr-0 inline-block whitespace-nowrap text-sm uppercase font-bold p-4 px-0"
-                        href=""
+                        className="md:block text-left md:pb-2 text-blueGray-600 mr-0 inline-block whitespace-nowrap text-sm uppercase p-4 px-0"
+                        href="/"
                     >
-                        PPAT APP
-                    </Link>
+                        <div>
+                            <div className="text-lg font-bold">PPAT APP</div>
+                            <div className="text-md">{user.name}</div>
+                        </div>
+                    </Link>{" "}
                     {/* User */}
                     <ul className="md:hidden items-center flex flex-wrap list-none">
                         <li className="inline-block relative">
@@ -72,7 +78,7 @@ export default function StafSidebar() {
                             </div>
                         </div>
                         {/* Form */}
-                        <form className="mt-6 mb-4 md:hidden">
+                        {/* <form className="mt-6 mb-4 md:hidden">
                             <div className="mb-3 pt-0">
                                 <input
                                     type="text"
@@ -80,7 +86,7 @@ export default function StafSidebar() {
                                     className="border-0 px-3 py-2 h-12 border-solid  border-blueGray-500 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-base leading-snug shadow-none outline-none focus:outline-none w-full font-normal"
                                 />
                             </div>
-                        </form>
+                        </form> */}
 
                         {/* Divider */}
                         <hr className="my-4 md:min-w-full" />
@@ -214,26 +220,26 @@ export default function StafSidebar() {
                                         className={
                                             "text-xs uppercase py-3 font-bold flex items-center " +
                                             (currentRoute ===
-                                            "staf.transaksi.transpermohonans.tempatarsips.create"
+                                            "staf.transaksi.transpermohonans.posisiberkas.create"
                                                 ? " text-lightBlue-500 hover:text-lightBlue-600 "
                                                 : " text-blueGray-700 hover:text-blueGray-500 ")
                                         }
                                         href={route(
-                                            "staf.transaksi.transpermohonans.tempatarsips.create"
+                                            "staf.transaksi.transpermohonans.posisiberkas.create"
                                         )}
                                     >
                                         <i
                                             className={
                                                 "fas fa-tv mr-2 text-sm " +
                                                 (currentRoute ===
-                                                "staf.transaksi.transpermohonans.tempatarsips.create"
+                                                "staf.transaksi.transpermohonans.posisiberkas.create"
                                                     ? "opacity-75"
                                                     : "text-blueGray-300")
                                             }
                                         ></i>
                                         <span>
                                             <span className="inline-block">
-                                                Tempat Arsip
+                                                Tempat Berkas
                                             </span>
                                             <span className="inline-block">
                                                 Permohonan

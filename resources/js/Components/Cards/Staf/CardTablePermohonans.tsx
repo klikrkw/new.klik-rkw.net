@@ -14,6 +14,8 @@ import InputWithSelect from "@/Components/Shared/InputWithSelect";
 import { DateRange } from "react-number-format/types/types";
 import MonthRangeInput from "@/Components/Shared/MonthRangeInput";
 import moment from "moment";
+import { Tooltip } from "react-tooltip";
+import { copyToClipboard } from "@/utils";
 
 // components
 
@@ -134,7 +136,7 @@ export default function CardTablePermohonans({
                 )}
             >
                 <div className="rounded-full mb-0 px-4 py-3 border-0 ">
-                    <div className="flex justify-between w-full flex-col md:flex-row">
+                    <div className="flex justify-between w-full flex-col md:flex-row gap-2">
                         <div className="relative w-full max-w-full flex-grow flex-1 ">
                             <h3
                                 className={
@@ -147,82 +149,86 @@ export default function CardTablePermohonans({
                                 Permohonan List
                             </h3>
                         </div>
-                        <div className="flex justify-center gap-2 flex-row items-start">
-                            <PopupMenu caption="Filter">
-                                <MonthRangeInput
-                                    label="Rentang Waktu"
-                                    onDataChange={(d) => handleDateChange(d)}
-                                    value={{
-                                        date1: values.date1
-                                            ? values.date1
-                                            : moment().format("YYYY-MM-DD"),
-                                        date2: values.date2
-                                            ? values.date2
-                                            : moment().format("YYYY-MM-DD"),
-                                    }}
-                                />
-                                <SelectSearch
-                                    className="text-blueGray-900"
-                                    isClearable
-                                    value={jenishak ? jenishak : ""}
-                                    options={jenishaks}
-                                    label="Jenis Hak"
-                                    onChange={(e: any) =>
-                                        setValues((v) => ({
-                                            ...v,
-                                            jenishak_id: e ? e.value : "",
-                                        }))
-                                    }
-                                />
-                                <SelectSearch
-                                    className="text-blueGray-900"
-                                    isClearable
-                                    value={jenistanah}
-                                    options={jenistanahs}
-                                    label="Jenis Tanah"
-                                    onChange={(e: any) =>
-                                        setValues((v) => ({
-                                            ...v,
-                                            jenis_tanah: e ? e.value : "",
-                                        }))
-                                    }
-                                />
-                                <AsyncSelectSearch
-                                    url="/admin/desas/api/list"
-                                    className="text-blueGray-900"
-                                    value={selectedDesa}
-                                    optionLabels={[
-                                        "nama_desa",
-                                        "nama_kecamatan",
-                                    ]}
-                                    optionValue="id"
-                                    isClearable
-                                    label="Letak Obyek"
-                                    onChange={(e: any) =>
-                                        setValues((v) => ({
-                                            ...v,
-                                            desa_id: e ? e.value : "",
-                                        }))
-                                    }
-                                />
-                                <div className="p-2 flex items-center text-blueGray-900 gap-2">
-                                    <span>Active</span>
-                                    <input
-                                        type="checkbox"
-                                        name="inactive"
-                                        checked={isChecked}
+                        <div className="flex flex-col md:flex-row justify-center gap-1 items-start">
+                            <div className="w-full mb-2">
+                                <PopupMenu caption="Filter">
+                                    <MonthRangeInput
+                                        label="Rentang Waktu"
+                                        onDataChange={(d) =>
+                                            handleDateChange(d)
+                                        }
+                                        value={{
+                                            date1: values.date1
+                                                ? values.date1
+                                                : moment().format("YYYY-MM-DD"),
+                                            date2: values.date2
+                                                ? values.date2
+                                                : moment().format("YYYY-MM-DD"),
+                                        }}
+                                    />
+                                    <SelectSearch
+                                        className="text-blueGray-900"
+                                        isClearable
+                                        value={jenishak ? jenishak : ""}
+                                        options={jenishaks}
+                                        label="Jenis Hak"
                                         onChange={(e: any) =>
-                                            setValues((v: any) => {
-                                                setIsChecked(!isChecked);
-                                                return {
-                                                    ...v,
-                                                    inactive: isChecked,
-                                                };
-                                            })
+                                            setValues((v) => ({
+                                                ...v,
+                                                jenishak_id: e ? e.value : "",
+                                            }))
                                         }
                                     />
-                                </div>
-                            </PopupMenu>
+                                    <SelectSearch
+                                        className="text-blueGray-900"
+                                        isClearable
+                                        value={jenistanah}
+                                        options={jenistanahs}
+                                        label="Jenis Tanah"
+                                        onChange={(e: any) =>
+                                            setValues((v) => ({
+                                                ...v,
+                                                jenis_tanah: e ? e.value : "",
+                                            }))
+                                        }
+                                    />
+                                    <AsyncSelectSearch
+                                        url="/admin/desas/api/list"
+                                        className="text-blueGray-900"
+                                        value={selectedDesa}
+                                        optionLabels={[
+                                            "nama_desa",
+                                            "nama_kecamatan",
+                                        ]}
+                                        optionValue="id"
+                                        isClearable
+                                        label="Letak Obyek"
+                                        onChange={(e: any) =>
+                                            setValues((v) => ({
+                                                ...v,
+                                                desa_id: e ? e.value : "",
+                                            }))
+                                        }
+                                    />
+                                    <div className="p-2 flex items-center text-blueGray-900 gap-2">
+                                        <span>Active</span>
+                                        <input
+                                            type="checkbox"
+                                            name="inactive"
+                                            checked={isChecked}
+                                            onChange={(e: any) =>
+                                                setValues((v: any) => {
+                                                    setIsChecked(!isChecked);
+                                                    return {
+                                                        ...v,
+                                                        inactive: isChecked,
+                                                    };
+                                                })
+                                            }
+                                        />
+                                    </div>
+                                </PopupMenu>
+                            </div>
                             {/* <AsyncSelectSearch
                                 placeholder="Pilih User"
                                 name="users"
@@ -470,12 +476,27 @@ export default function CardTablePermohonans({
                                                             className="rounded-full bg-white/50 text-center mb-1"
                                                             key={idx}
                                                         >
-                                                            {tp.no_daftar} -{" "}
-                                                            {
-                                                                tp
-                                                                    .jenispermohonan
-                                                                    .nama_jenispermohonan
-                                                            }
+                                                            <Tooltip
+                                                                id={`tooltip_${idx}`}
+                                                            />
+                                                            <span
+                                                                data-tooltip-id={`tooltip_${idx}`}
+                                                                data-tooltip-content="Copy No Daftar"
+                                                                data-tooltip-place="top"
+                                                                onClick={() =>
+                                                                    copyToClipboard(
+                                                                        tp.no_daftar
+                                                                    )
+                                                                }
+                                                                className="hover:cursor-pointer hover:text-lightBlue-300"
+                                                            >
+                                                                {tp.no_daftar} -{" "}
+                                                                {
+                                                                    tp
+                                                                        .jenispermohonan
+                                                                        .nama_jenispermohonan
+                                                                }
+                                                            </span>
                                                         </li>
                                                     )
                                                 )}

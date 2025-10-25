@@ -23,6 +23,7 @@ use Inertia\Inertia;
 use App\Traits\FirebaseTrait;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 
 class KasbonController extends Controller
@@ -84,6 +85,7 @@ class KasbonController extends Controller
         ['value' => 'approved', 'label' => 'Approved', 'isDisabled'],
         ['value' => 'cancelled', 'label' => 'Cancelled', 'isDisabled'],
         ['value' => 'finish', 'label' => 'finish', 'isDisabled'],
+        ['value' => 'used', 'label' => 'Used', 'isDisabled'],
         ];
 
         return Inertia::render('Admin/Kasbon/Index', [
@@ -254,6 +256,7 @@ class KasbonController extends Controller
             'itemkegiatanOpts' => collect($itemkegiatans)->map(fn ($o) => ['label' => $o['nama_itemkegiatan'], 'value' => $o['id']]),
             'is_admin' => $this->is_admin,
             'base_route' => $this->base_route,
+            'user_id' => $this->user->id,
             'allPermohonan' =>$this->all_permohonan,
             'dkasbons' => $kasbon->jenis_kasbon == 'permohonan'?DkasbonCollection::collection($dkasbons):DkasbonnopermCollection::collection($dkasbons),
             'statuskasbonOpt' => collect($xstatus_kasbons)->filter(function ($v) use ($kasbon) {
@@ -354,6 +357,7 @@ class KasbonController extends Controller
         $kasbon->delete();
         return Redirect::back()->with('success', 'Kasbon deleted.');
     }
+
     private function toArray($rec): array
     {
         $nohak = $rec->singkatan == 'C' ? $rec->nomor_hak . ', Ps.' . $rec->persil . ', ' . $rec->klas : $rec->nomor_hak;
@@ -459,16 +463,19 @@ class KasbonController extends Controller
         return Redirect::back()->with('success', 'Item Kasbon deleted.');
     }
 
-    public function lapKasbonStaf(Kasbon $kasbon)
+public function lapKasbonStaf(Kasbon $kasbon)
     {
         $kasbon->tanggal = Carbon::parse($kasbon->created_at)->format('d M Y');
         $kasbon->instansi = $kasbon->instansi;
         $kasbon->user = $kasbon->user;
         $data =[];
         $filelap='pdf.lapKasbonstaf';
+        $filelap_screen='lapKasbonstaf';
+        $qr_kode = sprintf("%s_%s.png", $filelap_screen, $this->user->id);
+        $media = request('media','print');
         if($kasbon->jenis_kasbon == 'permohonan'){
-        $dkasbons = Dkasbon::query();
-        $dkasbons = $dkasbons
+            $dkasbons = Dkasbon::query();
+            $dkasbons = $dkasbons
             ->select('dkasbons.id', 'nama_penerima', 'nomor_hak', 'persil', 'klas', 'luas_tanah', 'singkatan', 'nama_itemkegiatan', 'jumlah_biaya', 'ket_biaya', 'nama_desa', 'nama_kecamatan')
             ->join('transpermohonans', 'transpermohonans.id', 'dkasbons.transpermohonan_id')
             ->join('itemkegiatans', 'itemkegiatans.id', 'dkasbons.itemkegiatan_id')
@@ -479,7 +486,7 @@ class KasbonController extends Controller
             ->where('kasbon_id', $kasbon->id)
             ->orderBy('dkasbons.id', 'asc')
             ->take(100)->skip(0)->get();
-        $dkasbons = collect($dkasbons)->map((function ($item, $i) {
+            $dkasbons = collect($dkasbons)->map((function ($item, $i) {
             $nohak = $item['singkatan'] == 'C' ? $item['nomor_hak'] . ', Ps.' . $item['persil'] . ', ' . $item['klas'] : $item['nomor_hak'];
             return [
                 'nourut' => ($i + 1) . '.',
@@ -497,16 +504,27 @@ class KasbonController extends Controller
                 'jumlah_biaya' => number_format($item['jumlah_biaya']),
                 'ket_biaya' => $item['ket_biaya'],
             ];
-        }));
-        $tanggal = Carbon::now()->format('d M Y');
-        $data = [
-            'judul_lap' => 'KASBON PENGELUARAN BIAYA',
+            }));
+            $tanggal = Carbon::now()->format('d M Y');
+            $xpath = url()->current().'/?media=screen';
+            QrCode::format('png')->size(100)->generate($xpath, public_path($qr_kode));
+            $data = [
+                'qrcode' => config('app.qrcodeurl',''). $qr_kode,
+                'judul_lap' => 'KASBON PENGELUARAN BIAYA',
             'kasbon' => $kasbon,
             'dkasbons' => $dkasbons,
             'tanggal' => $tanggal,
-        ];
+            ];
+        if($media == 'print'){
+            $pdf = Pdf::loadView($filelap, $data)->setPaper(array(0, 0, 609.4488, 935.433), 'portrait');
+            return 'data:application/pdf;base64,' . base64_encode($pdf->stream());
+            }else{
+            return view($filelap_screen, $data);
+        }
     }else{
         $filelap='pdf.lapKasbonnopermstaf';
+        $filelap_screen='lapKasbonnopermstaf';
+        $qr_kode = sprintf("%s_%s.png", $filelap_screen, $this->user->id);
         $dkasbons = Dkasbonnoperm::query();
         $dkasbons = $dkasbons
             ->select('dkasbonnoperms.id', 'nama_itemkegiatan', 'jumlah_biaya', 'ket_biaya')
@@ -524,25 +542,101 @@ class KasbonController extends Controller
             ];
         }));
         $tanggal = Carbon::now()->format('d M Y');
+    //     $data = [
+    //         'judul_lap' => 'KASBON PENGELUARAN BIAYA',
+    //         'kasbon' => $kasbon,
+    //         'dkasbons' => $dkasbons,
+    //         'tanggal' => $tanggal,
+    //     ];
+
+    // }
+        $xpath = url()->current().'/?media=screen';
+        QrCode::format('png')->size(100)->generate($xpath, public_path($qr_kode));
         $data = [
+            'qrcode' => config('app.qrcodeurl',''). $qr_kode,
             'judul_lap' => 'KASBON PENGELUARAN BIAYA',
             'kasbon' => $kasbon,
             'dkasbons' => $dkasbons,
-            'tanggal' => $tanggal,
+        'tanggal' => $tanggal,
         ];
+        if($media == 'print'){
+            $pdf = Pdf::loadView($filelap, $data)->setPaper(array(0, 0, 609.4488, 935.433), 'portrait');
+            return 'data:application/pdf;base64,' . base64_encode($pdf->stream());
+            }else{
+            return view($filelap_screen, $data);
+        }
+    }
+    // $pdf = Pdf::loadView($filelap, $data)->setPaper(array(0, 0, 609.4488, 935.433), 'portrait');
+    //     // return view('pdf.lapKeluarbiayauser', compact('judul_lap', 'subjudul_lap'));
+    //     // return $pdf->stream('lapKeluarbiayauser.pdf');
+    //     return 'data:application/pdf;base64,' . base64_encode($pdf->stream());
+}
 
-    }
-        $pdf = Pdf::loadView($filelap, $data)->setPaper(array(0, 0, 609.4488, 935.433), 'portrait');
-        // return view('pdf.lapKeluarbiayauser', compact('judul_lap', 'subjudul_lap'));
-        // return $pdf->stream('lapKeluarbiayauser.pdf');
-        return 'data:application/pdf;base64,' . base64_encode($pdf->stream());
-    }
     public function updateStatus(Kasbon $kasbon)
     {
         $validated =  request()->validate([
             'status_kasbon' => ['required'],
         ]);
-        $kasbon->update($validated);
+        // $kasbon->update($validated);
+        $kasbon->status_kasbon = $validated['status_kasbon'];
+        $kasbon->save();
+        $kasbon->status_kasbon = $validated['status_kasbon'];
+        $data['kabon']=$kasbon;
+        if ($kasbon->status_kasbon == 'approved') {
+            $akunkredit = Akun::getKodeAkun('kas');
+            $akundebet = Akun::getKodeAkun('piutang');
+            $uraian = 'Kasbon Approved, ' . $kasbon->user->name . ' - ' . $kasbon->keperluan;
+            $parent_id = $kasbon->id;
+            $ids = $kasbon->jurnalumums;
+            if (count($ids) > 0) {
+                $ids[0]->delete();
+                $ids[1]->delete();
+            }
+
+            $ju1 = Jurnalumum::create([
+                'uraian' => $uraian,
+                'akun_id' => $akundebet,
+                'debet' => $kasbon->jumlah_kasbon,
+                'kredit' => 0,
+                'parent_id' => $parent_id
+            ]);
+            $ju2 = Jurnalumum::create([
+                'uraian' => $uraian,
+                'akun_id' => $akunkredit,
+                'debet' => 0,
+                'kredit' => $kasbon->jumlah_kasbon,
+                'parent_id' => $parent_id
+            ]);
+            $ids = [$ju1->id, $ju2->id];
+            $kasbon->jurnalumums()->attach($ids);
+
+        } elseif ($kasbon->status_kasbon == 'finish') {
+            $akundebet = Akun::getKodeAkun('kas');
+            $akunkredit = Akun::getKodeAkun('piutang');
+            $uraian = 'Kasbon ' . $kasbon->status_kasbon . ', ' . $kasbon->user->name . ' - ' . $kasbon->keperluan;
+            $parent_id = $kasbon->id;
+            $ju1 = Jurnalumum::create([
+                'uraian' => $uraian,
+                'akun_id' => $akundebet,
+                'debet' => $kasbon->sisa_penggunaan,
+                'kredit' => 0,
+                'parent_id' => $parent_id
+            ]);
+            $ju2 = Jurnalumum::create([
+                'uraian' => $uraian,
+                'akun_id' => $akunkredit,
+                'debet' => 0,
+                'kredit' => $kasbon->sisa_penggunaan,
+                'parent_id' => $parent_id
+            ]);
+            $ids = [$ju1->id, $ju2->id];
+            $kasbon->jurnalumums()->attach($ids);
+        } elseif ($kasbon->status_kasbon == 'cancelled') {
+            $recs = Jurnalumum::where('parent_id',$kasbon->id)->get();
+            for ($i=0; $i < $recs->count(); $i++) {
+                $recs[$i]->delete();
+            }
+        }
         return redirect()->back()->with('Status Kasbon updated');
     }
 

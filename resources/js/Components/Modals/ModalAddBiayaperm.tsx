@@ -16,30 +16,36 @@ import useSwal from "@/utils/useSwal";
 import SelectSearch from "../Shared/SelectSearch";
 import {
     ref,
-    uploadBytes,
     getDownloadURL,
-    listAll,
-    list,
     uploadBytesResumable,
     deleteObject,
 } from "firebase/storage";
 import Button from "../Shared/Button";
 import { storage } from "@/firebase";
 import { resizeImage } from "@/utils/images";
+import apputils from "@/bootstrap";
+import { parse } from "path";
+import UploadImage from "../Shared/UploadImage";
+
 type Props = {
     showModal: boolean;
     setShowModal: (e: boolean) => void;
+    transpermohonan_id: string;
 };
 type OptionSelectExt = {
     rincianbiayaperm: Rincianbiayaperm;
 } & OptionSelect;
 
-const ModalAddBiayaperm = ({ showModal, setShowModal }: Props) => {
+const ModalAddBiayaperm = ({
+    showModal,
+    setShowModal,
+    transpermohonan_id,
+}: Props) => {
     type FormValues = {
         transpermohonan_id: string;
-        jumlah_biayaperm: string;
-        jumlah_bayar: string;
-        kurang_bayar: string;
+        jumlah_biayaperm: number;
+        jumlah_bayar: number;
+        kurang_bayar: number;
         catatan_biayaperm: string;
         image_biayaperm: string;
         rincianbiayapermOpt: OptionSelectExt | undefined;
@@ -47,95 +53,30 @@ const ModalAddBiayaperm = ({ showModal, setShowModal }: Props) => {
         _method: string;
     };
 
-    const fileRef = useRef<any>();
     const [imageUpload, setImageUpload] = useState<File | null>(null);
-    const [uploadProgress, setUploadProgress] = useState<number | null>();
-    // const [imageUrls, setImageUrls] = useState<string[]>([]);
-
-    // const imagesListRef = ref(storage, "/images/biayaperms/");
-
-    const uploadFile = async () => {
-        if (imageUpload == null) return;
-        const newImg = await resizeImage(imageUpload, 500, 500);
-        let rand = Math.random() * 100000;
-        const imageRef = ref(
-            storage,
-            `/images/biayaperms/${rand}_${imageUpload.name}`
-        );
-
-        const uploadTask = uploadBytesResumable(imageRef, newImg);
-
-        // Register three observers:
-        // 1. 'state_changed' observer, called any time the state changes
-        // 2. Error observer, called on failure
-        // 3. Completion observer, called on successful completion
-        uploadTask.on(
-            "state_changed",
-            (snapshot) => {
-                //         // Observe state change events such as progress, pause, and resume
-                //         // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-                const progress =
-                    (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                console.log("Upload is " + progress + "% done");
-                setUploadProgress(progress);
-                switch (snapshot.state) {
-                    case "paused":
-                        console.log("Upload is paused");
-                        break;
-                    case "running":
-                        console.log("Upload is running");
-                        break;
-                }
-            },
-            (error) => {
-                // Handle unsuccessful uploads
-            },
-            () => {
-                // Handle successful uploads on complete
-                // For instance, get the download URL: https://firebasestorage.googleapis.com/...
-                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                    //   console.log('File available at', downloadURL);
-                    setData("image_biayaperm", downloadURL);
-                    setUploadProgress(null);
-                    fileRef.current.value = null;
-                    setImageUpload(null);
-                });
-            }
-        );
-    };
-
-    const deleteFile = async (imageUrl: string) => {
-        // setLoading(true);
-        // const start = imageUrl.lastIndexOf("biayaperms%2F");
-        // const end = imageUrl.lastIndexOf("?alt=media");
-        // const fbimg = imageUrl.substring(start + 13, end);
-        // const imgDir = "/images/biayaperms/";
-        const imageRef = ref(storage, imageUrl);
-        // Delete the file
-        deleteObject(imageRef)
-            .then(() => {
-                setImageUpload(null);
-                setData("image_biayaperm", "");
-                console.log("image deleted from firebase");
-                // File deleted successfully
-            })
-            .catch((error) => {
-                console.log("error delete : ", error);
-                // Uh-oh, an error occurred!
-            });
-    };
 
     const { transpermohonan, rincianbiayapermOpts } = usePage<{
         transpermohonan: Transpermohonan;
         rincianbiayapermOpts: OptionSelectExt[];
     }>().props;
+    const [xrincianbiayapermOpts, setXrincianbiayapermOpts] =
+        useState<OptionSelectExt[]>(rincianbiayapermOpts);
+    // const [imageUrls, setImageUrls] = useState<string[]>([]);
+
+    // const imagesListRef = ref(storage, "/images/biayaperms/");
+    const getRincianbiayapermOpts = async (transpermohonan_id: string) => {
+        let xlink = `/transaksi/biayaperms/${transpermohonan_id}/api/rincianbiayapermopts`;
+        const response = await apputils.backend.get(xlink);
+        const data = response.data;
+        setXrincianbiayapermOpts(data);
+    };
 
     const { data, setData, errors, post, processing, reset, progress } =
         useForm<FormValues>({
-            transpermohonan_id: transpermohonan?.id || "",
-            jumlah_biayaperm: "0",
-            jumlah_bayar: "0",
-            kurang_bayar: "0",
+            transpermohonan_id: "",
+            jumlah_biayaperm: 0,
+            jumlah_bayar: 0,
+            kurang_bayar: 0,
             catatan_biayaperm: "",
             image_biayaperm: "",
             rincianbiayapermOpt: undefined,
@@ -148,13 +89,13 @@ const ModalAddBiayaperm = ({ showModal, setShowModal }: Props) => {
         useSwal
             .confirm({
                 title: "Simpan Data",
-                text: "apakah akan menyimpan?",
+                text: "apakah akan menyimpan ?",
             })
             .then((result) => {
                 if (result.isConfirmed) {
                     post(route("transaksi.biayaperms.store"), {
                         onSuccess: () => {
-                            reset();
+                            // console.log("sukses");
                             setShowModal(false);
                         },
                     });
@@ -163,19 +104,18 @@ const ModalAddBiayaperm = ({ showModal, setShowModal }: Props) => {
     }
     const getKurangBayar = (jmlBiaya: number, jmlBayar: number) => {
         let xkurang = jmlBiaya > jmlBayar ? jmlBiaya - jmlBayar : 0;
-        return xkurang.toString();
+        return xkurang;
     };
 
     useEffect(() => {
-        if (transpermohonan) {
-            setData("transpermohonan_id", transpermohonan.id);
+        setData("transpermohonan_id", transpermohonan_id);
+        if (showModal && transpermohonan_id) {
+            getRincianbiayapermOpts(transpermohonan_id);
         }
-    }, [transpermohonan]);
-    useEffect(() => {
-        return () => {
-            reset();
+        if (!showModal) {
             setImageUpload(null);
-        };
+            reset();
+        }
     }, [showModal]);
 
     return (
@@ -187,14 +127,19 @@ const ModalAddBiayaperm = ({ showModal, setShowModal }: Props) => {
         >
             <div className="p-4 bg-blueGray-100 rounded-md">
                 <form onSubmit={handleSubmit}>
-                    <h1 className="font-bold text-xl text-blueGray-700 mb-4">
-                        ADD BIAYA PERMOHONAN
-                    </h1>
+                    <div className="flex justify-between items-start">
+                        <h1 className="font-bold text-xl text-blueGray-700 mb-4">
+                            BIAYA PERMOHONAN BARU
+                        </h1>
+                        <div className="font-bold text-blueGray-500 text-sm">
+                            {data.transpermohonan_id}
+                        </div>
+                    </div>
                     <SelectSearch
                         name="rincianbiayaperm_id"
                         label="Rincian Biaya"
                         value={data.rincianbiayapermOpt}
-                        options={rincianbiayapermOpts}
+                        options={xrincianbiayapermOpts}
                         onChange={(e: any) => {
                             setData({
                                 ...data,
@@ -202,10 +147,13 @@ const ModalAddBiayaperm = ({ showModal, setShowModal }: Props) => {
                                 rincianbiayaperm_id: e ? e.value : "",
                                 jumlah_biayaperm:
                                     e.rincianbiayaperm.total_pemasukan,
-                                jumlah_bayar: (
-                                    e.rincianbiayaperm.sisa_saldo +
-                                    e.rincianbiayaperm.total_pengeluaran
-                                ).toString(),
+                                jumlah_bayar:
+                                    parseInt(
+                                        e.rincianbiayaperm.total_pemasukan
+                                    ) -
+                                    parseInt(
+                                        e.rincianbiayaperm.total_pengeluaran
+                                    ),
                             });
                         }}
                         errors={errors.rincianbiayaperm_id}
@@ -213,22 +161,23 @@ const ModalAddBiayaperm = ({ showModal, setShowModal }: Props) => {
                     <MoneyInput
                         name="jumlah_biayaperm"
                         label="Jumlah Biaya"
+                        disabled={data.rincianbiayapermOpt ? true : false}
                         errors={errors.jumlah_biayaperm}
                         autoComplete="off"
                         value={data.jumlah_biayaperm}
                         onValueChange={(e) =>
                             setData((prev) => ({
                                 ...prev,
-                                jumlah_biayaperm: e.value,
+                                jumlah_biayaperm: parseInt(e.value),
                                 kurang_bayar: getKurangBayar(
-                                    Number.parseInt(e.value),
-                                    Number.parseInt(data.jumlah_bayar)
+                                    parseInt(e.value),
+                                    data.jumlah_bayar
                                 ),
                             }))
                         }
                     />
                     <MoneyInput
-                        disabled
+                        disabled={true}
                         name="jumlah_bayar"
                         label="Jumlah Bayar"
                         errors={errors.jumlah_bayar}
@@ -237,10 +186,10 @@ const ModalAddBiayaperm = ({ showModal, setShowModal }: Props) => {
                         onValueChange={(e) =>
                             setData((prev) => ({
                                 ...prev,
-                                jumlah_bayar: e.value,
+                                jumlah_bayar: parseInt(e.value),
                                 kurang_bayar: getKurangBayar(
-                                    Number.parseInt(data.jumlah_biayaperm),
-                                    Number.parseInt(e.value)
+                                    data.jumlah_biayaperm,
+                                    parseInt(e.value)
                                 ),
                             }))
                         }
@@ -252,7 +201,7 @@ const ModalAddBiayaperm = ({ showModal, setShowModal }: Props) => {
                         errors={errors.kurang_bayar}
                         value={data.kurang_bayar}
                         onValueChange={(e) => {
-                            setData("kurang_bayar", e.value);
+                            setData("kurang_bayar", parseInt(e.value));
                         }}
                     />
                     <Input
@@ -264,67 +213,14 @@ const ModalAddBiayaperm = ({ showModal, setShowModal }: Props) => {
                             setData("catatan_biayaperm", e.target.value)
                         }
                     />
-                    <div className="font-[sans-serif] max-w-md mx-auto">
-                        <label className="text-md text-gray-500 font-semibold mb-2 block">
-                            Upload file
-                        </label>
-                        <input
-                            type="file"
-                            ref={fileRef}
-                            name="image_biayaperm"
-                            className="w-full text-gray-400 font-semibold text-sm bg-white border file:cursor-pointer cursor-pointer file:border-0 file:py-3 file:px-4 file:mr-4 file:bg-gray-100 file:hover:bg-gray-200 file:text-gray-500 rounded"
-                            onChange={
-                                (e: BaseSyntheticEvent) =>
-                                    setImageUpload(e.target.files[0])
-                                // setData("image_biayaperm", e.target.files[0])
-                            }
-                        />
-                        <p className="text-xs text-gray-400 mt-2">
-                            PNG, JPG SVG, WEBP, and GIF are Allowed.
-                        </p>
-                    </div>
-                    <div className="flex flex-row justify-start gap-1 items-start">
-                        {imageUpload ? (
-                            <Button
-                                name="upload"
-                                type="button"
-                                theme="blueGrey"
-                                className="mt-2"
-                                onClick={uploadFile}
-                            >
-                                <i className="fas fa-upload"></i>
-                            </Button>
-                        ) : null}
-                        {data.image_biayaperm ? (
-                            <div className="flex flex-row justify-between items-start p-2">
-                                <div className="flex flex-wrap justify-center ">
-                                    <div className="w-6/12 sm:w-4/12 p-4 group rounded-lg bg-gray-400 overflow-hidden border-2 cursor-pointer">
-                                        <img
-                                            src={data.image_biayaperm}
-                                            alt="..."
-                                            className="shadow rounded max-w-full h-auto align-middle border-none transition-all group-hover:scale-110 group-hover:bg-gray-600"
-                                        />
-                                    </div>
-                                </div>
-                                <Button
-                                    name="upload"
-                                    type="button"
-                                    theme="black"
-                                    onClick={() =>
-                                        deleteFile(data.image_biayaperm)
-                                    }
-                                >
-                                    <i className="fas fa-trash"></i>
-                                </Button>
-                            </div>
-                        ) : null}
-                    </div>
-                    {uploadProgress && (
-                        <progress value={uploadProgress} max="100">
-                            {uploadProgress}%
-                        </progress>
-                    )}
-
+                    <UploadImage
+                        name={"image_biayaperm"}
+                        image={data.image_biayaperm}
+                        imagePath={"/images/dkeluarbiayapermusers/"}
+                        setImage={(imgfile) =>
+                            setData("image_biayaperm", imgfile)
+                        }
+                    />
                     <div className="mt-4 w-full flex justify-between items-center">
                         <LoadingButton
                             theme="black"

@@ -1,6 +1,13 @@
+import ModalEditProsespermohonan from "@/Components/Modals/ModalEditProsespermohonan";
 import Pagination from "@/Components/Shared/Pagination";
-import { Prosespermohonan } from "@/types";
+import {
+    OptionSelect,
+    Prosespermohonan,
+    StatusprosespermProsespermohonan,
+} from "@/types";
+import { Link } from "@inertiajs/react";
 import moment from "moment";
+import { useState } from "react";
 
 type Props = {
     prosespermohonans: {
@@ -11,6 +18,14 @@ type Props = {
 const CardListProsespermohonan = ({
     prosespermohonans: { data, links },
 }: Props) => {
+    const [showModalEditProsesperm, setshowModalEditProsesperm] =
+        useState<boolean>(false);
+    const [prosespermohonan, setProsespermohonan] =
+        useState<Prosespermohonan>();
+    const [statusprosesperm, setStatusprosesperm] = useState<
+        StatusprosespermProsespermohonan | null | undefined
+    >();
+
     return (
         <div className="p-4 flex flex-col text-xs bg-blueGray-200 rounded-md shadow-lg shadow-gray-400">
             <h1 className="font-bold text-lg text-lightBlue-700">
@@ -38,18 +53,18 @@ const CardListProsespermohonan = ({
                             </div>
                             <div className="w-full grid grid-cols-1 md:grid-cols-2 mt-0 bg-white px-2 shadow">
                                 <div className="w-full flex items-start flex-wrap">
+                                    <div className="w-1/4">Penerima</div>
+                                    <div className="w-3/4 font-bold">
+                                        {
+                                            p.transpermohonan.permohonan
+                                                .nama_penerima
+                                        }
+                                    </div>
                                     <div className="w-1/4">Pelepas</div>
                                     <div className="w-3/4">
                                         {
                                             p.transpermohonan.permohonan
                                                 .nama_pelepas
-                                        }
-                                    </div>
-                                    <div className="w-1/4">Penerima</div>
-                                    <div className="w-3/4">
-                                        {
-                                            p.transpermohonan.permohonan
-                                                .nama_penerima
                                         }
                                     </div>
                                     <div className="w-1/4">Alas Hak</div>
@@ -111,37 +126,66 @@ const CardListProsespermohonan = ({
                                     </div>
                                 </div>
                             </div>
-                            <div className="relative w-full rounded-b-md px-2 py-2 pb-2 bg-white text-red-700 text-xs shadow">
+                            <div className="relative w-full flex rounded-b-md px-2 py-2 pb-2 bg-white text-red-700 text-xs shadow gap-2">
                                 {p.statusprosesperms &&
                                     p.statusprosesperms.map((e, i) => (
-                                        <ol
-                                            className="flex flex-wrap w-full list-disc ml-3 gap-1"
-                                            key={i}
-                                        >
-                                            <li>
-                                                {moment(
-                                                    e.pivot.created_at
-                                                ).format("DD MMM YYYY HH:mm")}
-                                            </li>
-                                            <li className="ml-4">
-                                                {e.nama_statusprosesperm}
-                                            </li>
-                                            {e.pivot
-                                                .catatan_statusprosesperm ? (
-                                                <li className="ml-4">
-                                                    {
-                                                        e.pivot
-                                                            .catatan_statusprosesperm
-                                                    }
+                                        <>
+                                            <ol
+                                                className="flex flex-wrap w-9/12 list-disc ml-3 gap-1"
+                                                key={i}
+                                            >
+                                                <li>
+                                                    {moment(
+                                                        e.pivot.created_at
+                                                    ).format(
+                                                        "DD MMM YYYY HH:mm"
+                                                    )}
                                                 </li>
-                                            ) : null}
-                                        </ol>
+                                                <li className="ml-4">
+                                                    {e.nama_statusprosesperm}
+                                                </li>
+                                                {e.pivot
+                                                    .catatan_statusprosesperm ? (
+                                                    <li className="ml-4">
+                                                        {
+                                                            e.pivot
+                                                                .catatan_statusprosesperm
+                                                        }
+                                                    </li>
+                                                ) : null}
+                                            </ol>
+                                            <div className="w-3/12 p-1 items-center flex justify-end">
+                                                <Link
+                                                    href="#"
+                                                    onClick={(event) => {
+                                                        event.preventDefault();
+                                                        setProsespermohonan(p);
+                                                        setStatusprosesperm(e);
+                                                        setshowModalEditProsesperm(
+                                                            true
+                                                        );
+                                                    }}
+                                                    className="text-lightBlue-500 background-transparent font-bold px-3 py-1 text-xs outline-none focus:outline-none hover:text-lightBlue-100 hover:scale-105 mr-1 mb-1 ease-linear transition-all duration-150"
+                                                    type="button"
+                                                >
+                                                    Edit
+                                                </Link>
+                                            </div>
+                                        </>
                                     ))}
                             </div>
                         </li>
                     ))}
             </ul>
             <Pagination links={links} />
+            {showModalEditProsesperm && (
+                <ModalEditProsespermohonan
+                    showModal={showModalEditProsesperm}
+                    setShowModal={setshowModalEditProsesperm}
+                    prosespermohonan={prosespermohonan}
+                    statusprosesperm={statusprosesperm}
+                />
+            )}
         </div>
     );
 };

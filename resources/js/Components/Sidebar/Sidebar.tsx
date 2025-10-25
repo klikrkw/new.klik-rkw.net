@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import NotificationDropdown from "../Dropdowns/NotificationDropdown";
 import UserDropdown from "../Dropdowns/UserDropdown";
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import MenuItem from "./MenuItem";
 
 export default function Sidebar() {
@@ -14,9 +14,15 @@ export default function Sidebar() {
     const isInformasiRoute = currentRoute
         ? currentRoute.includes("informasi")
         : false;
+    const isUtilityRoute = currentRoute
+        ? currentRoute.includes("utils")
+        : false;
+    const {
+        auth: { user },
+    } = usePage<any>().props;
     return (
         <>
-            <nav className="container-snap md:left-0 md:block md:fixed md:top-0 md:bottom-0 md:overflow-y-auto md:flex-row md:flex-nowrap md:overflow-hidden shadow-xl bg-white flex flex-wrap items-center justify-between relative md:w-64 z-10 py-4 px-6">
+            <nav className="container-snap md:left-0 md:block md:fixed md:top-0 md:bottom-0 md:overflow-y-auto md:flex-row md:flex-nowrap md:overflow-hidden shadow-xl bg-white flex flex-wrap items-center justify-between relative md:w-64 z-[55] py-4 px-6">
                 <div className="md:flex-col md:items-stretch md:min-h-full md:flex-nowrap px-0 flex flex-wrap items-center justify-between w-full mx-auto">
                     {/* Toggler */}
                     <button
@@ -30,10 +36,13 @@ export default function Sidebar() {
                     </button>
                     {/* Brand */}
                     <Link
-                        className="md:block text-left md:pb-2 text-blueGray-600 mr-0 inline-block whitespace-nowrap text-sm uppercase font-bold p-4 px-0"
-                        href=""
+                        className="md:block text-left md:pb-2 text-blueGray-600 mr-0 inline-block whitespace-nowrap text-sm uppercase p-4 px-0"
+                        href="/"
                     >
-                        PPAT APP
+                        <div>
+                            <div className="text-lg font-bold">PPAT APP</div>
+                            <div className="text-md">{user.name}</div>
+                        </div>
                     </Link>
                     {/* User */}
                     <ul className="md:hidden items-center flex flex-wrap list-none">
@@ -47,12 +56,12 @@ export default function Sidebar() {
                     {/* Collapse */}
                     <div
                         className={
-                            "md:flex md:flex-col md:items-stretch md:opacity-100 md:relative md:mt-4 md:shadow-none shadow absolute top-0 left-0 right-0 z-40 overflow-y-auto overflow-x-hidden h-auto items-center flex-1 rounded " +
+                            "md:flex md:flex-col md:items-stretch md:opacity-100 md:relative md:mt-4 md:shadow-none shadow absolute top-0 left-0 right-0 z-50 overflow-y-auto overflow-x-hidden h-auto items-center flex-1 rounded " +
                             collapseShow
                         }
                     >
                         {/* Collapse header */}
-                        <div className="md:min-w-full md:hidden block pb-4 mb-4 border-b border-solid border-blueGray-200">
+                        <div className="md:min-w-full md:hidden block pb-4 mb-2 border-b border-solid border-blueGray-200">
                             <div className="flex flex-wrap">
                                 <div className="w-6/12">
                                     <Link
@@ -76,7 +85,7 @@ export default function Sidebar() {
                             </div>
                         </div>
                         {/* Form */}
-                        <form className="mt-6 mb-4 md:hidden">
+                        {/* <form className="mt-6 mb-4 md:hidden">
                             <div className="mb-3 pt-0">
                                 <input
                                     type="text"
@@ -84,10 +93,10 @@ export default function Sidebar() {
                                     className="border-0 px-3 py-2 h-12 border-solid  border-blueGray-500 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-base leading-snug shadow-none outline-none focus:outline-none w-full font-normal"
                                 />
                             </div>
-                        </form>
+                        </form> */}
 
                         {/* Divider */}
-                        <hr className="my-4 md:min-w-full" />
+                        <hr className="my-2 md:min-w-full" />
                         {/* Heading */}
                         <h6 className="md:min-w-full text-blueGray-500 text-xs uppercase font-bold block pt-1 pb-4 no-underline">
                             MENU ADMIN
@@ -151,6 +160,29 @@ export default function Sidebar() {
                                             }
                                         ></i>{" "}
                                         Users
+                                    </Link>
+                                </li>
+                                <li className="items-center px-2">
+                                    <Link
+                                        className={
+                                            "text-xs uppercase py-3 font-bold block " +
+                                            (currentRoute ===
+                                            "admin.pengaturans.index"
+                                                ? " text-lightBlue-500 hover:text-lightBlue-600 "
+                                                : " text-blueGray-700 hover:text-blueGray-500 ")
+                                        }
+                                        href={route("admin.pengaturans.index")}
+                                    >
+                                        <i
+                                            className={
+                                                "fas fa-cogs mr-2 text-sm " +
+                                                (currentRoute ===
+                                                "admin.pengaturans.index"
+                                                    ? "opacity-75"
+                                                    : "text-blueGray-300")
+                                            }
+                                        ></i>{" "}
+                                        Pengaturans
                                     </Link>
                                 </li>
 
@@ -475,24 +507,24 @@ export default function Sidebar() {
                                             className={
                                                 "text-xs uppercase py-3 font-bold block " +
                                                 (currentRoute ===
-                                                "admin.tempatarsips.index"
+                                                "admin.tempatberkas.index"
                                                     ? " text-lightBlue-500 hover:text-lightBlue-600"
                                                     : " text-blueGray-700 hover:text-blueGray-500")
                                             }
                                             href={route(
-                                                "admin.tempatarsips.index"
+                                                "admin.tempatberkas.index"
                                             )}
                                         >
                                             <i
                                                 className={
                                                     "fas fa-building mr-2 text-sm " +
                                                     (currentRoute ===
-                                                    "admin.tempatarsips.index"
+                                                    "admin.tempatberkas.index"
                                                         ? "opacity-75"
                                                         : "text-blueGray-300")
                                                 }
                                             ></i>{" "}
-                                            Tempat Arsip
+                                            Tempat Berkas
                                         </Link>
                                     </li>
                                 </MenuItem>
@@ -559,26 +591,26 @@ export default function Sidebar() {
                                         className={
                                             "text-xs uppercase py-3 font-bold flex items-center " +
                                             (currentRoute ===
-                                            "admin.transaksi.transpermohonans.tempatarsips.create"
+                                            "admin.transaksi.transpermohonans.posisiberkas.create"
                                                 ? " text-lightBlue-500 hover:text-lightBlue-600 "
                                                 : " text-blueGray-700 hover:text-blueGray-500 ")
                                         }
                                         href={route(
-                                            "admin.transaksi.transpermohonans.tempatarsips.create"
+                                            "admin.transaksi.transpermohonans.posisiberkas.create"
                                         )}
                                     >
                                         <i
                                             className={
                                                 "fas fa-tv mr-2 text-sm " +
                                                 (currentRoute ===
-                                                "admin.transaksi.transpermohonans.tempatarsips.create"
+                                                "admin.transaksi.transpermohonans.posisiberkas.create"
                                                     ? "opacity-75"
                                                     : "text-blueGray-300")
                                             }
                                         ></i>
                                         <span>
                                             <span className="inline-block">
-                                                Tempat Arsip
+                                                Tempat Berkas
                                             </span>
                                             <span className="inline-block">
                                                 Permohonan
@@ -964,6 +996,38 @@ export default function Sidebar() {
                                         </Link>
                                     </li>
                                 </MenuItem>
+                            </MenuItem>
+                            <MenuItem
+                                expanded={
+                                    currentRoute
+                                        ? currentRoute.includes("utils")
+                                        : false
+                                }
+                                label="Utility"
+                            >
+                                <li className="items-center px-2">
+                                    <Link
+                                        className={
+                                            "text-xs uppercase py-3 font-bold block " +
+                                            (currentRoute ===
+                                            "admin.utils.backupdb"
+                                                ? " text-lightBlue-500 hover:text-lightBlue-600"
+                                                : " text-blueGray-700 hover:text-blueGray-500")
+                                        }
+                                        href={route("admin.utils.backupdb")}
+                                    >
+                                        <i
+                                            className={
+                                                "fas fa-tv mr-2 text-sm " +
+                                                (currentRoute ===
+                                                "admin.utils.backupdb"
+                                                    ? "opacity-75"
+                                                    : "text-blueGray-300")
+                                            }
+                                        ></i>{" "}
+                                        Backup Database
+                                    </Link>
+                                </li>
                             </MenuItem>
                         </ul>
                     </div>

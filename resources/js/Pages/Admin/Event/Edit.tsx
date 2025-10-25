@@ -1,3 +1,4 @@
+import ModalAddPermohonan from "@/Components/Modals/ModalAddPermohonan";
 import DateInput from "@/Components/Shared/DateInput";
 import Input from "@/Components/Shared/Input";
 import LinkButton from "@/Components/Shared/LinkButton";
@@ -9,8 +10,7 @@ import AdminLayout from "@/Layouts/AdminLayout";
 import { Event, OptionSelect, Permohonan, Transpermohonan } from "@/types";
 import { Link, router, useForm, usePage } from "@inertiajs/react";
 import moment from "moment";
-import { useState } from "react";
-import Select, { MultiValue, OnChangeValue } from "react-select";
+import { useRef, useState } from "react";
 
 const Edit = () => {
     type FormValues = {
@@ -23,6 +23,7 @@ const Edit = () => {
         kategorievent: OptionSelect | null;
         transpermohonan_id: string;
         transpermohonan: Transpermohonan | undefined;
+        permohonan: Permohonan | undefined;
         _method: string;
     };
 
@@ -34,7 +35,8 @@ const Edit = () => {
         transpermohonanOpt,
         transpermohonan_id,
         transpermohonan,
-        permohonan_id,
+        // permohonan_id,
+        permohonan,
     } = usePage<{
         base_route: string;
         event: Event;
@@ -55,9 +57,10 @@ const Edit = () => {
         // start: moment(event.start).toISOString(),
         // end: moment(event.end).toISOString(),
         transpermohonan_id: transpermohonan_id,
-        transpermohonan: transpermohonan,
-        title: event.title,
-        data: event.data,
+        transpermohonan: transpermohonan ?? undefined,
+        title: event.title ?? "",
+        data: event.data ?? "",
+        permohonan: transpermohonan?.permohonan ?? undefined,
         _method: "PUT",
     });
 
@@ -75,22 +78,33 @@ const Edit = () => {
     //     }
     // }
 
-    const setPermohonan = (transpermohonan: Transpermohonan | null) => {
-        if (transpermohonan) {
+    // const setPermohonan = (transpermohonan: Transpermohonan | null) => {
+    //     if (transpermohonan) {
+    //         setData({
+    //             ...data,
+    //             transpermohonan_id: transpermohonan.id,
+    //             transpermohonan: transpermohonan,
+    //         });
+    //     }
+    // };
+    const setPermohonan = (permohonan: Permohonan | undefined) => {
+        if (permohonan) {
             setData({
                 ...data,
-                transpermohonan_id: transpermohonan.id,
-                transpermohonan: transpermohonan,
+                transpermohonan_id: permohonan.transpermohonan.id,
+                permohonan: permohonan,
             });
         }
     };
+
     const [showModalAddPermohonan, setShowModalAddPermohonan] =
         useState<boolean>(false);
+    const transpermSelectRef = useRef<any>(null);
 
     return (
         <AdminLayout>
             <div className="flex content-center items-center justify-center h-full">
-                <div className="w-full lg:w-2/3 px-4">
+                <div className="w-full md:w-3/4 px-4">
                     <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-blueGray-200 border-0">
                         <div className="rounded-t mb-0 px-6 py-6">
                             <div className="text-center mb-3">
@@ -102,10 +116,11 @@ const Edit = () => {
                         </div>
                         <div className="flex-auto px-4 lg:px-10 py-10 pt-0">
                             <form onSubmit={handleSubmit}>
-                                <div className="w-full flex flex-row gap-2">
+                                <div className="w-full flex flex-col md:flex-row gap-2">
                                     <DateInput
                                         label="Start"
                                         showTimeSelect
+                                        className="z-3"
                                         selected={data.start}
                                         value={data.start}
                                         name="start"
@@ -123,6 +138,7 @@ const Edit = () => {
                                     <DateInput
                                         label="End"
                                         showTimeSelect
+                                        className="z-3"
                                         selected={data.end}
                                         value={data.end}
                                         name="end"
@@ -160,7 +176,7 @@ const Edit = () => {
                                     label="Kategori"
                                     placeholder="Pilih Kategori"
                                     name="kategorievent_id"
-                                    className="mb-3 z-[51]"
+                                    className="mb-3 z-2"
                                     value={data.kategorievent}
                                     options={kategorieventOpts}
                                     onChange={(e: any) =>
@@ -176,13 +192,17 @@ const Edit = () => {
                                     <div className="flex flex-col justify-between items-start">
                                         <div className="w-full flex flex-row justify-between">
                                             <TranspermohonanSelect
+                                                inputRef={transpermSelectRef}
                                                 value={data.transpermohonan}
                                                 className="mb-1 w-full mr-2"
+                                                zIndex="z-0"
                                                 errors={
                                                     errors.transpermohonan_id
                                                 }
                                                 onValueChange={(e) => {
-                                                    setPermohonan(e);
+                                                    setPermohonan(
+                                                        e?.permohonan
+                                                    );
                                                 }}
                                             />
 
@@ -231,6 +251,12 @@ const Edit = () => {
                         </div>
                     </div>
                 </div>
+                <ModalAddPermohonan
+                    showModal={showModalAddPermohonan}
+                    setShowModal={setShowModalAddPermohonan}
+                    setPermohonan={setPermohonan}
+                    src={route(base_route + "permohonans.modal.create")}
+                />
             </div>
         </AdminLayout>
     );

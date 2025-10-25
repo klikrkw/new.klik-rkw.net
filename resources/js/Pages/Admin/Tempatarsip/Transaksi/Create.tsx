@@ -1,21 +1,45 @@
+import CardPermohonanEditable from "@/Components/Cards/Admin/CardPermohonanEditable";
+import CardTableTempatarsips from "@/Components/Cards/Admin/CardTableTempatarsips";
 import CardTranspermohonanEditable from "@/Components/Cards/Admin/CardTranspermohonanEditable";
+import CardTempatarsip from "@/Components/Cards/CardTempatarsip";
+import CardTempatberkas from "@/Components/Cards/CardTempatberkas";
+import ModalCariTempatarsip from "@/Components/Modals/ModalCariTempatarsip";
+import Button from "@/Components/Shared/Button";
+import LinkButton from "@/Components/Shared/LinkButton";
 import { LoadingButton } from "@/Components/Shared/LoadingButton";
+import SelectSearch from "@/Components/Shared/SelectSearch";
 import TempatarsipSelect from "@/Components/Shared/TempatarsipSelect";
 import TranspermohonanSelect from "@/Components/Shared/TranspermohonanSelect";
 import AdminLayout from "@/Layouts/AdminLayout";
-import { Tempatarsip, Transpermohonan } from "@/types";
+import {
+    OptionSelect,
+    OptionSelectActive,
+    Permohonan,
+    Ruang,
+    Tempatarsip,
+    Transpermohonan,
+} from "@/types";
 import useSwal from "@/utils/useSwal";
 import { router, useForm } from "@inertiajs/react";
 import { pickBy } from "lodash";
 import React, { useEffect, useRef, useState } from "react";
+import { Options } from "react-select";
 import { usePrevious } from "react-use";
 
 type Props = {
     baseRoute: string;
     ctranspermohonan: Transpermohonan | null | undefined;
     ctempatarsip: Tempatarsip | null | undefined;
+    ruangOpts: OptionSelect[] | [];
+    cruangOpt: OptionSelect | null | undefined;
 };
-const Create = ({ baseRoute, ctranspermohonan, ctempatarsip }: Props) => {
+const Create = ({
+    baseRoute,
+    ctranspermohonan,
+    ctempatarsip,
+    ruangOpts,
+    cruangOpt,
+}: Props) => {
     const [transpermohonan, setTranspermohonan] = useState<
         Transpermohonan | undefined | null
     >(ctranspermohonan);
@@ -80,6 +104,25 @@ const Create = ({ baseRoute, ctranspermohonan, ctempatarsip }: Props) => {
         }
         // router.get(route('admin.prosespermohonans.create', { transpermohonan_id: permohonan.transpermohonan.id }), {}, { preserveState: true, preserveScroll: true })
     };
+    const setPermohonan = (permohonan: Permohonan | undefined) => {
+        if (permohonan) {
+            setData({
+                ...data,
+                transpermohonan_id: permohonan.transpermohonan.id,
+            });
+            setValues((prev) => ({
+                ...prev,
+                transpermohonan_id: permohonan.transpermohonan.id,
+            }));
+        } else {
+            setValues((prev) => ({
+                ...prev,
+                transpermohonan_id: "",
+            }));
+        }
+        // router.get(route('admin.prosespermohonans.create', { transpermohonan_id: permohonan.transpermohonan.id }), {}, { preserveState: true, preserveScroll: true })
+    };
+
     const setCtempatarsip = (tmparsip: Tempatarsip | undefined | null) => {
         if (tmparsip) {
             setData({
@@ -100,7 +143,9 @@ const Create = ({ baseRoute, ctranspermohonan, ctempatarsip }: Props) => {
     const prevValues = usePrevious(values);
     const transpermohonanRef = useRef<any>(null);
     const tempatarsipRef = useRef<any>(null);
-
+    const [ruangOpt, setRuangOpt] = useState<OptionSelect>(
+        cruangOpt ? cruangOpt : { value: "", label: "" }
+    );
     useEffect(() => {
         if (prevValues) {
             const query = Object.keys(pickBy(values)).length
@@ -115,13 +160,16 @@ const Create = ({ baseRoute, ctranspermohonan, ctempatarsip }: Props) => {
                 }
             );
             setTempatarsip(ctempatarsip ? ctempatarsip : null);
+            const rng = ruangOpts.find(
+                (r) => r.value === ctempatarsip?.ruang.id
+            );
         }
 
-        // if (tempatarsipRef.current) {
-        //     tempatarsipRef.current.value = ctempatarsip
-        //         ? ctempatarsip.nama_tempatarsip
-        //         : "";
-        // }
+        //     // if (tempatarsipRef.current) {
+        //     //     tempatarsipRef.current.value = ctempatarsip
+        //     //         ? ctempatarsip.nama_tempatarsip
+        //     //         : "";
+        //     // }
     }, [values]);
     return (
         <AdminLayout>
@@ -147,14 +195,15 @@ const Create = ({ baseRoute, ctranspermohonan, ctempatarsip }: Props) => {
                                     value={transpermohonan}
                                     errors={errors.transpermohonan_id}
                                 />
-                                <CardTranspermohonanEditable
-                                    base_route={baseRoute}
-                                    permohonan={transpermohonan}
-                                    setPermohonan={(perm) =>
-                                        setTranspermohonan(perm)
-                                    }
-                                />
-                                <TempatarsipSelect
+                                {transpermohonan &&
+                                transpermohonan.permohonan ? (
+                                    <CardPermohonanEditable
+                                        permohonan={transpermohonan.permohonan}
+                                        base_route={baseRoute}
+                                        setPermohonan={setPermohonan}
+                                    />
+                                ) : null}
+                                {/* <TempatarsipSelect
                                     className="mt-2"
                                     inputRef={tempatarsipRef}
                                     isStaf={false}
@@ -163,8 +212,27 @@ const Create = ({ baseRoute, ctranspermohonan, ctempatarsip }: Props) => {
                                     }}
                                     value={tempatarsip}
                                     errors={errors.tempatarsip_id}
+                                /> */}
+                                <SelectSearch
+                                    name="ruang"
+                                    label="Tempat Berkas"
+                                    value={ruangOpt}
+                                    options={ruangOpts}
+                                    className="w-full mt-4"
+                                    onChange={(e) => {
+                                        if (e) {
+                                            setRuangOpt(e);
+                                        }
+                                    }}
                                 />
-                                {tempatarsip ? (
+                                {ruangOpt && (
+                                    <CardTempatarsip
+                                        ruangId={ruangOpt.value}
+                                        ctempatarsip={ctempatarsip}
+                                        onSelectTempatarsip={setCtempatarsip}
+                                    />
+                                )}
+                                {/* {tempatarsip ? (
                                     <div className="relative flex flex-col min-w-0 break-words w-full mb-2 shadow-lg rounded-lg bg-blueGray-50 border-0 text-xs mt-2">
                                         <div className="flex-auto px-2 lg:px-4 py-4 pt-0 ">
                                             <div className="relative w-full mt-2 grid grid-cols-2 md:grid-cols-4 gap-1">
@@ -222,11 +290,17 @@ const Create = ({ baseRoute, ctranspermohonan, ctempatarsip }: Props) => {
                                                     <div>
                                                         {tempatarsip.kolom}
                                                     </div>
+                                                    <div>Kode</div>
+                                                    <div>
+                                                        {
+                                                            tempatarsip.kode_tempatarsip
+                                                        }
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                ) : null}
+                                ) : null} */}
                                 <LoadingButton
                                     disabled={
                                         ctempatarsip?.id ===

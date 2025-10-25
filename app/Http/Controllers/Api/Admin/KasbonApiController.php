@@ -3,18 +3,13 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Http\Controllers\Controller;
-use App\Http\Resources\Admin\KasbonCollection;
-use App\Http\Resources\Api\KasbonApiResource;
 use App\Models\Akun;
 use App\Models\Jurnalumum;
 use App\Models\Kasbon;
 use App\Models\User;
 use App\Models\UserFirebase;
-use App\Traits\FirebaseTrait;
 class KasbonApiController extends BaseController
 {
-    use FirebaseTrait;
     public function test(){
         // $data['user'] = User::whereHas('roles', function($q){
         //     $q->where('name','=','staf');
@@ -38,7 +33,7 @@ class KasbonApiController extends BaseController
 
         $kasbons = Kasbon::query();
         $kasbons = $kasbons
-        ->with('user')
+        ->with(['user','instansi'])
         ->orderBy('id', 'desc');
         if ($is_admin) {
             if (request()->has('user_id')) {
@@ -84,6 +79,7 @@ class KasbonApiController extends BaseController
         $data=['statusKasbons' => $status_kasbons,'kasbon'=>$statusksb];
         return $this->sendResponse($data,"Sukses");
     }
+
     public function updateStatus(Kasbon $kasbon)
     {
         $validated =  request()->validate([
@@ -99,6 +95,12 @@ class KasbonApiController extends BaseController
             $akundebet = Akun::getKodeAkun('piutang');
             $uraian = 'Kasbon Approved, ' . $kasbon->user->name . ' - ' . $kasbon->keperluan;
             $parent_id = $kasbon->id;
+            $ids = $kasbon->jurnalumums;
+            if (count($ids) > 0) {
+                $ids[0]->delete();
+                $ids[1]->delete();
+            }
+
             $ju1 = Jurnalumum::create([
                 'uraian' => $uraian,
                 'akun_id' => $akundebet,
@@ -115,7 +117,7 @@ class KasbonApiController extends BaseController
             ]);
             $ids = [$ju1->id, $ju2->id];
             $kasbon->jurnalumums()->attach($ids);
-        } elseif ($kasbon->status_kasbon == 'cancelled' || $kasbon->status_kasbon == 'finish') {
+        } elseif ($kasbon->status_kasbon == 'finish') {
             $akundebet = Akun::getKodeAkun('kas');
             $akunkredit = Akun::getKodeAkun('piutang');
             $uraian = 'Kasbon ' . $kasbon->status_kasbon . ', ' . $kasbon->user->name . ' - ' . $kasbon->keperluan;
@@ -136,7 +138,13 @@ class KasbonApiController extends BaseController
             ]);
             $ids = [$ju1->id, $ju2->id];
             $kasbon->jurnalumums()->attach($ids);
+        } elseif ($kasbon->status_kasbon == 'cancelled') {
+            $recs = Jurnalumum::where('parent_id',$kasbon->id)->get();
+            for ($i=0; $i < $recs->count(); $i++) {
+                $recs[$i]->delete();
+            }
         }
+
         return $this->sendResponse($data,"Update Sukses");
     }
 

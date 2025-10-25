@@ -7,6 +7,7 @@ use App\Http\Resources\Admin\BiayapermCollection;
 use App\Http\Resources\Admin\PermohonanCollection;
 use App\Models\Bayarbiayaperm;
 use App\Models\Biayaperm;
+use App\Models\Instansi;
 use App\Models\Itemkegiatan;
 use App\Models\Metodebayar;
 use App\Models\Permohonan;
@@ -92,6 +93,7 @@ class BiayapermStafController extends Controller
         $metodebayars = Metodebayar::all();
         $itemkegiatans = [];
         $rekenings = Rekening::all();
+        $instansis = Instansi::all();
 
         if (request()->has('permohonan_id')) {
             $rec = Permohonan::with('users')->find(request()->get('permohonan_id'));
@@ -154,6 +156,7 @@ class BiayapermStafController extends Controller
             'rekenings' => collect($rekenings)->map(function ($item) {
                 return ['value' => $item['id'], 'label' => $item['nama_rekening']];
             }),
+            'instansiOpts' => collect($instansis)->map(fn ($o) => ['label' => $o['nama_instansi'], 'value' => $o['id']]),
             'base_route'=>'staf.',
             'allPermohonan' =>$this->all_permohonan,
         ]);

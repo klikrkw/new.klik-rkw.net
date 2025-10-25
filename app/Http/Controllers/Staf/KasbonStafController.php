@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class KasbonStafController extends Controller
 {
@@ -453,9 +454,12 @@ class KasbonStafController extends Controller
         $kasbon->user = $kasbon->user;
         $data =[];
         $filelap='pdf.lapKasbonstaf';
+        $filelap_screen='lapKasbonstaf';
+        $qr_kode = sprintf("%s_%s.png", $filelap_screen, $this->user->id);
+        $media = request('media','print');
         if($kasbon->jenis_kasbon == 'permohonan'){
-        $dkasbons = Dkasbon::query();
-        $dkasbons = $dkasbons
+            $dkasbons = Dkasbon::query();
+            $dkasbons = $dkasbons
             ->select('dkasbons.id', 'nama_penerima', 'nomor_hak', 'persil', 'klas', 'luas_tanah', 'singkatan', 'nama_itemkegiatan', 'jumlah_biaya', 'ket_biaya', 'nama_desa', 'nama_kecamatan')
             ->join('transpermohonans', 'transpermohonans.id', 'dkasbons.transpermohonan_id')
             ->join('itemkegiatans', 'itemkegiatans.id', 'dkasbons.itemkegiatan_id')
@@ -466,7 +470,7 @@ class KasbonStafController extends Controller
             ->where('kasbon_id', $kasbon->id)
             ->orderBy('dkasbons.id', 'asc')
             ->take(100)->skip(0)->get();
-        $dkasbons = collect($dkasbons)->map((function ($item, $i) {
+            $dkasbons = collect($dkasbons)->map((function ($item, $i) {
             $nohak = $item['singkatan'] == 'C' ? $item['nomor_hak'] . ', Ps.' . $item['persil'] . ', ' . $item['klas'] : $item['nomor_hak'];
             return [
                 'nourut' => ($i + 1) . '.',
@@ -484,16 +488,28 @@ class KasbonStafController extends Controller
                 'jumlah_biaya' => number_format($item['jumlah_biaya']),
                 'ket_biaya' => $item['ket_biaya'],
             ];
-        }));
-        $tanggal = Carbon::now()->format('d M Y');
-        $data = [
+            }));
+            $tanggal = Carbon::now()->format('d M Y');
+            $xpath = url()->current().'/?media=screen';
+            QrCode::format('png')->size(100)->generate($xpath, public_path($qr_kode));
+            $data = [
+            'qrcode' => config('app.qrcodeurl',''). $qr_kode,
+                // 'qrcode' => $qr_kode,
             'judul_lap' => 'KASBON PENGELUARAN BIAYA',
             'kasbon' => $kasbon,
             'dkasbons' => $dkasbons,
             'tanggal' => $tanggal,
-        ];
+            ];
+        if($media == 'print'){
+            $pdf = Pdf::loadView($filelap, $data)->setPaper(array(0, 0, 609.4488, 935.433), 'portrait');
+            return 'data:application/pdf;base64,' . base64_encode($pdf->stream());
+            }else{
+            return view($filelap_screen, $data);
+        }
     }else{
         $filelap='pdf.lapKasbonnopermstaf';
+        $filelap_screen='lapKasbonnopermstaf';
+        $qr_kode = sprintf("%s_%s.png", $filelap_screen, $this->user->id);
         $dkasbons = Dkasbonnoperm::query();
         $dkasbons = $dkasbons
             ->select('dkasbonnoperms.id', 'nama_itemkegiatan', 'jumlah_biaya', 'ket_biaya')
@@ -511,18 +527,64 @@ class KasbonStafController extends Controller
             ];
         }));
         $tanggal = Carbon::now()->format('d M Y');
+    //     $data = [
+    //         'judul_lap' => 'KASBON PENGELUARAN BIAYA',
+    //         'kasbon' => $kasbon,
+    //         'dkasbons' => $dkasbons,
+    //         'tanggal' => $tanggal,
+    //     ];
+
+    // }
+        $xpath = url()->current().'/?media=screen';
+        QrCode::format('png')->size(100)->generate($xpath, public_path($qr_kode));
         $data = [
+            'qrcode' => config('app.qrcodeurl',''). $qr_kode,
             'judul_lap' => 'KASBON PENGELUARAN BIAYA',
             'kasbon' => $kasbon,
             'dkasbons' => $dkasbons,
-            'tanggal' => $tanggal,
+        'tanggal' => $tanggal,
         ];
+        if($media == 'print'){
+            $pdf = Pdf::loadView($filelap, $data)->setPaper(array(0, 0, 609.4488, 935.433), 'portrait');
+            return 'data:application/pdf;base64,' . base64_encode($pdf->stream());
+            }else{
+            return view($filelap_screen, $data);
+        }
+    }
+    // $pdf = Pdf::loadView($filelap, $data)->setPaper(array(0, 0, 609.4488, 935.433), 'portrait');
+    //     // return view('pdf.lapKeluarbiayauser', compact('judul_lap', 'subjudul_lap'));
+    //     // return $pdf->stream('lapKeluarbiayauser.pdf');
+    //     return 'data:application/pdf;base64,' . base64_encode($pdf->stream());
+}
+
+    public function destroyDkasbon(Dkasbon $dkasbon)
+    {
+        $kasbon = $dkasbon->kasbon;
+        $kasbon->update(
+            [
+                'jumlah_kasbon' => $kasbon->jumlah_kasbon - $dkasbon->jumlah_biaya,
+                'jumlah_penggunaan' => $kasbon->jumlah_penggunaan,
+                'sisa_penggunaan' => $kasbon->sisa_penggunaan - $dkasbon->jumlah_biaya,
+                ]
+        );
+
+        $dkasbon->delete();
+        return Redirect::back()->with('success', 'Item Kasbon deleted.');
 
     }
-        $pdf = Pdf::loadView($filelap, $data)->setPaper(array(0, 0, 609.4488, 935.433), 'portrait');
-        // return view('pdf.lapKeluarbiayauser', compact('judul_lap', 'subjudul_lap'));
-        // return $pdf->stream('lapKeluarbiayauser.pdf');
-        return 'data:application/pdf;base64,' . base64_encode($pdf->stream());
+    public function destroyDkasbonnoperm(Dkasbonnoperm $dkasbonnoperm)
+    {
+        $kasbon = $dkasbonnoperm->kasbon;
+        $kasbon->update(
+            [
+                'jumlah_kasbon' => $kasbon->jumlah_kasbon - $dkasbonnoperm->jumlah_biaya,
+                'jumlah_penggunaan' => $kasbon->jumlah_penggunaan,
+                'sisa_penggunaan' => $kasbon->sisa_penggunaan - $dkasbonnoperm->jumlah_biaya,
+                ]
+        );
+
+        $dkasbonnoperm->delete();
+        return Redirect::back()->with('success', 'Item Kasbon deleted.');
     }
 
 }

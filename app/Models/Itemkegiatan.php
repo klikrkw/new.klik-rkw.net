@@ -14,7 +14,11 @@ class Itemkegiatan extends Model
         'instansi_id',
         'isunique',
         'akun_id',
-        'checkbiaya'
+        'checkbiaya',
+        'is_alert',
+        'start',
+        'is_alert',
+        'start_alert',
     ];
     public function instansi()
     {
@@ -27,6 +31,10 @@ class Itemkegiatan extends Model
     public function grupitemkegiatans()
     {
         return $this->belongsToMany(Grupitemkegiatan::class, 'itemkegiatan_grupitemkegiatans', 'itemkegiatan_id', 'grupitemkegiatan_id');
+    }
+    public function itemprosesperms()
+    {
+        return $this->belongsToMany(Itemprosesperm::class, 'itemkegiatan_itemprosesperms', 'itemkegiatan_id', 'itemprosesperm_id');
     }
     public function scopeFilter($query, array $filters)
     {

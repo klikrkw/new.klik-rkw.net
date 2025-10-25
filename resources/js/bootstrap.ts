@@ -20,9 +20,10 @@ var lvToken = document.querySelector<any>('meta[name="csrf-token"]');
 var laravelToken = lvToken ? lvToken.getAttribute("content") : "";
 
 window.backend = axios.create({
-    timeout: 1000,
-    headers: { "X-CSRF-TOKEN": laravelToken },
+    timeout: 4000,
+    // headers: { "X-CSRF-TOKEN": lvToken },
 });
+
 const xmeta = document.querySelector<any>('meta[name="refresh-token"]');
 const refreshToken = xmeta ? xmeta.getAttribute("content") : "";
 export default { backend: window.backend, refreshToken: refreshToken };

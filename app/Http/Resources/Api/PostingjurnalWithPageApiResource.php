@@ -2,18 +2,14 @@
 
 namespace App\Http\Resources\Api;
 
-use App\Http\Resources\Admin\TranspermohonanCollection;
-use App\Models\Dkeluarbiaya;
-use App\Models\Dkeluarbiayapermuser;
-use App\Models\Kasbon;
-use App\Models\Keluarbiayapermuser;
+use App\Models\Postingjurnal;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-class DkeluarbiayaStafApiResource extends ResourceCollection
+class PostingjurnalWithPageApiResource extends ResourceCollection
 {
     /**
      * Transform the resource into an array.
@@ -23,7 +19,7 @@ class DkeluarbiayaStafApiResource extends ResourceCollection
     // public function toArray(Request $request): array
     // {
     //     return [
-    //         'data' => $this->collection->transform(function (Kasbon $user, $meta) {
+    //         'data' => $this->collection->transform(function (Postingjurnal $user, $meta) {
     //     return [
     //         'id' => $user->id,
     //         // 'tgl_kasbon' => Carbon::parse($this->created_at)->format('d F Y'),
@@ -53,27 +49,23 @@ class DkeluarbiayaStafApiResource extends ResourceCollection
 
     public function toArray($request)
 {
-    $response = [
-        'current_page' => $this->resource->currentPage(),
-        'next_page_url' => $this->resource->nextPageUrl(),
-        'per_page'=> $this->resource->perPage(),
-        'data' => $this->collection->transform(function (Dkeluarbiaya $data) {
+        $data = $this->collection->transform(function (Postingjurnal $data) {
                 return [
                     'id' => $data->id,
-                    'created_at' => Carbon::parse($data->created_at)->format('d F Y'),
-                    'metodebayar' => $data->keluarbiaya->metodebayar,
-                    'instansi' => $data->keluarbiaya->instansi,
-                    'user' => $data->keluarbiaya->user,
-                    'itemkegiatan' => $data->itemkegiatan,
-                    'jumlah_biaya' => number_format($data->jumlah_biaya),
-                    'ket_biaya' => $data->ket_biaya,
-                    // 'first_page_url'=> $this->resource->from,
-                    // 'from'=> $this->resource->from,
-                    // 'path' => $this->resource->path,
-                    // 'prev_page_url'=> $this->resource->prevPageUrl(),
-                    // 'to' => $this->resource->to,
+                    'created_at' => Carbon::parse($data->created_at)->format('d F Y H:i:s'),
+                    'user' => $data->user,
+                    'akun_debet' => $data->akun_debet,
+                    'akun_kredit' => $data->akun_kredit,
+                    'uraian' => $data->uraian,
+                    'image' => $data->image,
+                    'jumlah' => number_format($data->jumlah),
                 ];
-    })];
-    return $response;
-        }
+    });
+    return [
+        'data'=>$data,
+        'current_page' => $this->resource->currentPage(),
+        'next_page_url'=> $this->resource->nextPageUrl(),
+        'per_page'=> $this->resource->perPage(),
+    ];
+}
 }

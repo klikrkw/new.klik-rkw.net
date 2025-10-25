@@ -4,11 +4,11 @@ import { LoadingButton } from "@/Components/Shared/LoadingButton";
 import AdminLayout from "@/Layouts/AdminLayout";
 import { Link, router, useForm, usePage } from "@inertiajs/react";
 import MoneyInput from "@/Components/Shared/MoneyInput";
-import { OptionSelect } from "@/types";
+import { OptionSelect, PageProps } from "@/types";
 import SelectSearch from "@/Components/Shared/SelectSearch";
 import AsyncSelectSearch from "@/Components/Shared/AsyncSelectSearch";
 import StafLayout from "@/Layouts/StafLayout";
-
+import apputils from "@/bootstrap";
 type Props = {
     statuskasbonOpts: OptionSelect[];
     jeniskasbonOpts: OptionSelect[];
@@ -33,11 +33,12 @@ const Create = ({
         instansiOpt: OptionSelect | undefined;
         user: OptionSelect | undefined;
         instansi_id: string;
-        user_id: string;
+        user_id: string | null;
         jenis_kasbon: string;
         jeniskabonOpt: OptionSelect | undefined;
         _method: string;
     };
+    const cuser = usePage<PageProps>().props.auth.user;
 
     // const { statuskasbonOpts } = usePage<{ statuskasbonOpts: OptionSelect[] }>().props;
     const { data, setData, errors, post, processing } = useForm<FormValues>({
@@ -48,8 +49,10 @@ const Create = ({
         status_kasbon: statuskasbonOpts[0].value,
         statuskabonOpt: statuskasbonOpts[0] || undefined,
         instansiOpt: instansiOpts[0] || undefined,
-        user: undefined,
-        user_id: "",
+        user: cuser
+            ? { label: cuser.name, value: cuser.id.toString() }
+            : undefined,
+        user_id: cuser?.id.toString() || "",
         instansi_id: instansiOpts.length > 0 ? instansiOpts[0].value : "",
         jenis_kasbon: jeniskasbonOpts[0].value,
         jeniskabonOpt: jeniskasbonOpts[0] || undefined,
@@ -61,10 +64,41 @@ const Create = ({
             jmlKasbon > jmlPenggunaan ? jmlKasbon - jmlPenggunaan : 0;
         return xsisaPenggunaan.toString();
     };
+    const sendMessageToMobileRole = async (
+        title: string,
+        body: string,
+        datas: { navigationId: string } & object
+    ) => {
+        let xlink = `/admin/messages/api/sendmessagetomobilerole`;
+        const response = await apputils.backend.post(xlink, {
+            title,
+            role: "admin",
+            body,
+            datas,
+        });
+        const data = response.data;
+    };
 
     function handleSubmit(e: any) {
         e.preventDefault();
-        post(route("transaksi.kasbons.store"));
+        post(route("transaksi.kasbons.store"), {
+            onSuccess: () => {
+                sendMessageToMobileRole(
+                    "Kasbon Baru Dibuat ",
+                    data.jenis_kasbon +
+                        " - " +
+                        data.instansiOpt?.label +
+                        " - " +
+                        data.keperluan +
+                        " (" +
+                        cuser?.name +
+                        ")",
+                    {
+                        navigationId: "kasbon",
+                    }
+                );
+            },
+        });
     }
 
     return (

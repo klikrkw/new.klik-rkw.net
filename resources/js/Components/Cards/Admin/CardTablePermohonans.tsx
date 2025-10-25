@@ -15,6 +15,8 @@ import { DateRange } from "react-number-format/types/types";
 import MonthRangeInput from "@/Components/Shared/MonthRangeInput";
 import moment from "moment";
 import MenuDropdown from "@/Components/Dropdowns/MenuDropdown";
+import { copyToClipboard } from "@/utils";
+import { Tooltip } from "react-tooltip";
 
 // components
 
@@ -136,7 +138,7 @@ export default function CardTablePermohonans({
                 )}
             >
                 <div className="rounded-full mb-0 px-4 py-3 border-0 ">
-                    <div className="flex justify-between w-full flex-col md:flex-row">
+                    <div className="flex justify-between w-full flex-col md:flex-row gap-1">
                         <div className="relative w-full max-w-full flex-grow flex-1 ">
                             <h3
                                 className={
@@ -149,65 +151,69 @@ export default function CardTablePermohonans({
                                 Permohonan List
                             </h3>
                         </div>
-                        <div className="flex justify-center gap-2 flex-row items-start">
-                            <PopupMenu caption="Filter">
-                                <MonthRangeInput
-                                    label="Rentang Waktu"
-                                    onDataChange={(d) => handleDateChange(d)}
-                                    value={{
-                                        date1: values.date1
-                                            ? values.date1
-                                            : moment().format("YYYY-MM-DD"),
-                                        date2: values.date2
-                                            ? values.date2
-                                            : moment().format("YYYY-MM-DD"),
-                                    }}
-                                />
-                                <SelectSearch
-                                    className="text-blueGray-900"
-                                    isClearable
-                                    value={jenishak ? jenishak : ""}
-                                    options={jenishaks}
-                                    label="Jenis Hak"
-                                    onChange={(e: any) =>
-                                        setValues((v) => ({
-                                            ...v,
-                                            jenishak_id: e ? e.value : "",
-                                        }))
-                                    }
-                                />
-                                <SelectSearch
-                                    className="text-blueGray-900"
-                                    isClearable
-                                    value={jenistanah}
-                                    options={jenistanahs}
-                                    label="Jenis Tanah"
-                                    onChange={(e: any) =>
-                                        setValues((v) => ({
-                                            ...v,
-                                            jenis_tanah: e ? e.value : "",
-                                        }))
-                                    }
-                                />
-                                <AsyncSelectSearch
-                                    url="/admin/desas/api/list"
-                                    className="text-blueGray-900"
-                                    value={selectedDesa}
-                                    optionLabels={[
-                                        "nama_desa",
-                                        "nama_kecamatan",
-                                    ]}
-                                    optionValue="id"
-                                    isClearable
-                                    label="Letak Obyek"
-                                    onChange={(e: any) =>
-                                        setValues((v) => ({
-                                            ...v,
-                                            desa_id: e ? e.value : "",
-                                        }))
-                                    }
-                                />
-                                <div className="p-2 flex items-center text-blueGray-900 gap-2">
+                        <div className="flex flex-col md:flex-row justify-center gap-1 items-start">
+                            <div className="mb-2 w-full flex flex-row items-center">
+                                <PopupMenu caption="Filter">
+                                    <MonthRangeInput
+                                        label="Rentang Waktu"
+                                        onDataChange={(d) =>
+                                            handleDateChange(d)
+                                        }
+                                        value={{
+                                            date1: values.date1
+                                                ? values.date1
+                                                : moment().format("YYYY-MM-DD"),
+                                            date2: values.date2
+                                                ? values.date2
+                                                : moment().format("YYYY-MM-DD"),
+                                        }}
+                                    />
+                                    <SelectSearch
+                                        className="text-blueGray-900"
+                                        isClearable
+                                        value={jenishak ? jenishak : ""}
+                                        options={jenishaks}
+                                        label="Jenis Hak"
+                                        onChange={(e: any) =>
+                                            setValues((v) => ({
+                                                ...v,
+                                                jenishak_id: e ? e.value : "",
+                                            }))
+                                        }
+                                    />
+                                    <SelectSearch
+                                        className="text-blueGray-900"
+                                        isClearable
+                                        value={jenistanah}
+                                        options={jenistanahs}
+                                        label="Jenis Tanah"
+                                        onChange={(e: any) =>
+                                            setValues((v) => ({
+                                                ...v,
+                                                jenis_tanah: e ? e.value : "",
+                                            }))
+                                        }
+                                    />
+                                    <AsyncSelectSearch
+                                        url="/admin/desas/api/list"
+                                        className="text-blueGray-900"
+                                        value={selectedDesa}
+                                        optionLabels={[
+                                            "nama_desa",
+                                            "nama_kecamatan",
+                                        ]}
+                                        optionValue="id"
+                                        isClearable
+                                        label="Letak Obyek"
+                                        onChange={(e: any) =>
+                                            setValues((v) => ({
+                                                ...v,
+                                                desa_id: e ? e.value : "",
+                                            }))
+                                        }
+                                    />
+                                </PopupMenu>
+                                <div className="p-1 flex items-center text-blueGray-200 gap-1">
                                     <span>Active</span>
                                     <input
                                         type="checkbox"
@@ -224,7 +230,7 @@ export default function CardTablePermohonans({
                                         }
                                     />
                                 </div>
-                            </PopupMenu>
+                            </div>
                             <SelectSearch
                                 name="user_id"
                                 value={cuser}
@@ -419,6 +425,7 @@ export default function CardTablePermohonans({
                                     {
                                         id,
                                         no_daftar,
+                                        tgl_daftar,
                                         nama_pelepas,
                                         nama_penerima,
                                         nomor_hak,
@@ -429,26 +436,29 @@ export default function CardTablePermohonans({
                                     index
                                 ) => (
                                     <tr key={index}>
-                                        <td className="border-t-0 px-2 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-2">
-                                            {no_daftar}
+                                        <td className="border-t-2 px-2 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-1">
+                                            <span>{no_daftar}</span>
+                                            <div className="text-xs italic text-yellow-500">
+                                                {tgl_daftar}
+                                            </div>
                                         </td>
-                                        <td className="border-t-0 px-2 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-2">
-                                            <i className="fas fa-circle text-orange-500 mr-2"></i>{" "}
+                                        <td className="border-t-2 px-2 align-middle border-l-0 border-r-0 text-xs whitespace-pre-wrap p-1">
+                                            {/* <i className="fas fa-circle text-orange-500 mr-2"></i>{" "} */}
                                             {nama_pelepas}
                                         </td>
-                                        <td className="border-t-0 px-2 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-2">
+                                        <td className="border-t-2 px-2 align-middle border-l-0 border-r-0 text-xs whitespace-pre-wrap p-1">
                                             {nama_penerima}
                                         </td>
-                                        <td className="border-t-0 px-2 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-2">
+                                        <td className="border-t-2 px-2 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-1">
                                             {nomor_hak}
                                         </td>
-                                        <td className="border-t-0 px-2 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-2">
+                                        <td className="border-t-2 px-2 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-1">
                                             {luas_tanah}
                                         </td>
-                                        <td className="border-t-0 px-2 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-2">
+                                        <td className="border-t-2 px-2 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-1">
                                             {letak_obyek}
                                         </td>
-                                        <td className="border-t-0 px-2 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-2">
+                                        <td className="border-t-2 px-2 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-1">
                                             <ol>
                                                 {transpermohonans.map(
                                                     (tp, idx) => (
@@ -456,18 +466,33 @@ export default function CardTablePermohonans({
                                                             className="rounded-full bg-white/50 text-center mb-1"
                                                             key={idx}
                                                         >
-                                                            {tp.no_daftar} -{" "}
-                                                            {
-                                                                tp
-                                                                    .jenispermohonan
-                                                                    .nama_jenispermohonan
-                                                            }
+                                                            <Tooltip
+                                                                id={`tooltip_${idx}`}
+                                                            />
+                                                            <span
+                                                                data-tooltip-id={`tooltip_${idx}`}
+                                                                data-tooltip-content="Copy No Daftar"
+                                                                data-tooltip-place="top"
+                                                                onClick={() =>
+                                                                    copyToClipboard(
+                                                                        tp.no_daftar
+                                                                    )
+                                                                }
+                                                                className="hover:cursor-pointer hover:text-lightBlue-300"
+                                                            >
+                                                                {tp.no_daftar} -{" "}
+                                                                {
+                                                                    tp
+                                                                        .jenispermohonan
+                                                                        .nama_jenispermohonan
+                                                                }
+                                                            </span>
                                                         </li>
                                                     )
                                                 )}
                                             </ol>
                                         </td>
-                                        <td className="border-t-0 px-2 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap py-3 ">
+                                        <td className="border-t-2 px-2 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap py-3 ">
                                             <MenuDropdown>
                                                 <Link
                                                     href={route(
@@ -532,7 +557,7 @@ export default function CardTablePermohonans({
                 {meta.total > meta.per_page ? (
                     <div
                         className={
-                            "flex justify-end px-2 py-1  " +
+                            "flex justify-end px-2 py-1 " +
                             (color === "light"
                                 ? "bg-blueGray-50 text-blueGray-500 border-blueGray-100"
                                 : "bg-lightBlue-800 text-lightBlue-300 border-lightBlue-700")

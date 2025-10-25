@@ -28,9 +28,10 @@ const CardPermohonan: LazyComponentType = lazy(
 );
 
 const Create = () => {
-    const { transpermohonan, base_route } = usePage<{
+    const { transpermohonan, base_route, img } = usePage<{
         transpermohonan: Transpermohonan;
         base_route: string;
+        img: string;
     }>().props;
 
     const [ctranspermohonan, setCtranspermohonan] = useState<

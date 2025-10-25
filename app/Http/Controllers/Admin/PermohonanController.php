@@ -15,6 +15,7 @@ use App\Models\Itemprosesperm;
 use App\Models\Jenishak;
 use App\Models\Jenispermohonan;
 use App\Models\Permohonan;
+use App\Models\Posisiberkas;
 use App\Models\Transpermohonan;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -66,7 +67,7 @@ class PermohonanController extends Controller
         $date1 = Carbon::now();
         $date2 = Carbon::now();
         $last_day = $date2->daysInMonth;
-        $now = $date2->setDay($last_day);
+        $now = $date2->setDay($last_day)->addDay();
         $prev = $date1->subYear(1);
         $prev = $date1->setDay(1);
         $permohonans = Permohonan::query();
@@ -89,7 +90,7 @@ class PermohonanController extends Controller
         }
 
         $permohonans = $permohonans->with('jenishak')->with('desa')->with('users')->filter(Request::only('search', 'user_id', 'desa_id', 'jenishak_id', 'jenis_tanah', 'jenispermohonan_id', 'search_key'))
-            ->paginate(10)
+            ->paginate(20)
             ->appends(Request::all());
 
         $desa = null;
@@ -130,7 +131,7 @@ class PermohonanController extends Controller
             // 'users' => collect($users)->map(fn ($o) => ['label' => $o->name, 'value' => $o->id])->toArray(),
             'permohonanUsers' => [['label' => $user->name, 'value' => $user->id]],
             'jenishaks' => collect($jenishaks)->map(fn ($o) => ['label' => $o->nama_jenishak, 'value' => $o->id])->toArray(),
-            'jenispermohonans' => collect($jenispermohonans)->map(fn ($o, $i) => ['label' => $o->nama_jenispermohonan, 'value' => $o->id, 'active' => $i === 0 ? true : false])->toArray(),
+            'jenispermohonans' => collect($jenispermohonans)->map(fn ($o, $i) => ['label' => $o->nama_jenispermohonan, 'value' => $o->id, 'active' => false])->toArray(),
             'userOpts' => $userOpts,
         ]);
     }
@@ -151,7 +152,7 @@ class PermohonanController extends Controller
             // 'users' => collect($users)->map(fn ($o) => ['label' => $o->name, 'value' => $o->id])->toArray(),
             'permohonanUsers' => [['label' => $user->name, 'value' => $user->id]],
             'jenishaks' => collect($jenishaks)->map(fn ($o) => ['label' => $o->nama_jenishak, 'value' => $o->id])->toArray(),
-            'jenispermohonans' => collect($jenispermohonans)->map(fn ($o, $i) => ['label' => $o->nama_jenispermohonan, 'value' => $o->id, 'active' => $i === 0 ? true : false])->toArray(),
+            'jenispermohonans' => collect($jenispermohonans)->map(fn ($o, $i) => ['label' => $o->nama_jenispermohonan, 'value' => $o->id, 'active' => false])->toArray(),
             'permohonan_id'=>session('permohonan_id',null),
             'userOpts' => $userOpts,
         ]);
@@ -178,7 +179,10 @@ class PermohonanController extends Controller
             'desa_id' => ['required'],
             'bidang' => ['required'],
             'active' => ['boolean'],
+            'cek_biaya' => ['boolean'],
             'users' => ['nullable'],
+            'period_cekbiaya' => ['nullable'],
+            'date_cekbiaya' => ['nullable'],
             'jenispermohonans' => ['required'],
             'kode_unik' => ['required', 'string', 'unique:' . Permohonan::class],
         ]);
@@ -230,6 +234,7 @@ class PermohonanController extends Controller
             'desa_id' => ['required'],
             'bidang' => ['required'],
             'active' => ['boolean'],
+            'cek_biaya' => ['boolean'],
             'users' => ['nullable'],
             'jenispermohonans' => ['required'],
             'kode_unik' => ['required', 'string', 'unique:' . Permohonan::class],
@@ -296,6 +301,8 @@ class PermohonanController extends Controller
         $userOpts = collect($users)->map(fn ($o) => ['label' => $o['name'], 'value' => $o['id']])->toArray();
         $transpermohonan = $permohonan->transpermohonan();
         $fieldcatatans = Fieldcatatan::all();
+        $permohonan->cek_biaya =   $permohonan->cek_biaya==1 ? true : false;
+        $permohonan->active =   $permohonan->active==1 ? true : false;
         return Inertia::render('Admin/Permohonan/Edit', [
             'permohonan' => $permohonan,
             'fieldcatatanOpts' => collect($fieldcatatans)->map(fn ($v, $k) => [
@@ -305,12 +312,12 @@ class PermohonanController extends Controller
             'permohonanUsers' => collect($permohonan->users)->map(fn ($v, $k) => ["label" => $v["name"], "value" => $v["id"]])->toArray(),
             'permohonanJenispermohonans' => collect($permohonan->transpermohonans)->map(fn ($v, $k) => [
                 "label" => $v['jenispermohonan']["nama_jenispermohonan"], "value" => $v["id"],
-                "active" => $v['active'],
+                "active" => $v['active'] == 1 ? true : false,
                 'isFixed' => true
             ])->toArray(),
             'jenishak' => ["label" => $permohonan->jenishak->nama_jenishak, "value" => $permohonan->jenishak->id],
             'jenishaks' => collect($jenishaks)->map(fn ($o) => ['label' => $o->nama_jenishak, 'value' => $o->id])->toArray(),
-            'jenispermohonans' => collect($jenispermohonans)->map(fn ($o, $i) => ['label' => $o->nama_jenispermohonan, 'value' => $o->id, 'active' => false, 'isFixed' => false])->toArray(),
+            'jenispermohonans' => collect($jenispermohonans)->map(fn ($o, $i) => ['label' => $o->nama_jenispermohonan, 'value' => $o->id, 'active' => false])->toArray(),
             'desa' => ["label" => $permohonan->desa->nama_desa . ' - ' . $permohonan->desa->kecamatan->nama_kecamatan, "value" => $permohonan->desa->id],
             'userOpts' => $userOpts,
         ]);
@@ -327,6 +334,8 @@ class PermohonanController extends Controller
         $userOpts = collect($users)->map(fn ($o) => ['label' => $o['name'], 'value' => $o['id']])->toArray();
         $transpermohonan = $permohonan->transpermohonan();
         $fieldcatatans = Fieldcatatan::all();
+        $permohonan->cek_biaya =   $permohonan->cek_biaya==1 ? true : false;
+        $permohonan->active =   $permohonan->active==1 ? true : false;
 
         return Inertia::render('Admin/Permohonan/Modal/Edit', [
             'permohonan' => $permohonan,
@@ -336,13 +345,13 @@ class PermohonanController extends Controller
             'permohonanUsers' => collect($permohonan->users)->map(fn ($v, $k) => ["label" => $v["name"], "value" => $v["id"]])->toArray(),
             'permohonanJenispermohonans' => collect($permohonan->transpermohonans)->map(fn ($v, $k) => [
                 "label" => $v['jenispermohonan']["nama_jenispermohonan"], "value" => $v["id"],
-                "active" => $v['active'],
+                "active" => $v['active'] == 1 ? true : false,
                 'isFixed' => true
             ])->toArray(),
             'jenishak' => ["label" => $permohonan->jenishak->nama_jenishak, "value" => $permohonan->jenishak->id],
             // 'users' => collect($users)->map(fn ($o) => ['label' => $o->name, 'value' => $o->id])->toArray(),
             'jenishaks' => collect($jenishaks)->map(fn ($o) => ['label' => $o->nama_jenishak, 'value' => $o->id])->toArray(),
-            'jenispermohonans' => collect($jenispermohonans)->map(fn ($o, $i) => ['label' => $o->nama_jenispermohonan, 'value' => $o->id, 'active' => $i === 0 ? true : false, 'isFixed' => false])->toArray(),
+            'jenispermohonans' => collect($jenispermohonans)->map(fn ($o, $i) => ['label' => $o->nama_jenispermohonan, 'value' => $o->id, 'active' => false])->toArray(),
             'desa' => ["label" => $permohonan->desa->nama_desa . ' - ' . $permohonan->desa->kecamatan->nama_kecamatan, "value" => $permohonan->desa->id],
             'userOpts' => $userOpts,
             'transpermohonan_id'=>$transpermohonan?$transpermohonan->id:null,
@@ -368,9 +377,12 @@ class PermohonanController extends Controller
             'desa_id' => ['required'],
             'bidang' => ['required'],
             'active' => ['boolean'],
+            'cek_biaya' => ['boolean'],
             'users' => ['nullable'],
             'jenispermohonans' => ['required'],
             'kode_unik' => ['nullable'],
+            'period_cekbiaya' => ['nullable'],
+            'date_cekbiaya' => ['nullable'],
         ]);
         $permohonan->update(
             $validated
@@ -425,6 +437,7 @@ class PermohonanController extends Controller
             'desa_id' => ['required'],
             'bidang' => ['required'],
             'active' => ['boolean'],
+            'cek_biaya' => ['boolean'],
             'users' => ['nullable'],
             'jenispermohonans' => ['required'],
             'kode_unik' => ['nullable'],
@@ -447,7 +460,7 @@ class PermohonanController extends Controller
             }
         }
         collect($valjnsperms)->each(function ($elm) use ($permohonan, $validated) {
-            if (!$elm['isFixed']) {
+            if (!key_exists('isFixed',$elm)) {
                 $permohonan->transpermohonans()->create(['jenispermohonan_id' => $elm['value'], 'active' => $elm['active'],
                 'nomor_haktp'=> $validated['nomor_hak'],
                 'atas_namatp'=> $validated['atas_nama'],
@@ -519,9 +532,10 @@ class PermohonanController extends Controller
     {
         $row = request('row',1);
         $col = request('col',1);
-        QrCode::format('png')->size(300)->generate($transpermohonan->id, public_path('qrcode_pmh.png'));
+        $qr_kode = sprintf("qrcode_pmh_%s.png", rand(1,10));
+        QrCode::format('png')->size(300)->generate($transpermohonan->id, public_path($qr_kode));
         $data = [
-            'qrcode' => 'qrcode_pmh.png',
+            'qrcode' => config('app.qrcodeurl',''). $qr_kode,
             'row'=>$row,
             'col'=>$col,
             'row_count'=>6,
@@ -534,24 +548,31 @@ class PermohonanController extends Controller
     public function cetakLabelberkas(Transpermohonan $transpermohonan)
     {
         // $transpermohonan = $transpermohonan->with(['permohonan.jenishak','permohonan.desa'])->first();
-
-        QrCode::format('png')->size(300)->generate($transpermohonan->id, public_path('qrcodelabel.png'));
+        $qr_kode = sprintf("qrcode_labelberkas_%s.png", rand(1,10));
+        QrCode::format('png')->size(300)->generate($transpermohonan->id, public_path($qr_kode));
         $permission_name = "Access All Permohonan - Biaya Permohonan";
 
         $biayaperms = [];
+        $tempatarsip = null;
         $dkeluarbiayapermusers = [];
         if($this->user->hasPermissionTo($permission_name)){
-            $biayaperms = $transpermohonan->biayaperms;
+            $biayaperms = $transpermohonan->biayaperms->take(2);
             $dkeluarbiayapermusers = $transpermohonan->dkeluarbiayapermusers->take(10);
         }
         $total_pengeluaran = $transpermohonan->dkeluarbiayapermusers->sum('jumlah_biaya');
         $itemprosesperms=[];
         $itemprosesperms = Itemprosesperm::all();
-
+        $tempatarsip = $transpermohonan->tempatarsips->first();
+        $img=null;
+        if($tempatarsip && $tempatarsip->image_tempatarsip!=null){
+            $img = file_get_contents($tempatarsip->image_tempatarsip);
+        }
         $data = [
-            'qrcode' => 'qrcodelabel.png',
+            'qrcode' => config('app.qrcodeurl',''). $qr_kode,
             'transpermohonan'=>$transpermohonan,
             'biayaperms'=>$biayaperms,
+            'tempatarsip'=>$tempatarsip,
+            'image_tempatarsip'=>$tempatarsip?'data:image/text;base64,' . base64_encode($img):null,
             'dkeluarbiayapermusers'=>$dkeluarbiayapermusers,
             'total_pengeluaran'=>$total_pengeluaran,
             'itemprosesperms'=>$itemprosesperms,
@@ -559,5 +580,91 @@ class PermohonanController extends Controller
         $pdf = Pdf::loadView('pdf.cetakLabelberkas', $data)->setPaper(array(0, 0, 609.4488, 935.433), 'portrait');
         return 'data:application/pdf;base64,' . base64_encode($pdf->stream());
     }
+    public function printLabelberkas(Transpermohonan $transpermohonan)
+    {
+        // $transpermohonan = $transpermohonan->with(['permohonan.jenishak','permohonan.desa'])->first();
+        $qr_kode = sprintf("qrcode_labelberkas_%s.png", rand(1,10));
+        QrCode::format('png')->size(300)->generate($transpermohonan->id, public_path($qr_kode));
+        $permission_name = "Access All Permohonan - Biaya Permohonan";
 
+        $biayaperms = [];
+        $dkeluarbiayapermusers = [];
+        if($this->user->hasPermissionTo($permission_name)){
+            $biayaperms = $transpermohonan->biayaperms->take(1);
+            $dkeluarbiayapermusers = $transpermohonan->dkeluarbiayapermusers->take(10);
+        }
+        $total_pengeluaran = $transpermohonan->dkeluarbiayapermusers->sum('jumlah_biaya');
+        $itemprosesperms=[];
+        $itemprosesperms = Itemprosesperm::all()->toArray();
+        $posisiberkas = $transpermohonan->posisiberkases->first();
+        $tempatberkas = $posisiberkas?$posisiberkas->tempatberkas:null;
+        $text="";
+        if($tempatberkas){
+        for ($i=0; $i < ($tempatberkas->row_count); $i++) {
+                $text .="<tr>";
+            for ($j=0; $j < $tempatberkas->col_count; $j++) {
+                $selected = (($i+1) == (int) $posisiberkas->row && ($j+1) == (int) $posisiberkas->col)?true:false;
+                    $text .=$selected? "<td class='selected'>".($i+1).'|'.($j+1)."</td>":"<td>".($i+1).'|'.($j+1)."</td>";
+                }
+                $text .="</tr>";
+            }
+        }
+        $posisiberkas_table ='<table class="table-posisiberkas">'.$text."</table>";
+
+        $text="";
+        if(count($itemprosesperms)>5){
+            $part1 = array_slice($itemprosesperms, 0, 8);
+            $part2 = array_slice($itemprosesperms, 8, 8);
+            $text .="<tr><td>";
+            $text .="<ul>";
+            foreach ($part1 as $key => $value) {
+                $text .="<li>".$value['nama_itemprosesperm']."</li>";
+            }
+            $text .="</ul>";
+            $text .="<td><ul>";
+            foreach ($part2 as $key => $value) {
+                $text .="<li>".$value['nama_itemprosesperm']."</li>";
+            }
+            $text .="</ul>";
+            if(count($itemprosesperms)>16){
+                $part3 = array_slice($itemprosesperms, 16, 8);
+                $text .="<td><ul>";
+                foreach ($part3 as $key => $value) {
+                    $text .="<li>".$value['nama_itemprosesperm']."</li>";
+                }
+                $text .="</td></ul>";
+            }
+            if(count($itemprosesperms)>36){
+                $part4 = array_slice($itemprosesperms, 36, 8);
+                $text .="<td><ul>";
+                foreach ($part4 as $key => $value) {
+                    $text .="<li>".$value['nama_itemprosesperm']."</li>";
+                }
+                $text .="</td></ul>";
+            }
+            $text .="</td></tr>";
+        }else{
+            $part1 = $itemprosesperms;
+            $text .="<tr><td>";
+            $text .="<ul>";
+            foreach ($part1 as $key => $value) {
+                $text .="<li>".$value['nama_itemprosesperm']."</li>";
+            }
+            $text .="</td></tr>";
+        }
+        $itemprosesperms_table ='<table class="table-itemprosesperms">'.$text."</table>";
+
+        $data = [
+            'qrcode' => config('app.qrcodeurl',''). $qr_kode,
+            'transpermohonan'=>$transpermohonan,
+            'biayaperms'=>$biayaperms,
+            'posisiberkas'=>$posisiberkas,
+            'posisiberkas_table'=>$posisiberkas_table,
+            'dkeluarbiayapermusers'=>$dkeluarbiayapermusers,
+            'total_pengeluaran'=>$total_pengeluaran,
+            'itemprosesperms_table'=>$itemprosesperms_table,
+        ];
+        $pdf = Pdf::loadView('pdf.printLabelberkas', $data)->setPaper(array(0, 0, 609.4488, 935.433), 'portrait');
+        return 'data:application/pdf;base64,' . base64_encode($pdf->stream());
+    }
 }

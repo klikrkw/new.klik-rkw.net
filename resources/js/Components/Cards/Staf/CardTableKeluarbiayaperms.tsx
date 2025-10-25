@@ -23,6 +23,7 @@ import { Tab } from "@headlessui/react";
 import LinkButton from "@/Components/Shared/LinkButton";
 import ModalKeluarBiayaperm from "@/Components/Modals/ModalKeluarBiayaperm";
 import SubCardNeracaTableKeluarBiayaPermUser from "./SubCard/SubCardNeracaTblKeluarBiayaPermUser";
+import { Lightbox } from "react-modal-image";
 
 type Props = {
     transpermohonan: Transpermohonan;
@@ -44,6 +45,8 @@ function CardTableKeluarbiayaperms({ transpermohonan }: Props) {
     const [neracas, setNeracas] = useState<never[]>();
     const [totDebet, setTotDebet] = useState<string>();
     const [totKredit, setTotKredit] = useState<string>();
+    const [viewImage, setViewImage] = useState<boolean>(false);
+    const [image, setImage] = useState<string | null>(null);
 
     const handleRemoveData = (id: string) => {
         router.delete(route("transaksi.keluarbiayaperms.destroy", id));
@@ -190,20 +193,23 @@ function CardTableKeluarbiayaperms({ transpermohonan }: Props) {
                                     <div className="flex flex-row w-full px-4 justify-center items-center rounded-t-md text-xs bg-lightBlue-600 border-blueGray-400 py-2  text-lightBlue-50 font-semibold">
                                         <div className="w-[5%]">No</div>
                                         <div className="w-[15%]">Tanggal</div>
-                                        <div className="w-[35%] md:w-[13%]">
+                                        <div className="w-[30%] md:w-[13%]">
                                             Instansi
                                         </div>
-                                        <div className="w-[35%] md:w-[10%]">
+                                        <div className="w-[30%] md:w-[10%]">
                                             Metode
                                         </div>
                                         <div className="w-[35%] md:w-[15%]">
                                             Item Kegiatan
                                         </div>
-                                        <div className="md:block w-[15%]">
-                                            Jumlah Biaya
-                                        </div>
                                         <div className="hidden md:flex md:w-[15%]">
                                             Ket Biaya
+                                        </div>
+                                        <div className="hidden md:flex md:w-[10%]">
+                                            Image
+                                        </div>
+                                        <div className="md:block w-[15%]">
+                                            Jumlah Biaya
                                         </div>
                                         <div className="w-[35%] md:w-[12%]">
                                             User
@@ -266,14 +272,34 @@ function CardTableKeluarbiayaperms({ transpermohonan }: Props) {
                                                                         .nama_itemkegiatan
                                                                 }
                                                             </div>
-                                                            <div className="w-[35%] md:w-[15%]">
-                                                                {
-                                                                    dkeluarbiayapermuser.jumlah_biaya
-                                                                }
-                                                            </div>
                                                             <div className="md:block md:w-[15%]">
                                                                 {
                                                                     dkeluarbiayapermuser.ket_biaya
+                                                                }
+                                                            </div>
+                                                            <div className="hidden md:block md:w-[9%]">
+                                                                {dkeluarbiayapermuser.image_dkeluarbiayapermuser && (
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setImage(
+                                                                                dkeluarbiayapermuser.image_dkeluarbiayapermuser
+                                                                            );
+                                                                            setViewImage(
+                                                                                true
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        <i
+                                                                            className={
+                                                                                "fas fa-image mr-2 text-sm cursor-pointer"
+                                                                            }
+                                                                        ></i>
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                            <div className="w-[35%] md:w-[15%]">
+                                                                {
+                                                                    dkeluarbiayapermuser.jumlah_biaya
                                                                 }
                                                             </div>
                                                             <div className="hidden md:flex md:w-[12%]">
@@ -401,6 +427,15 @@ function CardTableKeluarbiayaperms({ transpermohonan }: Props) {
                         setShowModal={setShowModalKeluarbiayaperm}
                     />
                 </>
+            )}
+            {viewImage && (
+                <Lightbox
+                    small={image ? image : ""}
+                    medium={image ? image : ""}
+                    large={image ? image : ""}
+                    alt="View Image"
+                    onClose={() => setViewImage(false)}
+                />
             )}
         </div>
     );

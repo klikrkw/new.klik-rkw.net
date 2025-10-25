@@ -18,6 +18,9 @@ const Create = () => {
         itemrincianbiayaperms: OptionSelect[] | [];
         isunique: boolean;
         checkbiaya: boolean;
+        is_alert: boolean;
+        start_alert: number;
+        itemprosesperms: OptionSelect[] | [];
         _method: string;
     };
 
@@ -26,11 +29,13 @@ const Create = () => {
         grupitemkegiatanopts,
         akunopts,
         itemrincianbiayapermOpts,
+        itemprosespermOpts,
     } = usePage<{
         instansiopts: OptionSelect[];
         akunopts: OptionSelect[];
         grupitemkegiatanopts: OptionSelect[];
         itemrincianbiayapermOpts: OptionSelect[];
+        itemprosespermOpts: OptionSelect[];
     }>().props;
     const { data, setData, errors, post, processing } = useForm<FormValues>({
         nama_itemkegiatan: "",
@@ -42,6 +47,9 @@ const Create = () => {
         itemrincianbiayaperms: [],
         isunique: false,
         checkbiaya: false,
+        is_alert: false,
+        start_alert: 0,
+        itemprosesperms: [],
         _method: "POST",
     });
 
@@ -153,11 +161,10 @@ const Create = () => {
                                         })
                                     }
                                 />
-
-                                <div className="mb-4">
+                                <div>
                                     <label className="inline-flex items-center cursor-pointer">
                                         <input
-                                            id="customCheckLogin"
+                                            id="customCheckLogin1"
                                             type="checkbox"
                                             className="form-checkbox border-0 rounded text-blueGray-700 ml-1 w-5 h-5 ease-linear transition-all duration-150"
                                             checked={data.isunique}
@@ -173,6 +180,56 @@ const Create = () => {
                                         </span>
                                     </label>
                                 </div>
+                                <SelectSearch
+                                    isMulti
+                                    name="itemprosesperms"
+                                    label="Item Proses Permohonan"
+                                    value={data.itemprosesperms}
+                                    options={itemprosespermOpts}
+                                    className="w-full"
+                                    onChange={(e: any) =>
+                                        setData({
+                                            ...data,
+                                            itemprosesperms: e ? e : {},
+                                        })
+                                    }
+                                />
+
+                                <div>
+                                    <label className="inline-flex items-center cursor-pointer">
+                                        <input
+                                            id="customCheckLogin"
+                                            type="checkbox"
+                                            className="form-checkbox border-0 rounded text-blueGray-700 ml-1 w-5 h-5 ease-linear transition-all duration-150"
+                                            checked={data.is_alert}
+                                            onChange={(e) =>
+                                                setData(
+                                                    "is_alert",
+                                                    e.target.checked
+                                                )
+                                            }
+                                        />
+                                        <span className="ml-2 text-sm font-semibold text-blueGray-600">
+                                            Is Alert
+                                        </span>
+                                    </label>
+                                </div>
+
+                                <Input
+                                    name="start_alert"
+                                    pattern="[0-9]*"
+                                    onInput={(evt: any) => {
+                                        const v = evt.target.validity.valid
+                                            ? evt.target.value
+                                            : data.start_alert;
+                                        setData("start_alert", v);
+                                    }}
+                                    label="Start Alert"
+                                    errors={errors.start_alert}
+                                    value={data.start_alert}
+                                    type="text"
+                                    className="w-full"
+                                />
                                 <div className="flex items-center justify-between">
                                     <LinkButton
                                         theme="blueGrey"

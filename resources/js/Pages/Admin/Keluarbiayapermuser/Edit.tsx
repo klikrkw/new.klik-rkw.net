@@ -30,6 +30,7 @@ import {
 import { storage } from "@/firebase";
 import { resizeImage } from "@/utils/images";
 import { useAuth } from "@/Contexts/AuthContext";
+import UploadImage from "@/Components/Shared/UploadImage";
 
 type Props = {
     keluarbiayapermuser: Keluarbiayapermuser;
@@ -294,29 +295,9 @@ const Edit = ({
                             keluarbiayapermuser.status_keluarbiayapermuser ==
                                 "wait_approval" ? (
                                 <form onSubmit={handleSubmit}>
-                                    <div className="w-full grid grid-cols-2 gap-2">
+                                    <div className="w-full grid grid-cols-1 md:grid-cols-2 md:gap-2">
                                         <div className="w-full grid grid-cols-1">
                                             <div className="flex flex-row justify-between items-center">
-                                                {/* <PermohonanSelect
-                                                    inputRef={firstInput}
-                                                    value={data.permohonan}
-                                                    className="mb-1 w-full mr-2"
-                                                    errors={
-                                                        errors.transpermohonan_id
-                                                    }
-                                                    onValueChange={(e) => {
-                                                        setPermohonan(e);
-                                                        // setData((v) => ({
-                                                        //     ...v,
-                                                        //     permohonan: e,
-                                                        //     transpermohonan_id:
-                                                        //         e
-                                                        //             .transpermohonan
-                                                        //             .id,
-                                                        // }));
-                                                    }}
-                                                /> */}
-
                                                 <TranspermohonanSelect
                                                     inputRef={firstInput}
                                                     value={
@@ -349,7 +330,7 @@ const Edit = ({
                                                     <i className="fas fa-add text-md text-center text-gray-700"></i>
                                                 </a>
                                             </div>
-                                            <div className="grid grid-cols-2 gap-2">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 md:gap-2">
                                                 <SelectSearch
                                                     placeholder="Pilih Kegiatan"
                                                     name="itemkegiatan_id"
@@ -425,74 +406,22 @@ const Edit = ({
                                                 </Button>
                                             </div>
                                         </div>
-                                        <div className="w-full grid grid-cols-2 grid-rows-1 gap-2 row-span-2">
-                                            <input
-                                                type="file"
-                                                ref={fileRef}
-                                                tabIndex={-1}
-                                                name="image_dkeluarbiaya"
-                                                className="h-10 w-full text-gray-400 font-semibold text-sm bg-white border file:cursor-pointer cursor-pointer file:border-0 file:py-0 file:px-3 file:mr-4 file:bg-gray-100 file:hover:bg-gray-200 file:text-gray-500 rounded file:h-full"
-                                                onChange={
-                                                    (e: BaseSyntheticEvent) =>
-                                                        setImageUpload(
-                                                            e.target.files[0]
-                                                        )
-                                                    // setData("image_biayaperm", e.target.files[0])
-                                                }
-                                            />
 
-                                            <div className="flex flex-col justify-start gap-1 items-start ">
-                                                {imageUpload ? (
-                                                    <Button
-                                                        tabIndex={-1}
-                                                        name="upload"
-                                                        type="button"
-                                                        theme="blueGrey"
-                                                        className="h-9"
-                                                        onClick={uploadFile}
-                                                    >
-                                                        <i className="fas fa-upload"></i>
-                                                    </Button>
-                                                ) : null}
-                                                {data.image_dkeluarbiayapermuser ? (
-                                                    <div className="flex flex-col justify-between items-start">
-                                                        <div className="flex flex-wrap justify-center">
-                                                            <div className="w-full group rounded-lg bg-gray-400 overflow-hidden border-2 cursor-pointer">
-                                                                <img
-                                                                    src={
-                                                                        data.image_dkeluarbiayapermuser
-                                                                    }
-                                                                    alt="..."
-                                                                    className="shadow rounded max-w-full h-auto align-middle border-none transition-all group-hover:scale-110 group-hover:bg-gray-600"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <Button
-                                                            name="upload"
-                                                            type="button"
-                                                            tabIndex={-1}
-                                                            className="h-9 mt-2 absolute ml-2"
-                                                            theme="black"
-                                                            onClick={() =>
-                                                                deleteFile(
-                                                                    data.image_dkeluarbiayapermuser
-                                                                )
-                                                            }
-                                                        >
-                                                            <i className="fas fa-trash"></i>
-                                                        </Button>
-                                                    </div>
-                                                ) : null}
-                                            </div>
-                                            {uploadProgress && (
-                                                <progress
-                                                    value={uploadProgress}
-                                                    max="100"
-                                                >
-                                                    {uploadProgress}%
-                                                </progress>
-                                            )}
-                                        </div>
+                                        <UploadImage
+                                            name={"image_dkeluarbiaya"}
+                                            image={
+                                                data.image_dkeluarbiayapermuser
+                                            }
+                                            imagePath={
+                                                "/images/dkeluarbiayapermusers/"
+                                            }
+                                            setImage={(imgfile) =>
+                                                setData(
+                                                    "image_dkeluarbiayapermuser",
+                                                    imgfile
+                                                )
+                                            }
+                                        />
                                         <div className="w-full flex items-start">
                                             <CardPermohonanEditable
                                                 permohonan={data.permohonan}
@@ -555,7 +484,7 @@ const Edit = ({
                 showModal={showModalLaporan}
                 setShowModal={setShowModalLaporan}
                 src={route(
-                    base_route + "transaksi.keluarbiayapermusers.lap.staf",
+                    "keluarbiayapermusers.lap.staf",
                     keluarbiayapermuser.id
                 )}
             />

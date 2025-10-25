@@ -122,8 +122,8 @@ export default function CardTableEvents({
                 )}
             >
                 <div className="rounded-t mb-0 px-4 py-3 border-0">
-                    <div className="flex justify-between">
-                        <div className="relative w-full px-4 max-w-full flex-grow flex-1">
+                    <div className="flex flex-col md:flex-row justify-between">
+                        <div className="relative w-full max-w-full flex-grow flex-1">
                             <h3
                                 className={
                                     "font-semibold text-lg " +
@@ -135,11 +135,11 @@ export default function CardTableEvents({
                                 Event List
                             </h3>
                         </div>
-                        <div className="flex justify-center gap-2 flex-row items-start w-full md:w-3/4">
+                        <div className="flex flex-col justify-center gap-2 md:flex-row items-start w-full md:w-3/4">
                             <div className="w-4/5  text-blueGray-800 flex flex-col md:flex-row justify-between items-center gap-2">
                                 {period === "tanggal" ? (
                                     <DateRangeInput
-                                        className="w-3/5"
+                                        className="w-full md:w-3/5"
                                         onDataChange={(d) =>
                                             handleDateChange(d)
                                         }
@@ -153,12 +153,12 @@ export default function CardTableEvents({
                                         }}
                                     />
                                 ) : (
-                                    <div className="w-4/5"></div>
+                                    <div className="w-full md:w-4/5"></div>
                                 )}
 
                                 <SelectSearch
                                     name="period"
-                                    className="w-1/3"
+                                    className="w-full md:w-1/3"
                                     value={periode}
                                     options={periodOpts}
                                     placeholder="Periode"
@@ -173,7 +173,7 @@ export default function CardTableEvents({
                             </div>
                             <SelectSearch
                                 placeholder="Kategori"
-                                className="w-1/3 text-black"
+                                className="w-full md:w-1/3 text-black"
                                 name="kategorievent_id"
                                 value={kategorieventOpt}
                                 options={kategorieventOpts}

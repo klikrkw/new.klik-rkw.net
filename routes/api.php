@@ -6,8 +6,10 @@ use App\Http\Controllers\Api\Admin\KasbonApiController;
 use App\Http\Controllers\Api\Admin\KeluarbiayaApiController;
 use App\Http\Controllers\Api\Admin\KeluarbiayapermuserApiController;
 use App\Http\Controllers\Api\Admin\LapKeuanganAdminApiController;
+use App\Http\Controllers\Api\Admin\PostingjurnalApiController;
 use App\Http\Controllers\Api\Admin\ProsespermohonanApiController;
 use App\Http\Controllers\Api\Admin\RincianbiayapermApiController;
+use App\Http\Controllers\Api\Admin\TempatberkasApiController;
 use App\Http\Controllers\Api\Admin\TranspermohonanApiController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FirebaseApiController;
@@ -55,10 +57,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/test', function (Request $request) {
         return response()->json(['data'=>"data"]);
     });
-    Route::get('/kasbons',[KasbonApiController::class, 'index'])->name('kasbons.index');
-    Route::get('/kasbons/status_kasbons/{kasbon}',[KasbonApiController::class, 'statusKasbons'])->name('kasbons.status_kasbons');
-    Route::patch('/kasbons/update_status/{kasbon}', [KasbonApiController::class, 'updateStatus'])->name('kasbons.update_status');
-    Route::get('/kasbons/test',[KasbonApiController::class, 'test'])->name('kasbons.test');
     Route::get('/transpermohonans',[TranspermohonanApiController::class, 'index'])->name('transpermohonans.index');
     Route::get('/transpermohonans/show',[TranspermohonanApiController::class, 'show'])->name('transpermohonans.show');
     Route::get('/prosespermohonans/getoptions',[ProsespermohonanApiController::class, 'getOptions'])->name('prosespermohonans.getoptions');
@@ -82,6 +80,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::patch('/keluarbiayapermusers/update_status/{keluarbiayapermuser}', [KeluarbiayapermuserApiController::class, 'updateStatus'])->name('keluarbiayapermusers.update_status');
     Route::get('/keluarbiayapermusers/getoptions',[KeluarbiayapermuserApiController::class, 'getOptions'])->name('keluarbiayapermusers.getoptions');
     Route::get('/keluarbiayas/getoptions',[KeluarbiayaApiController::class, 'getOptions'])->name('keluarbiayas.getoptions');
+    Route::get('/keluarbiayas/getitemkegiatanoptions',[KeluarbiayaApiController::class, 'getItemkegiatanOptions'])->name('keluarbiayas.getitemkegiatanoptions');
+    Route::get('/keluarbiayapermusers/getitemkegiatanoptions',[KeluarbiayapermuserApiController::class, 'getItemkegiatanOptions'])->name('keluarbiayapermusers.getitemkegiatanoptions');
     Route::get('/keluarbiayas',[KeluarbiayaApiController::class, 'index'])->name('keluarbiayas.index');
     Route::get('/keluarbiayas/status_keluarbiayas/{keluarbiaya?}',[KeluarbiayaApiController::class, 'statusKeluarbiayas'])->name('keluarbiayas.status_keluarbiayas');
     Route::patch('/keluarbiayas/update_status/{keluarbiaya}', [KeluarbiayaApiController::class, 'updateStatus'])->name('keluarbiayas.update_status');
@@ -92,13 +92,42 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/keuangans/bukubesarperms',[LapKeuanganAdminApiController::class, 'bukuBesarperm'])->name('keuangans.bukubesarperms.index');
     Route::post('/keluarbiayapermusers/store',[KeluarbiayapermuserApiController::class, 'store'])->name('keluarbiayapermusers.store');
     Route::post('/keluarbiayas/store',[KeluarbiayaApiController::class, 'store'])->name('keluarbiayas.store');
+    Route::post('/keluarbiayas/dkeluarbiayas/{keluarbiaya}/store',[KeluarbiayaApiController::class, 'storeDkeluarbiaya'])->name('keluarbiayas.dkeluarbiayas.store');
+    Route::get('/keluarbiayas/{keluarbiaya}/show',[KeluarbiayaApiController::class, 'show'])->name('keluarbiayas.show');
+    Route::get('/keluarbiayas/dkeluarbiayas/info',[KeluarbiayaApiController::class, 'infoDkeluarbiaya'])->name('keluarbiayas.dkeluarbiayas.info');
+    Route::get('/keluarbiayapermusers/dkeluarbiayapermusers/info',[KeluarbiayapermuserApiController::class, 'infoDkeluarbiayapermuser'])->name('keluarbiayapermusers.dkeluarbiayapermusers.info');
     Route::get('/keuangans/neracas/pageparams',[LapKeuanganAdminApiController::class, 'neracaPageParams'])->name('keuangans.neracas.pageparams');
     Route::get('/keuangans/neracas',[LapKeuanganAdminApiController::class, 'neraca'])->name('keuangans.neracas.index');
     Route::get('/dkeluarbiayas', [KeluarbiayaApiController::class, 'list'])->name('dkeluarbiayas.api.list');
-    Route::get('/kasbons/statuskasbonopts',[KasbonApiController::class, 'statusKasbonOpts'])->name('kasbons.statuskasbonopts');
     Route::get('/transpermohonans/tempatarsips/show',[TranspermohonanApiController::class, 'showTempatarsip'])->name('transpermohonans.tempatarsips.show');
     Route::get('/transpermohonans/tempatarsips/showbykode',[TranspermohonanApiController::class, 'showTempatarsipbykode'])->name('transpermohonans.tempatarsips.showbykode');
     Route::post('/transpermohonans/tempatarsips/store',[TranspermohonanApiController::class, 'storeTempatarsip'])->name('transpermohonans.tempatarsips.store');
     Route::get('/transpermohonans/tempatarsips/list',[TranspermohonanApiController::class, 'listTempatarsip'])->name('transpermohonans.tempatarsips.list');
+    Route::delete('/keluarbiayas/dkeluarbiayas/{dkeluarbiaya}/destroy',[KeluarbiayaApiController::class, 'destroyDkeluarbiaya'])->name('keluarbiayas.dkeluarbiayas.destroy');
+    Route::get('/posisiberkas/listbytempatberkas/{tempatberkas}', [TempatberkasApiController::class,'listByTempatberkas'])->name('posisiberkas.listbytempatberkas');
+    Route::get('/tempatberkas/options', [TempatberkasApiController::class,'options'])->name('tempatberkas.options');
+    Route::get('/tempatberkas/posisisiberkas', [TempatberkasApiController::class,'posisiberkas'])->name('tempatberkas.pososisiberkas');
+    Route::patch('/tempatberkas/posisiberkas/{transpermohonan}/update', [TempatberkasApiController::class,'updatePosisiberkas'])->name('tempatberkas.pososisiberkas.update');
+
+    // kasbon
+    Route::get('/kasbons',[KasbonApiController::class, 'index'])->name('kasbons.index');
+    Route::get('/kasbons/status_kasbons/{kasbon}',[KasbonApiController::class, 'statusKasbons'])->name('kasbons.status_kasbons');
+    Route::patch('/kasbons/update_status/{kasbon}', [KasbonApiController::class, 'updateStatus'])->name('kasbons.update_status');
+    // Route::get('/kasbons/test',[KasbonApiController::class, 'test'])->name('kasbons.test');
+    Route::get('/kasbons/statuskasbonopts',[KasbonApiController::class, 'statusKasbonOpts'])->name('kasbons.statuskasbonopts');
+
+    // posting jurnal
+    Route::get('/postingjurnals/pageparams',[PostingjurnalApiController::class, 'pageParams'])->name('postingjurnals.pageparams');
+    Route::get('/postingjurnals',[PostingjurnalApiController::class, 'index'])->name('postingjurnals.index');
+    Route::post('/postingjurnals/store',[PostingjurnalApiController::class, 'store'])->name('postingjurnals.store');
+    Route::get('/postingjurnals/akunoptions',[PostingjurnalApiController::class, 'getAkunOptions'])->name('keluarbiayas.akunoptions');
+    Route::get('/postingjurnals/{postingjurnal}/show',[PostingjurnalApiController::class, 'show'])->name('postingjurnals.show');
+    Route::patch('/postingjurnals/{postingjurnal}/update', [PostingjurnalApiController::class, 'update'])->name('postingjurnals.update');
+    Route::delete('/postingjurnals/{postingjurnal}/destroy',[PostingjurnalApiController::class, 'destroy'])->name('postingjurnals.destroy');
+
+    //python
+    Route::get('/transpermohonans/list',[TranspermohonanApiController::class, 'list'])->name('transpermohonans.list');
+    Route::get('/transpermohonans/posisiberkas/{transpermohonan}',[TranspermohonanApiController::class, 'posisiberkas'])->name('transpermohonans.posisiberkas');
+
 });
 

@@ -78,6 +78,7 @@
         width: 700px;
         /* border: 1px solid gray; */
         color: black;
+        font-size: 11px;
     }
 
     table {
@@ -217,7 +218,7 @@
             <tr>
                 <td colspan="2"></td>
                 <td align="right" style="font-weight: bold;">Total Piutang</td>
-                <td align="right">{{ $rincianbiayaperm['total_pengeluaran'] }}</td>
+                <td align="right">{{ $rincianbiayaperm['total_piutang'] }}</td>
             </tr>
             <tr>
                 <td colspan="2"></td>
@@ -226,24 +227,65 @@
             </tr>
         </tfoot>
     </table>
+    <h2>PEMBAYARAN</h2>
+    <table class="detail-isi-lap">
+        <thead>
+            <tr style="background-color: rgb(212, 207, 207); font-weight: bold;">
+                <td>No.</td>
+                <td>Tanggal</td>
+                <td>Metode</td>
+                <td>Keterangan</td>
+                <td align="right">Saldo Awal</td>
+                <td align="right">Jumlah Bayar</td>
+                <td align="right">Saldo Akhir</td>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($bayarbiayaperms as $item)
+                <tr>
+                    <td>{{ $loop->index + 1 }}</td>
+                    <td>{{ $item->tgl_bayarbiayaperm }}</td>
+                    <td>{{ $item->metodebayar->nama_metodebayar }}</td>
+                    <td>{{ $item->catatan_bayarbiayaperm }}</td>
+                    <td align="right">{{ number_format($item['saldo_awal']) }}</td>
+                    <td align="right">{{ number_format($item['jumlah_bayar']) }}</td>
+                    <td align="right">{{ number_format($item['saldo_akhir']) }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="7">Data Kosong</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
     <table style="width: 700px; margin-left: 5px;">
         <tr>
             <td>&nbsp;</td>
+            <td style="text-align: center;">Pati, {{ $tanggal }}</td>
             <td>&nbsp;</td>
-            <td>Pati, {{ $tanggal }}</td>
         </tr>
         <tr>
-            <td colspan=>Notaris dan PPAT</td>
-            <td colspan=>Bendahara</td>
-            <td colspan=>Petugas</td>
+            <td style="text-align: center;">Notaris dan PPAT</td>
+            <td style="text-align: center;">Bendahara</td>
+            <td style="text-align: center;">Petugas</td>
         </tr>
         <tr>
-            <td style="padding-top: 40px;" colspan="2">&nbsp;</td>
+            {{-- <td style="padding-top: 40px;" colspan="2">&nbsp;</td> --}}
+            <td></td>
+            <td style="text-align:center;vertical-align: middle; padding: 2px;" align="center">
+                @if ($rincianbiayaperm['status_rincianbiayaperm'] == 'wait_approval')
+                    <h2>menunggu persetujuan</h2>
+                @else
+                    <img src="{{ $qrcode }}" width="100" height="100" />
+                    <div style="margin-top:5px;">{{ $rincianbiayaperm['id'] }}</div>
+                @endif
+            </td>
+            <td></td>
         </tr>
         <tr>
-            <td>REKOWARNO, S.H., M.H.</td>
-            <td>BAHTIAR</td>
-            <td>{{ strtoupper($rincianbiayaperm['user']['name']) }}</td>
+            <td style="text-align: center;">REKOWARNO, S.H., M.H.</td>
+            <td style="text-align: center;">BAHTIAR</td>
+            <td style="text-align: center;">{{ strtoupper($rincianbiayaperm['user']['name']) }}</td>
         </tr>
     </table>
 

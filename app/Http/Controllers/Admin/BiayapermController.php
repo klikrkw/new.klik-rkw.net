@@ -22,6 +22,7 @@ use App\Models\Transpermohonan;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Closure;
 use Illuminate\Auth\Events\Validated;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -181,6 +182,7 @@ class BiayapermController extends Controller
             'catatan_biayaperm' => ['nullable'],
             'image_biayaperm' => ['nullable'],
             'rincianbiayaperm_id' => ['nullable'],
+            'info_rekening' =>'nullable',
         ]);
 
         $biayaperm = Biayaperm::create(
@@ -216,9 +218,17 @@ class BiayapermController extends Controller
                 'metodebayar_id' => $rincianbiayaperm->metodebayar_id,
                 'info_rekening' => '',
                 'rekening_id' => $rincianbiayaperm->rekening_id,
+            //     'rekening_id' => ['required',  function (string $attribute, mixed $value, Closure $fail) {
+            //     $rek = Rekening::find($value);
+            //     if($rek){
+            //         if($rek->metodebayar_id != request('metodebayar_id'))
+            //         $fail("Rekening tidak sesuai metode bayar");
+            //     }
+            // }],
                 'catatan_bayarbiayaperm' => $validated['catatan_biayaperm'],
                 'image_bayarbiayaperm' => null,
             ];
+
             $bayarbiayaperm = Bayarbiayaperm::create(
                 $validated
             );
@@ -270,13 +280,27 @@ class BiayapermController extends Controller
             }
             $biayaperm->jurnalumums()->attach($ids);
         }else{
-            $ju1 = Jurnalumum::create([
+            $ids=[];
+            if($biayaperm->jumlah_bayar>0){
+                $ju1 = Jurnalumum::create([
                 'uraian' => $uraian,
-                'akun_id' => $akun_piutang,
-                'debet' => $biayaperm->kurang_bayar,
+                'akun_id' => Akun::getKodeAkun('kas'),
+                'debet' => $biayaperm->jumlah_bayar,
                 'kredit' => 0,
                 'parent_id' => $parent_id
             ]);
+            array_push($ids, $ju1->id);
+        }
+            if($biayaperm->kurang_bayar>0){
+                $ju1 = Jurnalumum::create([
+                    'uraian' => $uraian,
+                    'akun_id' => $akun_piutang,
+                    'debet' => $biayaperm->kurang_bayar,
+                    'kredit' => 0,
+                    'parent_id' => $parent_id
+                ]);
+                array_push($ids, $ju1->id);
+            }
             $ju2 = Jurnalumum::create([
                 'uraian' => $uraian,
                 'akun_id' => $akun_pendapatan,
@@ -446,5 +470,14 @@ class BiayapermController extends Controller
                 'user_id' => $user_id,
             ]
         );
+    }
+
+    public function RincianbiayaOpts(Transpermohonan $transpermohonan)
+    {
+        $rincianbiayaperms = $transpermohonan->waitapproval_rincianbiayaperms;
+        $rincianbiayapermOpts = collect($rincianbiayaperms)->map(function ($item) {
+                return ['value' => $item['id'], 'label' => sprintf('%s - %s',$item['id'],$item['ket_rincianbiayaperm']),'rincianbiayaperm'=>$item];
+            });
+        return Response()->json($rincianbiayapermOpts);
     }
 }

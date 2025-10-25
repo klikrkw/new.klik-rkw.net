@@ -8,6 +8,7 @@ import LinkButton from "@/Components/Shared/LinkButton";
 import PermohonanSelect from "@/Components/Shared/PermohonanSelect";
 import SelectSearch from "@/Components/Shared/SelectSearch";
 import TranspermohonanSelect from "@/Components/Shared/TranspermohonanSelect";
+import { useAuth } from "@/Contexts/AuthContext";
 import AdminLayout from "@/Layouts/AdminLayout";
 import StafLayout from "@/Layouts/StafLayout";
 import {
@@ -149,15 +150,22 @@ const Create = () => {
             );
         }
     }, [values]);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const { currentUser, login, logout } = useAuth();
+    const { fbtoken } = usePage().props;
+    useEffect(() => {
+        if (!currentUser) {
+            login(fbtoken);
+        }
+    }, []);
 
+    const inputRef = useRef<HTMLInputElement>(null);
     return (
         <StafLayout>
             {AddMode ? (
                 <div className="z-20 absolute h-full w-full left-0"></div>
             ) : null}
             <div className="flex content-center items-center justify-center h-full">
-                <div className="w-full lg:w-10/12 px-4">
+                <div className="w-full lg:w-10/12 md:px-4 px-0">
                     <div className="relative flex flex-col min-w-0 break-words w-full mb-2 shadow-lg shadow-slate-400 rounded-lg bg-blueGray-200 border-0">
                         <div className="rounded-t mt-2 px-4">
                             <div className="text-center">
@@ -258,6 +266,7 @@ const Create = () => {
                 </div>
             </div>
             <ModalAddBiayaperm
+                transpermohonan_id={transpermohonan_id}
                 showModal={showModalBiayaperm}
                 setShowModal={setShowModalBiayaperm}
             />

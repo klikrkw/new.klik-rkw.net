@@ -114,7 +114,7 @@ export default function CardTableKasbons({
         >
             <div className="rounded-full mb-0 px-4 py-3 border-0 ">
                 <div className="flex justify-between w-full flex-col md:flex-row">
-                    <div className="relative w-full max-w-full flex-grow flex-1 ">
+                    <div className="relative w-full max-w-full flex-grow flex-1 mb-2">
                         <h3
                             className={
                                 "font-semibold text-lg " +
@@ -126,7 +126,7 @@ export default function CardTableKasbons({
                             Kasbon List
                         </h3>
                     </div>
-                    <div className="flex justify-center gap-2 flex-row items-start w-3/4 md:w-2/3">
+                    <div className="flex flex-col justify-center gap-1 md:flex-row items-start w-full md:w-2/3">
                         {isAdmin ? (
                             <AsyncSelectSearch
                                 placeholder="Pilih User"
@@ -196,6 +196,36 @@ export default function CardTableKasbons({
                                     href="#"
                                     onClick={(e) =>
                                         handleSortLinkClick({
+                                            sortBy: "id",
+                                            sortDir:
+                                                values.sortDir === "asc"
+                                                    ? "desc"
+                                                    : "asc",
+                                        })
+                                    }
+                                >
+                                    <div className="flex flex-row justify-between">
+                                        <span>Id</span>
+                                        <IconSort
+                                            sortBy="id"
+                                            sortDir={values.sortDir || ""}
+                                        />
+                                    </div>
+                                </Link>
+                            </th>
+
+                            <th
+                                className={
+                                    "px-4 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left " +
+                                    (color === "light"
+                                        ? "bg-blueGray-50 text-blueGray-500 border-blueGray-100"
+                                        : "bg-lightBlue-800 text-lightBlue-300 border-lightBlue-700")
+                                }
+                            >
+                                <Link
+                                    href="#"
+                                    onClick={(e) =>
+                                        handleSortLinkClick({
                                             sortBy: "created_at",
                                             sortDir:
                                                 values.sortDir === "asc"
@@ -222,7 +252,7 @@ export default function CardTableKasbons({
                                 }
                             >
                                 <div className="flex flex-row justify-between">
-                                    <span>Jumlah Kasbon</span>
+                                    <span>Jumlah </span>
                                 </div>
                             </th>
                             <th
@@ -305,7 +335,7 @@ export default function CardTableKasbons({
                                         : "bg-lightBlue-800 text-lightBlue-300 border-lightBlue-700")
                                 }
                             >
-                                Options
+                                Menu
                             </th>
                         </tr>
                     </thead>
@@ -327,6 +357,9 @@ export default function CardTableKasbons({
                             ) => (
                                 <tr key={index}>
                                     <td className="border-t-0 px-4 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-2">
+                                        {id}
+                                    </td>
+                                    <td className="border-t-0 px-4 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-2">
                                         {tgl_kasbon}
                                     </td>
                                     <td className="border-t-0 px-4 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-2">
@@ -338,7 +371,10 @@ export default function CardTableKasbons({
                                     <td className="border-t-0 px-4 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-2">
                                         {sisa_penggunaan}
                                     </td>
-                                    <td className="border-t-0 px-4 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-2">
+                                    <td
+                                        className="border-t-0 px-4 align-middle border-l-0 border-r-0
+                                    text-xs whitespace-pre-wrap p-2"
+                                    >
                                         {keperluan}
                                     </td>
                                     <td className="border-t-0 px-4 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-2">
@@ -379,6 +415,34 @@ export default function CardTableKasbons({
                                                 <i className="fas fa-print"></i>
                                                 <span> Cetak Kasbon</span>
                                             </Link>
+                                            {status_kasbon === "cancelled" && (
+                                                <Link
+                                                    href="#"
+                                                    onClick={(e) =>
+                                                        useSwal
+                                                            .confirm({
+                                                                title: "Hapus Data",
+                                                                text: "apakah akan menghapus?",
+                                                            })
+                                                            .then((result) => {
+                                                                if (
+                                                                    result.isConfirmed
+                                                                ) {
+                                                                    handleRemoveData(
+                                                                        id
+                                                                    );
+                                                                }
+                                                            })
+                                                    }
+                                                    className={
+                                                        "text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
+                                                    }
+                                                    type="button"
+                                                >
+                                                    <i className="fas fa-trash"></i>
+                                                    <span> Hapus</span>
+                                                </Link>
+                                            )}
                                         </MenuDropdown>
                                     </td>
                                 </tr>

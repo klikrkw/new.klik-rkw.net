@@ -10,6 +10,7 @@ import {
     OptionSelect,
     Permohonan,
     Transpermohonan,
+    User,
 } from "@/types";
 import SelectSearch from "@/Components/Shared/SelectSearch";
 import AsyncSelectSearch from "@/Components/Shared/AsyncSelectSearch";
@@ -22,6 +23,7 @@ import ModalAddPermohonan from "@/Components/Modals/ModalAddPermohonan";
 import { usePrevious } from "react-use";
 import { pickBy } from "lodash";
 import TranspermohonanSelect from "@/Components/Shared/TranspermohonanSelect";
+import apputils from "@/bootstrap";
 
 type Props = {
     transpermohonan_id: string;
@@ -34,6 +36,8 @@ type Props = {
     base_route: string;
     isAdmin: boolean;
     allPermohonan: boolean;
+    userOpts: User[];
+    userId: string;
 };
 const Create = ({
     permohonan_id,
@@ -46,6 +50,8 @@ const Create = ({
     base_route,
     isAdmin,
     allPermohonan,
+    userOpts,
+    userId,
 }: Props) => {
     type FormValues = {
         itemrincianbiayapermOpt: OptionSelect | undefined;
@@ -97,9 +103,52 @@ const Create = ({
     const [showModalAddPermohonan, setShowModalAddPermohonan] =
         useState<boolean>(false);
 
+    const sendMessageToMobileRole = async (
+        title: string,
+        body: string,
+        datas: {
+            navigationId: string;
+            param1_name: string;
+            param1_value: string;
+        } & object
+    ) => {
+        let xlink = `/admin/messages/api/sendmessagetomobilerole`;
+        const response = await apputils.backend.post(xlink, {
+            title,
+            role: "admin",
+            body,
+            datas,
+        });
+        const data = response.data;
+    };
+
     function handleSubmit(e: any) {
         e.preventDefault();
-        post(route(base_route + "transaksi.rincianbiayaperms.store"));
+        post(route(base_route + "transaksi.rincianbiayaperms.store"), {
+            onSuccess: () => {
+                const pmh: string = data.permohonan
+                    ? data.ket_rincianbiayaperm +
+                      ", " +
+                      data.permohonan.transpermohonan.jenispermohonan
+                          .nama_jenispermohonan +
+                      ", " +
+                      data.permohonan?.nama_penerima +
+                      ", " +
+                      data.permohonan?.nomor_hak +
+                      "/" +
+                      data.permohonan?.letak_obyek +
+                      " " +
+                      "(" +
+                      data.permohonan.users.map((u: any) => u.name).join(", ") +
+                      ")"
+                    : data.ket_rincianbiayaperm;
+                sendMessageToMobileRole("Rincian Baru", pmh, {
+                    navigationId: "BiayaPerm",
+                    param1_name: "transpermohonanId",
+                    param1_value: data.transpermohonan_id,
+                });
+            },
+        });
     }
 
     const setPermohonan = (permohonan: Permohonan | undefined | null) => {
@@ -134,6 +183,9 @@ const Create = ({
         permohonan_id: permohonan_id,
         transpermohonan_id: transpermohonan_id,
     });
+
+    const xuser = userOpts.find((usr: any) => usr.value == userId);
+    const [cuser, setCuser] = useState(xuser);
 
     const prevValues = usePrevious(values);
     useEffect(() => {
@@ -190,7 +242,7 @@ const Create = ({
                                         }
                                         errors={errors.jenis_itemrincianbiaya}
                                     /> */}
-                                <div className="w-full grid grid-cols-2 gap-2">
+                                <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-2">
                                     <div className="w-full grid grid-cols-1">
                                         {/* <MoneyInput name='jumlah_kasbon' label='Jumlah Kasbon' errors={errors.ket}
                                         autoComplete='off'
@@ -273,27 +325,43 @@ const Create = ({
                                         </div>
                                         <div className="flex flex-row items-start w-full gap-2 ">
                                             {isAdmin ? (
-                                                <AsyncSelectSearch
-                                                    placeholder="Pilih User"
-                                                    value={data.user}
-                                                    name="users"
-                                                    url="/admin/users/api/list/"
-                                                    errors={errors.user_id}
-                                                    onChange={(e: any) =>
+                                                <SelectSearch
+                                                    name="user_id"
+                                                    value={cuser}
+                                                    options={userOpts}
+                                                    placeholder="Pilih Petugas"
+                                                    className="text-gray-800"
+                                                    onChange={(e: any) => {
                                                         setData((v) => ({
                                                             ...v,
-                                                            user: e,
                                                             user_id: e
                                                                 ? e.value
                                                                 : "",
-                                                        }))
-                                                    }
-                                                    isClearable
-                                                    optionLabels={["name"]}
-                                                    optionValue="id"
-                                                    className="text-blueGray-900"
+                                                        }));
+                                                        setCuser(e);
+                                                    }}
                                                 />
-                                            ) : null}
+                                            ) : // <AsyncSelectSearch
+                                            //     placeholder="Pilih User"
+                                            //     value={data.user}
+                                            //     name="users"
+                                            //     url="/admin/users/api/list/"
+                                            //     errors={errors.user_id}
+                                            //     onChange={(e: any) =>
+                                            //         setData((v) => ({
+                                            //             ...v,
+                                            //             user: e,
+                                            //             user_id: e
+                                            //                 ? e.value
+                                            //                 : "",
+                                            //         }))
+                                            //     }
+                                            //     isClearable
+                                            //     optionLabels={["name"]}
+                                            //     optionValue="id"
+                                            //     className="text-blueGray-900"
+                                            // />
+                                            null}
                                         </div>
                                         <SelectSearch
                                             name="metodebayar_id"

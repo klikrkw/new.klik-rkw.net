@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Mockery\Undefined;
 
 class EventController extends Controller
 {
@@ -145,13 +146,22 @@ class EventController extends Controller
     {
         $kategorievents = Kategorievent::all();
         $transpermohonan = $event->transpermohonans->first();
+        // return response()->json( [
+        //     'event' => $event,
+        //     'base_route'=>$this->base_route,
+        //     'kategorieventOpts' => collect($kategorievents)->map(fn ($o) => ['label' => $o['nama_kategorievent'], 'value' => $o['id']]),
+        //     'kategorieventOpt' => ["label" => $event->kategorievent->nama_kategorievent, "value" => $event->kategorievent->id],
+        //     'transpermohonanOpt' => $transpermohonan?["label" => $transpermohonan->permohonan->nama_penerima, "value" => $transpermohonan->id]:[],
+        //     'transpermohonan' =>new TranspermohonanCollection($transpermohonan),
+        // ]);
+
         return Inertia::render('Admin/Event/Edit', [
             'event' => $event,
             'base_route'=>$this->base_route,
             'kategorieventOpts' => collect($kategorievents)->map(fn ($o) => ['label' => $o['nama_kategorievent'], 'value' => $o['id']]),
             'kategorieventOpt' => ["label" => $event->kategorievent->nama_kategorievent, "value" => $event->kategorievent->id],
             'transpermohonanOpt' => $transpermohonan?["label" => $transpermohonan->permohonan->nama_penerima, "value" => $transpermohonan->id]:[],
-            'transpermohonan' =>new TranspermohonanCollection($transpermohonan),
+            'transpermohonan' =>$transpermohonan?new TranspermohonanCollection($transpermohonan):null,
         ]);
     }
 

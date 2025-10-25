@@ -1,12 +1,11 @@
 import CardFilterProsesbyPermohonan from "@/Components/Cards/Admin/CardFilterProsesbyPermohonan";
-import CardFilterProsespermohonan from "@/Components/Cards/Admin/CardFilterProsespermohonan";
-import CardListProsesbyPermohonan from "@/Components/Cards/Admin/CardListProsesbyPermohonan";
-import CardListProsespermohonan from "@/Components/Cards/Admin/CardListProsespermohonan";
+import CardListProsesbyPermohonanTimeline from "@/Components/Cards/Staf/CardListProsesbyPermohonanTimeline";
 import StafLayout from "@/Layouts/StafLayout";
 import { PageProps } from "@/types";
 import { usePage } from "@inertiajs/react";
 const ByPermohonan = () => {
-    const { itemprosespermsOpts, prosespermohonans } = usePage<any>().props;
+    const { itemprosespermsOpts, prosespermohonans, transpermohonan } =
+        usePage<any>().props;
 
     return (
         <StafLayout>
@@ -32,8 +31,9 @@ const ByPermohonan = () => {
                     />
                 </div>
                 <div className="w-full md:w-2/3">
-                    <CardListProsesbyPermohonan
+                    <CardListProsesbyPermohonanTimeline
                         prosespermohonans={prosespermohonans}
+                        transpermohonan={transpermohonan}
                     />
                 </div>
             </div>

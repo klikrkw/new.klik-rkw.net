@@ -1,4 +1,4 @@
-import CardTableInfoKeluarbiayas from "@/Components/Cards/Admin/CardTableInfoKeluarbiayas";
+import CardTableInfoKeluarbiayas from "@/Components/Cards/Staf/CardTableInfoKeluarbiayas";
 import AdminLayout from "@/Layouts/AdminLayout";
 import StafLayout from "@/Layouts/StafLayout";
 import { Dkeluarbiaya, OptionSelect } from "@/types";

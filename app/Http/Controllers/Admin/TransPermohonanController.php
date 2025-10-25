@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Admin\PermohonanCollection;
+use App\Http\Resources\Admin\PosisiberkasCollection;
 use App\Http\Resources\Admin\TempatarsipCollection;
+use App\Http\Resources\Admin\TempatberkasCollection;
 use App\Http\Resources\Admin\TranspermohonanCollection;
+use App\Models\Ruang;
 use App\Models\Tempatarsip;
+use App\Models\Tempatberkas;
 use App\Models\Transpermohonan;
 use Illuminate\Support\Facades\Request;
 use Inertia\Inertia;
@@ -40,7 +44,10 @@ class TransPermohonanController extends Controller
     {
         $is_staf = request('is_staf');
         $transpermohonans = Transpermohonan::query();
-        $transpermohonans = $transpermohonans->with('permohonan')->where('active', true);
+        $transpermohonans = $transpermohonans->where('active',true);
+        $transpermohonans = $transpermohonans->whereHas('permohonan',function($q){
+            $q->where('active','=',true);
+        });
         if($is_staf == "true"){
             $transpermohonans = $transpermohonans->whereRelation('permohonan.users', 'id', auth()->id());
         }
@@ -76,11 +83,15 @@ class TransPermohonanController extends Controller
         // if($tempatarsip_id){
         //     $tempatarsip = Tempatarsip::find($tempatarsip_id);
         // }
-
+        $ruangs = Ruang::all();
         return Inertia::render($this->base_dir.'/Tempatarsip/Transaksi/Create',
         ['baseRoute'=>$this->base_route,
+        'ruangOpts' => collect($ruangs)->map(fn ($o) => ['label' => $o['kantor']['nama_kantor'].' - '.$o['nama_ruang'], 'value' => $o['id']]),
         'ctranspermohonan'=>$transpermohonan?new TranspermohonanCollection($transpermohonan):null,
-        'ctempatarsip'=>$tempatarsip? new TempatarsipCollection($tempatarsip):null]);
+        'ctempatarsip'=>$tempatarsip? new TempatarsipCollection($tempatarsip):null,
+        'cruangOpt'=>$tempatarsip?['label'=>$tempatarsip->ruang->kantor->nama_kantor.' - '.$tempatarsip->ruang->nama_ruang,'value'=>$tempatarsip->ruang_id]:
+        null
+    ]);
     }
     public function storeTempatarsip(Transpermohonan $transpermohonan)
     {
@@ -92,4 +103,50 @@ class TransPermohonanController extends Controller
         $pemohon = $transpermohonan->tempatarsips()->sync($tmparsip_ids);
         return back()->with('success', 'Tempat Arsip Permohonan created.');
     }
+    public function createPosisiberkas(Request $request)
+    {
+        $transpermohonan_id = request('transpermohonan_id');
+        $tempatberkas_id = request('tempatberkas_id');
+        // $tempatberkas_id = request('tempatberkas_id');
+        $transpermohonan = null;
+        $posisiberkas = null;
+        $tempatberkas = null;
+        if($transpermohonan_id){
+            $transpermohonan = Transpermohonan::find($transpermohonan_id);
+            if($transpermohonan){
+                $posisiberkases = $transpermohonan->posisiberkases;
+                if(count($posisiberkases)>0){
+                    $posisiberkas = $posisiberkases->first();
+                    if($posisiberkas){
+                         $tempatberkas = $posisiberkas->tempatberkas;
+                    }
+                }
+            }
+        }
+        if($tempatberkas_id){
+            $tempatberkas = Tempatberkas::find($tempatberkas_id);
+        }
+
+        $tempatberkases = Tempatberkas::all();
+        return Inertia::render($this->base_dir.'/Tempatberkas/Transaksi/Create',
+        ['baseRoute'=>$this->base_route,
+        'tempatberkasOpts' => collect($tempatberkases)->map(fn ($o) => ['label' => $o['ruang']['nama_ruang'].' - '.$o['nama_tempatberkas'], 'value' => $o['id']]),
+        'ctranspermohonan'=>$transpermohonan?new TranspermohonanCollection($transpermohonan):null,
+        'cposisiberkas'=>$posisiberkas? new PosisiberkasCollection($posisiberkas):null,
+        'ctempatberkas'=>$tempatberkas? $tempatberkas:null,
+        'tempatberkasOpt'=>$tempatberkas?['label'=>$tempatberkas->ruang->nama_ruang.' - '.$tempatberkas->nama_tempatberkas,'value'=>$tempatberkas->id]:
+        null
+    ]);
+    }
+    public function storePosisiberkas(Transpermohonan $transpermohonan)
+    {
+        $validated =  request()->validate([
+            'transpermohonan_id' => ['required'],
+            'posisiberkas_id' => ['required'],
+        ]);
+        $posisiberkas_ids = [$validated['posisiberkas_id']];
+        $pemohon = $transpermohonan->posisiberkases()->sync($posisiberkas_ids);
+        return back()->with('success', 'Tempat Berkas created.');
+    }
+
 }

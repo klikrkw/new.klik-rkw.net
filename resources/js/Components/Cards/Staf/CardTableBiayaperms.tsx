@@ -125,7 +125,7 @@ function CardTableBiayaperms({ biayaperms }: Props) {
                                     )}
                                 </div>
                                 <div className="hidden md:flex md:w-[10%]">
-                                    User
+                                    <span>{biayaperm.user.name}</span>
                                 </div>
                                 <div className="w-[10%] flex justify-center items-center">
                                     <div className="absolute">

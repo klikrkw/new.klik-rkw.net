@@ -7,6 +7,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+use function Laravel\Prompts\text;
+
 class EventCollection extends JsonResource
 {
     /**

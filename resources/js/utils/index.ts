@@ -10,3 +10,8 @@ export const formatNumber = (value: number) => {
         maximumFractionDigits: 0,
     }).format(value);
 };
+export const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then((elm) => {
+        console.log(elm);
+    });
+};

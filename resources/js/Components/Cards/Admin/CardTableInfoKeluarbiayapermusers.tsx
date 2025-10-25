@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     Dkeluarbiaya,
     Dkeluarbiayapermuser,
@@ -20,6 +20,7 @@ import moment from "moment";
 import { DateRange } from "react-number-format/types/types";
 import PopupMenu from "@/Components/Hero/PopupMenu";
 import TranspermohonanSelect from "@/Components/Shared/TranspermohonanSelect";
+import { Lightbox } from "react-modal-image";
 
 // components
 export default function CardTableInfoKeluarbiayapermusers({
@@ -149,6 +150,10 @@ export default function CardTableInfoKeluarbiayapermusers({
             }));
         }
     };
+    const [viewImage, setViewImage] = useState<boolean>(false);
+    const [image, setImage] = useState<string | null>(null);
+    const TransPermSelect = useRef<HTMLInputElement>(null);
+
     return (
         <>
             <div
@@ -162,7 +167,7 @@ export default function CardTableInfoKeluarbiayapermusers({
             >
                 <div className="rounded-full mb-0 px-4 py-3 border-0 ">
                     <div className="flex justify-between w-full flex-col">
-                        <div className="relative w-full max-w-full flex-grow flex-1 ">
+                        <div className="relative w-full max-w-full flex-grow flex-1 mb-2">
                             <h3
                                 className={
                                     "font-semibold text-lg " +
@@ -210,6 +215,7 @@ export default function CardTableInfoKeluarbiayapermusers({
                                     PERMOHONAN
                                 </label>
                                 <TranspermohonanSelect
+                                    inputRef={TransPermSelect}
                                     value={transpermohonan}
                                     onValueChange={setTransPermohonan}
                                 />
@@ -366,6 +372,19 @@ export default function CardTableInfoKeluarbiayapermusers({
                                     }
                                 >
                                     <div className="flex flex-row justify-between">
+                                        <span>Image</span>
+                                    </div>
+                                </th>
+
+                                <th
+                                    className={
+                                        "px-3 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left " +
+                                        (color === "light"
+                                            ? "bg-blueGray-50 text-blueGray-500 border-blueGray-100"
+                                            : "bg-lightBlue-800 text-lightBlue-300 border-lightBlue-700")
+                                    }
+                                >
+                                    <div className="flex flex-row justify-between">
                                         <span>User</span>
                                     </div>
                                 </th>
@@ -395,6 +414,7 @@ export default function CardTableInfoKeluarbiayapermusers({
                                         keluarbiayapermuser,
                                         ket_biaya,
                                         jumlah_biaya,
+                                        image_dkeluarbiayapermuser,
                                     },
                                     index
                                 ) => (
@@ -416,6 +436,24 @@ export default function CardTableInfoKeluarbiayapermusers({
                                         </td>
                                         <td className="border-t-0 px-3 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap py-2">
                                             {ket_biaya}
+                                        </td>
+                                        <td className="border-t-0 px-3 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap py-2">
+                                            {image_dkeluarbiayapermuser && (
+                                                <button
+                                                    onClick={() => {
+                                                        setImage(
+                                                            image_dkeluarbiayapermuser
+                                                        );
+                                                        setViewImage(true);
+                                                    }}
+                                                >
+                                                    <i
+                                                        className={
+                                                            "fas fa-image mr-2 text-sm cursor-pointer"
+                                                        }
+                                                    ></i>
+                                                </button>
+                                            )}
                                         </td>
                                         <td className="border-t-0 px-3 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap py-2">
                                             {keluarbiayapermuser?.user?.name}
@@ -444,6 +482,15 @@ export default function CardTableInfoKeluarbiayapermusers({
                         />
                     </div>
                 ) : null}
+                {viewImage && (
+                    <Lightbox
+                        small={image ? image : ""}
+                        medium={image ? image : ""}
+                        large={image ? image : ""}
+                        alt="View Image"
+                        onClose={() => setViewImage(false)}
+                    />
+                )}
             </div>
         </>
     );

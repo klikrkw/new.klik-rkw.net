@@ -18,7 +18,9 @@ use App\Models\Jurnalumum;
 use App\Models\Kasbon;
 use App\Models\Keluarbiayapermuser;
 use App\Models\Metodebayar;
+use App\Models\Prosespermohonan;
 use App\Models\Rekening;
+use App\Models\Statusprosesperm;
 use App\Models\Transpermohonan;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -29,6 +31,8 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Inertia\Inertia;
 use App\Traits\PeriodetimeTrait;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Closure;
 
 class KeluarbiayapermuserStafController extends Controller
 {
@@ -106,13 +110,13 @@ class KeluarbiayapermuserStafController extends Controller
         $instansis = Instansi::all();
         $rekenings = Rekening::all();
         $metodebayars = Metodebayar::all();
-        $kasbons = Kasbon::where('status_kasbon', 'approved')->where('sisa_penggunaan', '>', '0')->where('user_id', $this->user->id)->get();
+        $kasbons = Kasbon::where('jenis_kasbon', 'permohonan')->where('status_kasbon', 'approved')->where('sisa_penggunaan', '>', '0')->where('user_id', $this->user->id)->get();
         return Inertia::render('Staf/Keluarbiayapermuser/Create', [
             'instansiOpts' => collect($instansis)->map(fn ($o) => ['label' => $o['nama_instansi'], 'value' => $o['id']]),
             // 'instansiOpts' => collect($kasbons)->map(fn ($o) => ['label' => $o->instansi['nama_instansi'], 'value' => $o->instansi['id']]),
             'metodebayarOpts' => collect($metodebayars)->map(fn ($o) => ['label' => $o['nama_metodebayar'], 'value' => $o['id']]),
             'rekeningOpts' => collect($rekenings)->map(fn ($o) => ['label' => $o['nama_rekening'], 'value' => $o['id']]),
-            'kasbonOpts' => collect($kasbons)->map(fn ($o) => ['label' => number_format($o['sisa_penggunaan']), 'value' => $o['id'], 'sisa_penggunaan' => $o['sisa_penggunaan'], 'instansi'=>$o['instansi']])->toArray(),
+            'kasbonOpts' => collect($kasbons)->map(fn ($o) => ['label' => sprintf('%s - %s', $o['id'], number_format($o['jumlah_kasbon'])), 'value' => $o['id'], 'sisa_penggunaan' => $o['sisa_penggunaan'], 'instansi'=>$o['instansi']])->toArray(),
             // 'transpermohonan' => Inertia::lazy(fn () => $transpermohonan),
             'base_route' => $this->base_route,
         ]);
@@ -146,7 +150,13 @@ class KeluarbiayapermuserStafController extends Controller
         $validated =  request()->validate([
             'instansi_id' => ['required'],
             'metodebayar_id' => ['required'],
-            'rekening_id' => ['required'],
+            'rekening_id' => ['required',  function (string $attribute, mixed $value, Closure $fail) {
+                $rek = Rekening::find($value);
+                if($rek){
+                    if($rek->metodebayar_id != request('metodebayar_id'))
+                    $fail("metodebayar {$attribute} harus sesuai!");
+                }
+            }],
             'kasbon_id' => ['nullable'],
             'saldo_awal' => ['nullable'],
             'jumlah_biaya' => ['nullable'],
@@ -273,6 +283,59 @@ class KeluarbiayapermuserStafController extends Controller
         ]);
         $ids = [$ju1->id, $ju2->id];
         $dkeluarbiayapermuser->jurnalumums()->attach($ids);
+        //cek proses permohonan
+        // $itemkegiatan = $dkeluarbiayapermuser->itemkegiatan;
+        $itemprosesperm = $dkeluarbiayapermuser->itemkegiatan->itemprosesperms->first();
+        $statusprosesperm = Statusprosesperm::where('nama_statusprosesperm', 'Proses')->first();
+        if ($itemprosesperm) {
+            $rec = Prosespermohonan::
+            where('transpermohonan_id', $dkeluarbiayapermuser->transpermohonan_id)
+            ->where('itemprosesperm_id', $itemprosesperm->id)->first();
+            // if ($rec) {
+            //     $rec->update([
+            //         'transpermohonan_id' => $dkeluarbiayapermuser->transpermohonan_id,
+            //         'itemprosesperm_id' => $itemprosesperm->id,
+            //         'catatan_prosesperm' => '-',
+            //         'statusprosesperm_id'=>$statusprosesperm->id,
+            //         'is_alert'=>false,
+            //         'start'=>$keluarbiayapermuser->updated_at,
+            //         'end'=>$keluarbiayapermuser->updated_at,
+            //     ]);
+            $user = auth()->user();
+            if(!$rec){
+
+                $prosespermohonan = Prosespermohonan::create([
+                'transpermohonan_id' => $dkeluarbiayapermuser->transpermohonan_id,
+                'itemprosesperm_id' => $itemprosesperm->id,
+                'catatan_prosesperm' => '-',
+                // 'statusprosesperm_id'=>$statusprosesperm->id,
+                'is_alert'=>false,
+                'start'=>Carbon::parse($keluarbiayapermuser->updated_at)->addDay(),
+                'end'=>Carbon::parse($keluarbiayapermuser->updated_at)->addDay(),
+                ]);
+            $validated = [
+                'prosespermohonan_id' => $prosespermohonan->id,
+                'statusprosesperm_id' => $statusprosesperm->id,
+                'catatan_statusprosesperm' => '-',
+                'user_id' => $user->id,
+            ];
+            $prosespermohonan->statusprosesperms()->attach($prosespermohonan->id, $validated);
+            }else{
+                $prosespermohonan = $rec;
+            $validated = [
+                'prosespermohonan_id' => $prosespermohonan->id,
+                'statusprosesperm_id' => $statusprosesperm->id,
+                'catatan_statusprosesperm' => '-',
+                'user_id' => $user->id,
+            ];
+            $prosespermohonan->statusprosesperms()->detach($statusprosesperm->id);
+            $ids = $prosespermohonan->statusprosesperms()->pluck('statusprosesperm_id');
+            if (count($ids) > 0) {
+                $prosespermohonan->statusprosesperms()->syncWithPivotValues($ids, ['active' => false]);
+            }
+            $prosespermohonan->statusprosesperms()->attach($prosespermohonan->id, $validated);
+            }
+        }
 
         $kasbons = $dkeluarbiayapermuser->keluarbiayapermuser->kasbons;
         if (count($kasbons) > 0) {
@@ -292,7 +355,7 @@ class KeluarbiayapermuserStafController extends Controller
                 [
                     // 'saldo_awal' => 0,
                     'jumlah_biaya' => $jmlbiaya,
-                    'saldo_akhir' => $keluarbiayapermuser->metodebayar->id == '1'? $keluarbiayapermuser->saldo_awal - $jmlbiaya:0,
+                    'saldo_akhir' => 0,
                 ]
             );
         }
@@ -393,6 +456,8 @@ class KeluarbiayapermuserStafController extends Controller
                 $ids = $kasbon->jurnalumums()->pluck('id');
                 if (count($ids) == 2) {
                     $ju1 = Jurnalumum::updateOrCreate(['id' => $ids[0]], [
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
                         'uraian' => $uraian,
                         'akun_id' => $akunpiutang,
                         'debet' => $jsisa,
@@ -400,6 +465,8 @@ class KeluarbiayapermuserStafController extends Controller
                         'parent_id' => $parent_id
                     ]);
                     $ju2 = Jurnalumum::updateOrCreate(['id' => $ids[1]], [
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
                         'uraian' => $uraian,
                         'akun_id' => $akunkas,
                         'debet' => 0,
@@ -440,6 +507,8 @@ class KeluarbiayapermuserStafController extends Controller
             $ids = $kasbon->jurnalumums()->pluck('id');
             if (count($ids) == 2) {
                 $ju1 = Jurnalumum::updateOrCreate(['id' => $ids[0]], [
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
                     'uraian' => $uraian,
                     'akun_id' => $akunpiutang,
                     'debet' => $jsisa,
@@ -447,6 +516,8 @@ class KeluarbiayapermuserStafController extends Controller
                     'parent_id' => $parent_id
                 ]);
                 $ju2 = Jurnalumum::updateOrCreate(['id' => $ids[1]], [
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
                     'uraian' => $uraian,
                     'akun_id' => $akunkas,
                     'debet' => 0,
@@ -504,16 +575,23 @@ class KeluarbiayapermuserStafController extends Controller
             ];
         }));
         $tanggal = Carbon::now()->format('d M Y');
+        $media = request('media','print');
+        $qr_kode = sprintf("lapkeluarbiayaprm_%s.png", $this->user->id);
+        $xpath = url()->current().'/?media=screen';
+        QrCode::format('png')->size(100)->generate($xpath, public_path($qr_kode));
         $data = [
-            'judul_lap' => 'PENGELUARAN BIAYA',
+            'qrcode' => config('app.qrcodeurl',''). $qr_kode,
+            'judul_lap' => 'PENGELUARAN BIAYA PERMOHONAN',
             'keluarbiayapermuser' => $keluarbiayapermuser,
             'dkeluarbiayapermusers' => $dkeluarbiayapermusers,
             'tanggal' => $tanggal,
         ];
-        $pdf = Pdf::loadView('pdf.lapKeluarbiayauser', $data)->setPaper(array(0, 0, 609.4488, 935.433), 'portrait');
-        // return view('pdf.lapKeluarbiayauser', compact('judul_lap', 'subjudul_lap'));
-        // return $pdf->stream('lapKeluarbiayauser.pdf');
-        return 'data:application/pdf;base64,' . base64_encode($pdf->stream());
+        if($media == 'print'){
+            $pdf = Pdf::loadView('pdf.lapKeluarbiayauser', $data)->setPaper(array(0, 0, 609.4488, 935.433), 'portrait');
+            return 'data:application/pdf;base64,' . base64_encode($pdf->stream());
+            }else{
+            return view('lapKeluarbiayauser', $data);
+        }
     }
 
     public function infoKeluarbiayapermuser()

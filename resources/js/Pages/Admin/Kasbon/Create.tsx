@@ -4,10 +4,10 @@ import { LoadingButton } from "@/Components/Shared/LoadingButton";
 import AdminLayout from "@/Layouts/AdminLayout";
 import { Link, router, useForm, usePage } from "@inertiajs/react";
 import MoneyInput from "@/Components/Shared/MoneyInput";
-import { OptionSelect } from "@/types";
+import { OptionSelect, User } from "@/types";
 import SelectSearch from "@/Components/Shared/SelectSearch";
 import AsyncSelectSearch from "@/Components/Shared/AsyncSelectSearch";
-import StafLayout from "@/Layouts/StafLayout";
+import apputils from "@/bootstrap";
 
 type Props = {
     statuskasbonOpts: OptionSelect[];
@@ -59,10 +59,41 @@ const Create = ({
             jmlKasbon > jmlPenggunaan ? jmlKasbon - jmlPenggunaan : 0;
         return xsisaPenggunaan.toString();
     };
+    const sendMessageToMobileRole = async (
+        title: string,
+        body: string,
+        datas: { navigationId: string } & object
+    ) => {
+        let xlink = `/admin/messages/api/sendmessagetomobilerole`;
+        const response = await apputils.backend.post(xlink, {
+            title,
+            role: "admin",
+            body,
+            datas,
+        });
+        const data = response.data;
+    };
 
     function handleSubmit(e: any) {
         e.preventDefault();
-        post(route("transaksi.kasbons.store"));
+        post(route("transaksi.kasbons.store"), {
+            onSuccess: () => {
+                sendMessageToMobileRole(
+                    "Kasbon Baru Dibuat ",
+                    data.jenis_kasbon +
+                        " - " +
+                        data.instansiOpt?.label +
+                        " - " +
+                        data.keperluan +
+                        " (" +
+                        data.user?.label +
+                        ")",
+                    {
+                        navigationId: "kasbon",
+                    }
+                );
+            },
+        });
     }
 
     return (

@@ -109,7 +109,7 @@ export default function CardTableKeluarbiayas({
             >
                 <div className="rounded-full mb-0 px-4 py-3 border-0 ">
                     <div className="flex justify-between w-full flex-col md:flex-row">
-                        <div className="relative w-full max-w-full flex-grow flex-1 ">
+                        <div className="relative w-full max-w-full flex-grow flex-1 mb-2">
                             <h3
                                 className={
                                     "font-semibold text-lg " +
@@ -121,7 +121,7 @@ export default function CardTableKeluarbiayas({
                                 PENGELUARAN BIAYA
                             </h3>
                         </div>
-                        <div className="flex justify-center gap-2 flex-row items-start w-3/4 md:w-2/3">
+                        <div className="flex flex-col justify-center gap-1 md:flex-row items-start w-3/4 md:w-2/3">
                             {isAdmin ? (
                                 <AsyncSelectSearch
                                     placeholder="Pilih User"
@@ -156,7 +156,7 @@ export default function CardTableKeluarbiayas({
                             />
 
                             <InputSearch
-                                className="w-2/3"
+                                className="w-full md:w-2/3"
                                 value={values.search ? values.search : ""}
                                 onChange={(e: any) =>
                                     setValues((v) => ({

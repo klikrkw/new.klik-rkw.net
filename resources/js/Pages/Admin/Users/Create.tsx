@@ -26,6 +26,7 @@ const Create = () => {
         name: string;
         email: string;
         password: string;
+        telp_user: string;
         roles: MultiValue<Role[]>;
         permissions: MultiValue<Permission[]>;
         _method: string;
@@ -36,6 +37,7 @@ const Create = () => {
         name: "",
         email: "",
         password: "",
+        telp_user: "",
         roles: [],
         permissions: [],
         _method: "POST",
@@ -112,6 +114,16 @@ const Create = () => {
                                         setData("password", e.target.value)
                                     }
                                 />
+                                <Input
+                                    name="telp_user"
+                                    label="Telp"
+                                    errors={errors.telp_user}
+                                    value={data.telp_user}
+                                    onChange={(e) =>
+                                        setData("telp_user", e.target.value)
+                                    }
+                                />
+
                                 <SelectSearch
                                     name="roles"
                                     options={roles}

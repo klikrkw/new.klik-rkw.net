@@ -2,52 +2,64 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\Admin\EventCollection;
 use App\Models\Akun;
+use App\Models\Dkeluarbiayapermuser;
+use App\Models\Event;
 use App\Models\Itemkegiatan;
 use App\Models\Kelompokakun;
+use App\Models\Keluarbiaya;
+use App\Models\Keluarbiayapermuser;
+use App\Models\Permohonan;
 use App\Models\Prosespermohonan;
+use App\Models\Tempatarsip;
+use App\Models\User;
+use App\Services\MessageBuilder;
+use App\Traits\FirebaseTrait;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Google\Cloud\Firestore\FieldValue;
+use Illuminate\Support\Facades\Http;
+use PhpParser\Node\Expr\Match_;
 
 class TestController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
+    use FirebaseTrait;
+    protected $firestoreDB;
+
+    public function __construct()
+    {
+        $this->firestoreDB = app('firebase.firestore')->database();
+    }
+
     public function index()
     {
-        $dt1 = Carbon::now();
-        $dt2 = Carbon::now();
-        $dt3 = Carbon::now()->subDays(7);
-        $dt4 = Carbon::now();
-        $dt5 = Carbon::now()->setDay(1);
-        $dt6 = Carbon::now();
-        $periods = [
-            'today' => [$dt1->setTime(0, 0, 1)->format('Y-m-d H:i:s'), $dt2->setTime(24, 0, 0)->format('Y-m-d H:i:s')],
-            'this_week' => [$dt3->setTime(0, 0, 1)->format('Y-m-d H:i:s'), $dt4->setTime(24, 0, 0)->format('Y-m-d H:i:s')],
-            'this_month' => [$dt5->setTime(0, 0, 1)->format('Y-m-d H:i:s'), $dt6->setTime(24, 0, 0)->format('Y-m-d H:i:s')],
-        ];
-
-        // return response()->json($periods);
-
-        // $tgl_lap = Carbon::today()->format('d F Y');
-        // $data = [
-        //     'judul_lap' => 'PENGELUARAN BIAYA BPN',
-        //     'subjudul_lap' => 'Tanggal : ' . $tgl_lap,
-        // ];
-
-        // $pdf = Pdf::loadView('pdf.lapKeluarbiayauser', $data)->setPaper(array(0, 0, 609.4488, 935.433), 'portrait');
-        // // return view('pdf.lapKeluarbiayauser', compact('judul_lap', 'subjudul_lap'));
-        // return $pdf->stream();
-        return Inertia::render('Test/Test', []);
+        $datas = Permohonan::where('cek_biaya', 0)->where('period_cekbiaya', 'limited')->where('date_cekbiaya', '=', Carbon::now()->format('Y-m-d'))
+        ->skip(0)->take(100)->get();
+        if(count($datas)>0){
+            for ($i=0; $i < count($datas) ; $i++) {
+                $row = $datas[$i];
+                $row->update([
+                    'cek_biaya' => 1,
+                ]);
+            }
+        }
+        // return Inertia::render('Test/Test', [
+        //     'users' => $users->get(),
+        // ]);
+        return response()->json($datas->pluck('nama_penerima')->toArray());
     }
 
     /**
      * Show the form for creating a new resource.
      */
+
     public function generateQRCode()
     {
         // Generate QR Code dengan data sederhana
@@ -71,9 +83,48 @@ class TestController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show()
     {
-        //
+        $response = Http::get('https://bphtb.patikab.go.id/pendaftaran');
+        $headers = $response->headers();
+        $hdrs = $headers['Set-Cookie'];
+        $hd1 = substr($hdrs[0],0,strpos($hdrs[0],'expires',0));
+        $hd2 = substr($hdrs[1],0,strpos($hdrs[1],'; expires',0));
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, 'https://bphtb.patikab.go.id/pendaftaran/datagrid-revisi');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'accept: */*',
+            'accept-language: en-US,en;q=0.9,id;q=0.8,de-DE;q=0.7,de;q=0.6',
+            'content-type: application/json',
+            'origin: https://bphtb.patikab.go.id',
+            'priority: u=1, i',
+            'referer: https://bphtb.patikab.go.id/pendaftaran',
+            'sec-ch-ua: "Not(A:Brand";v="99", "Microsoft Edge";v="133", "Chromium";v="133"',
+            'sec-ch-ua-mobile: ?0',
+            'sec-ch-ua-platform: "Windows"',
+            'sec-fetch-dest: empty',
+            'sec-fetch-mode: cors',
+            'sec-fetch-site: same-origin',
+            'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0',
+            'x-csrf-token: jZfiMwFi344eaIykHhi15eh7MFjwC5m5B715obY5',
+            'x-requested-with: XMLHttpRequest',
+        ]);
+        $hdrs = $headers['Set-Cookie'];
+        $hd1 = substr($hdrs[0],0,strpos($hdrs[0],'expires',0));
+        $hd2 = substr($hdrs[1],0,strpos($hdrs[1],'; expires',0));
+        curl_setopt($ch, CURLOPT_COOKIE, sprintf('%s%s',$hd1,$hd2));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, '{"filter":{"nomor":"","tanggal":"01-01-2025 - 17-02-2025","jenis_transaksi":"","notaris":"37","nama_wp":"","nop":"","kode_bill":""},"sorting":{},"pagination":{"pageNumber":0,"pageSize":"10"}}');        curl_setopt($ch, CURLOPT_POSTFIELDS, '{"filter":{"nomor":"","tanggal":"01-01-2025 - 17-02-2025","jenis_transaksi":"","notaris":"37","nama_wp":"","nop":"","kode_bill":""},"sorting":{},"pagination":{"pageNumber":0,"pageSize":"10"}}');
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+    $data = null;
+    // if($response->ok()){
+        // $data = $response->body();
+    // }
+        return Inertia::render('Test/Test',['data'=>json_decode($response, true)]);
     }
 
     /**

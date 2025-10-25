@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\UserCollection;
 use App\Models\User;
+use App\Models\UserFirebase;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -72,6 +73,7 @@ class UserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'min:6'],
             'roles' => ['nullable'],
+            'telp_user' => ['nullable'],
             'permissions' => ['nullable']
         ]);
 
@@ -92,6 +94,11 @@ class UserController extends Controller
             ];
             $fb = $this->firebaseAuth->createUser($userProperties);
             $userfb = $user->userfirebase;
+            if(!$userfb){
+                $login_data['user_id'] = $user->id;
+                $login_data['uid'] = $fb->uid;
+                $userfb = UserFirebase::create($login_data);
+            }
             $userfb->uid = $fb->uid;
             $userfb->save();
 
@@ -144,6 +151,7 @@ class UserController extends Controller
             'name' => ['required', 'max:50'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'roles' => ['nullable'],
+            'telp_user' => ['nullable'],
             'permissions' => ['nullable']
         ]);
 

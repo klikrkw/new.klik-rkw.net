@@ -27,6 +27,9 @@ class StoreProsespermohonanApiRequest extends FormRequest
             'itemprosesperm_id' => ['required', Rule::unique('prosespermohonans', 'itemprosesperm_id')->where('transpermohonan_id', request('transpermohonan_id'))],
             'catatan_prosesperm' => ['nullable'],
             'statusprosesperm_id' => ['required'],
+            'is_alert'=>['required'],
+            'start'=>['required'],
+            'end'=>['required'],
         ];
     }
 

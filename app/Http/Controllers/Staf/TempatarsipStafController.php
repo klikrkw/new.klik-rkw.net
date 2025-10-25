@@ -179,7 +179,7 @@ class TempatarsipStafController extends Controller
         $col = request('col',1);
         QrCode::format('png')->size(300)->generate($tempatarsip->kode_tempatarsip, public_path('qrcode_tmparsip.png'));
         $data = [
-            'qrcode' => 'qrcode_tmparsip.png',
+            'qrcode' => config('app.qrcodeurl',''). 'qrcode_tmparsip.png',
             'row'=>$row,
             'col'=>$col,
             'row_count'=>6,

@@ -16,6 +16,12 @@ body {
     background-color: #dae8f5;
 }
 
+.timeline-date {
+    color: #0369a1;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
 @layer utilities {
     /* Hide scrollbar for Chrome, Safari and Opera */
     .no-scrollbar::-webkit-scrollbar {

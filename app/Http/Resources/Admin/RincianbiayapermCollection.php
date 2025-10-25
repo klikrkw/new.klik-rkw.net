@@ -35,11 +35,12 @@ class RincianbiayapermCollection extends JsonResource
                 '%s - %s',
                 $this->nama_desa,
                 $this->nama_kecamatan,            )
-,
-            'total_pemasukan' => number_format($this->total_pemasukan),
-            'total_pengeluaran' => number_format($this->total_pengeluaran),
-            'sisa_saldo' => number_format($this->sisa_saldo),
-            'status_rincianbiayaperm' => $this->status_rincianbiayaperm,
+                ,
+                'total_pemasukan' => number_format($this->total_pemasukan),
+                'total_pengeluaran' => number_format($this->total_pengeluaran),
+                'sisa_saldo' => number_format($this->sisa_saldo),
+                'status_rincianbiayaperm' => $this->status_rincianbiayaperm,
+                'no_daftar' => $this->no_daftar,
         ];
     }
 

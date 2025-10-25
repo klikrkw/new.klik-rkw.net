@@ -19,17 +19,23 @@ import moment from "moment";
 import React, { SyntheticEvent, useState } from "react";
 import apputils from "@/bootstrap";
 import { trim } from "lodash";
+import DateInput from "@/Components/Shared/DateInput";
+import ModalSendNotif from "@/Components/Modals/ModalSendNotif";
+import { MultiValue } from "react-select";
+import { stat } from "fs";
 
 type Props = {
     prosespermohonans: Prosespermohonan[];
     statusprosesperms: OptionSelectDisabled[];
     transpermohonan: Transpermohonan;
+    userOpts: OptionSelect[];
 };
 
 function CardTableProsespermohonans({
     prosespermohonans,
     statusprosesperms,
     transpermohonan,
+    userOpts,
 }: Props) {
     type FormValues = {
         prosespermohonan_id: string;
@@ -37,6 +43,9 @@ function CardTableProsespermohonans({
         statusprosesperm_id: string;
         statusprosesperm: OptionSelect | unknown;
         catatan_statusprosesperm: string;
+        start: string;
+        end: string;
+        is_alert: boolean;
         _method: string;
     };
 
@@ -47,6 +56,9 @@ function CardTableProsespermohonans({
             statusprosesperm_id: "",
             statusprosesperm: null,
             catatan_statusprosesperm: "",
+            is_alert: false,
+            start: moment().format("YYYY-MM-DD HH:mm"),
+            end: moment().format("YYYY-MM-DD HH:mm"),
             _method: "POST",
         });
     const [statuspermOpts, setstatusPermOpts] = useState<OptionSelect[]>([]);
@@ -55,6 +67,9 @@ function CardTableProsespermohonans({
     // >([]);
     const [showModal, setShowModal] = useState(false);
     const [showModalMessage, setShowModalMessage] = useState<boolean>(false);
+    const [statusprosesperm, setStatusprosesperm] =
+        useState<StatusprosespermProsespermohonan>();
+    const [prosesperm, setProsesperm] = useState<Prosespermohonan | null>(null);
     function handleSubmit(e: any) {
         e.preventDefault();
         post(
@@ -74,6 +89,8 @@ function CardTableProsespermohonans({
             }
         );
     }
+    const [showModalSendNotif, setShowModalSendNotif] =
+        useState<boolean>(false);
 
     const sendMessageToMobile = async (
         users: User[],
@@ -112,7 +129,8 @@ function CardTableProsespermohonans({
     const handleShowModalEdit = (
         e: SyntheticEvent,
         statusprosesperm: StatusprosespermProsespermohonan,
-        prosespermohonan_id: string
+        prosespermohonan_id: string,
+        prosespermohonan: Prosespermohonan
     ) => {
         // { value: number, label: string, isDisabled: boolean }
         // const ids = opts.map((a) => a.id);
@@ -132,6 +150,9 @@ function CardTableProsespermohonans({
             catatan_statusprosesperm:
                 statusprosesperm.pivot.catatan_statusprosesperm,
             statusprosesperm_id: statusprosesperm.id,
+            is_alert: prosespermohonan.is_alert,
+            start: moment(prosespermohonan.start).format("YYYY-MM-DD hh:mm:ss"),
+            end: moment(prosespermohonan.end).format("YYYY-MM-DD hh:mm:ss"),
             statusprosesperm: {
                 value: statusprosesperm.id,
                 label: statusprosesperm.nama_statusprosesperm,
@@ -155,13 +176,12 @@ function CardTableProsespermohonans({
     return (
         <div className="w-full mt-4 flex flex-col">
             <ul className="list-none container-snap max-h-56 overflow-x-hidden">
-                <li className="flex relative flex-row w-full items-center rounded-t-md text-sm border justify-start bg-lightBlue-600 border-blueGray-400 px-2 py-2 gap-1 text-lightBlue-50 font-bold">
-                    <div className="w-[5%]">No</div>
-                    <div className="w-[15%]">Tanggal</div>
+                <li className="flex relative flex-row w-full items-center rounded-t-md text-sm border justify-start bg-lightBlue-600 border-blueGray-400 px-2 py-2 gap-1 text-lightBlue-50">
                     <div className="w-[40%] md:w-[25%]">Nama Proses</div>
+                    <div className="w-[30%] md:w-[15%]">Tanggal</div>
                     <div className="hidden md:block w-[25%]">Catatan</div>
-                    <div className="w-[15%]">User</div>
-                    <div className="flex-shrink-0">Menu</div>
+                    <div className="w-[20%]">User</div>
+                    {/* <div className="flex-shrink-0">Menu</div> */}
                 </li>
             </ul>
             <ul className="list-none container-snap max-h-80 overflow-x-hidden rounded-b-md shadow-md">
@@ -172,21 +192,20 @@ function CardTableProsespermohonans({
                                 key={index}
                                 className="w-full flex flex-col overflow-hidden bg-lightBlue-200"
                             >
-                                <div className="flex w-full text-sm px-2 py-2 items-center justify-start gap-1 font-semibold text-lightBlue-600 border-t-2 border-lightBlue-400">
-                                    <div className="w-[5%]">{index + 1}</div>
-                                    <div className="w-[15%]">
-                                        {prosesperm.tgl_proses}
-                                    </div>
+                                <div className="flex w-full text-sm px-2 py-2 items-center justify-start gap-1 text-lightBlue-600 ">
                                     <div className="w-[40%] md:w-[25%]">
                                         {
                                             prosesperm.itemprosesperm
                                                 .nama_itemprosesperm
                                         }
                                     </div>
+                                    <div className="w-[30%] md:w-[15%]">
+                                        {prosesperm.tgl_proses}
+                                    </div>
                                     <div className="hidden md:block md:w-[25%]">
                                         {prosesperm.catatan_prosesperm}
                                     </div>
-                                    <div className="w-[15%]">
+                                    <div className="w-[20%]">
                                         {prosesperm.user.name}{" "}
                                     </div>
 
@@ -211,8 +230,8 @@ function CardTableProsespermohonans({
                                 </div>
 
                                 {prosesperm.statusprosesperms.length > 0 ? (
-                                    <div className="w-full flex flex-col text-sm border-t-2 border-lightBlue-400">
-                                        <div className="list-none w-full px-6 bg-lightBlue-100  text-lightBlue-700">
+                                    <div className="w-full flex flex-col text-sm ">
+                                        <div className="list-none w-full px-2 bg-lightBlue-100  text-lightBlue-700">
                                             {prosesperm.statusprosesperms.map(
                                                 (
                                                     statusprosesperm: StatusprosespermProsespermohonan,
@@ -224,16 +243,16 @@ function CardTableProsespermohonans({
                                                     ) {
                                                         return (
                                                             <div
-                                                                className="w-full"
+                                                                className="w-full flex flex-row items-center justify-between gap-1"
                                                                 key={idx}
                                                             >
-                                                                <ol className="flex flex-row w-full items-center text-xs gap-1">
+                                                                <ol className="flex flex-row w-4/5 md:w-9/12 items-center text-xs gap-1 justify-start  ">
                                                                     <li className="py-2">
                                                                         <img
                                                                             src={
                                                                                 statusprosesperm.image_statusprosesperm
                                                                             }
-                                                                            className="h-5 w-auto"
+                                                                            className="h-5 w-auto "
                                                                             aria-hidden
                                                                             alt=""
                                                                         />
@@ -255,7 +274,6 @@ function CardTableProsespermohonans({
                                                                             : ""}
                                                                     </li>
                                                                     <li>
-                                                                        oleh{" "}
                                                                         <span className="font-semibold">
                                                                             {
                                                                                 statusprosesperm
@@ -264,7 +282,7 @@ function CardTableProsespermohonans({
                                                                             }
                                                                         </span>
                                                                     </li>
-                                                                    <li className="italic mr-2">
+                                                                    <li className="italic ">
                                                                         {moment(
                                                                             statusprosesperm
                                                                                 .pivot
@@ -273,102 +291,7 @@ function CardTableProsespermohonans({
                                                                             "DD MMM YYYY"
                                                                         )}
                                                                     </li>
-                                                                    <li>
-                                                                        <Link
-                                                                            className="rounded-full bg-white/80 px-2 py-1 shadow-lg font-bold text-lightBlue-500"
-                                                                            key={
-                                                                                index
-                                                                            }
-                                                                            href="#"
-                                                                            onClick={(
-                                                                                e
-                                                                            ) =>
-                                                                                handleShowModalEdit(
-                                                                                    e,
-                                                                                    statusprosesperm,
-                                                                                    prosesperm.id
-                                                                                )
-                                                                            }
-                                                                        >
-                                                                            <i className="fas fa-edit"></i>{" "}
-                                                                            Ubah
-                                                                        </Link>
-                                                                    </li>
-                                                                    <li>
-                                                                        <a
-                                                                            className="rounded-full bg-white/80 px-2 py-1 shadow-lg font-bold text-lightBlue-500"
-                                                                            href="#"
-                                                                            onClick={() =>
-                                                                                useSwal
-                                                                                    .confirm(
-                                                                                        {
-                                                                                            title: "Kirim Pesan",
-                                                                                            text: "apakah akan mengirim pesan?",
-                                                                                        }
-                                                                                    )
-                                                                                    .then(
-                                                                                        (
-                                                                                            result
-                                                                                        ) => {
-                                                                                            if (
-                                                                                                result.isConfirmed
-                                                                                            ) {
-                                                                                                sendMessageToMobile(
-                                                                                                    transpermohonan
-                                                                                                        .permohonan
-                                                                                                        .users,
-                                                                                                    prosesperm
-                                                                                                        .itemprosesperm
-                                                                                                        .nama_itemprosesperm,
-                                                                                                    `${
-                                                                                                        transpermohonan.no_daftar
-                                                                                                    } - [${
-                                                                                                        transpermohonan
-                                                                                                            .jenispermohonan
-                                                                                                            .nama_jenispermohonan
-                                                                                                    } - ${
-                                                                                                        transpermohonan
-                                                                                                            .permohonan
-                                                                                                            .nama_penerima
-                                                                                                    }-${
-                                                                                                        transpermohonan
-                                                                                                            .permohonan
-                                                                                                            .nomor_hak
-                                                                                                    },${
-                                                                                                        transpermohonan
-                                                                                                            .permohonan
-                                                                                                            .letak_obyek
-                                                                                                    }]
-                                                                                                        ${
-                                                                                                            statusprosesperm.nama_statusprosesperm
-                                                                                                        } - ${
-                                                                                                        statusprosesperm
-                                                                                                            .pivot
-                                                                                                            .catatan_statusprosesperm
-                                                                                                            ? statusprosesperm
-                                                                                                                  .pivot
-                                                                                                                  .catatan_statusprosesperm
-                                                                                                            : ""
-                                                                                                    }, Petugas : ${
-                                                                                                        statusprosesperm
-                                                                                                            .user
-                                                                                                            .name
-                                                                                                    }`,
-                                                                                                    {
-                                                                                                        navigationId:
-                                                                                                            "main",
-                                                                                                    }
-                                                                                                );
-                                                                                            }
-                                                                                        }
-                                                                                    )
-                                                                            }
-                                                                        >
-                                                                            <i className="fas fa-message"></i>{" "}
-                                                                            Kirim
-                                                                            Pesan
-                                                                        </a>
-                                                                    </li>
+
                                                                     {/* <li>
                                                                         <button
                                                                             onClick={(
@@ -406,6 +329,50 @@ function CardTableProsespermohonans({
                                                                         </button>
                                                                     </li> */}
                                                                 </ol>
+                                                                <div className="flex gap-1 justify-end ">
+                                                                    <Link
+                                                                        className="rounded-full bg-white/80 px-2 py-1 shadow-lg font-bold text-lightBlue-500"
+                                                                        key={
+                                                                            index
+                                                                        }
+                                                                        href="#"
+                                                                        onClick={(
+                                                                            e
+                                                                        ) =>
+                                                                            handleShowModalEdit(
+                                                                                e,
+                                                                                statusprosesperm,
+                                                                                prosesperm.id,
+                                                                                prosesperm
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <i className="fas fa-edit"></i>{" "}
+                                                                        <span className="hidden md:inline">
+                                                                            Ubah
+                                                                        </span>
+                                                                    </Link>
+                                                                    <a
+                                                                        className="rounded-full bg-white/80 px-2 py-1 shadow-lg font-bold text-lightBlue-500"
+                                                                        href="#"
+                                                                        onClick={() => {
+                                                                            setStatusprosesperm(
+                                                                                statusprosesperm
+                                                                            );
+                                                                            setProsesperm(
+                                                                                prosesperm
+                                                                            );
+                                                                            setShowModalSendNotif(
+                                                                                true
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        <i className="fas fa-message"></i>{" "}
+                                                                        <span className="hidden md:inline">
+                                                                            Pesan
+                                                                        </span>
+                                                                    </a>
+                                                                </div>
                                                             </div>
                                                         );
                                                     } else {
@@ -499,9 +466,9 @@ function CardTableProsespermohonans({
                 show={showModal}
                 maxWidth="md"
                 closeable={false}
-                onClose={() => alert("modal close")}
+                onClose={() => console.log("modal close")}
             >
-                <div className="p-4">
+                <div className="p-4 ">
                     <form onSubmit={handleSubmit}>
                         <SelectSearch
                             name="itemprosesperm_id"
@@ -529,6 +496,58 @@ function CardTableProsespermohonans({
                                 )
                             }
                         />
+                        <div className="relative h-full mr-4 mt-2">
+                            <label className="inline-flex items-center cursor-pointer">
+                                <input
+                                    id="customCheckAlert"
+                                    type="checkbox"
+                                    className="form-checkbox border-0 rounded text-blueGray-700 ml-1 w-5 h-5 ease-linear transition-all duration-150"
+                                    checked={data.is_alert}
+                                    onChange={(e) =>
+                                        setData("is_alert", e.target.checked)
+                                    }
+                                />
+                                <span className="ml-2 text-sm font-semibold text-blueGray-600">
+                                    Ingatkan
+                                </span>
+                            </label>
+                        </div>
+                        {data.is_alert ? (
+                            <div className="w-full flex flex-col gap-2 mb-4">
+                                <DateInput
+                                    label="Start"
+                                    // showTimeSelect
+                                    selected={data.start}
+                                    value={data.start}
+                                    name="start"
+                                    errors={errors.start}
+                                    // showTimeSelect
+                                    customDateFormat="DD-MMM-YYYY HH:mm"
+                                    onChange={(e) =>
+                                        setData(
+                                            "start",
+                                            moment(e).format("YYYY-MM-DD HH:mm")
+                                        )
+                                    }
+                                />
+                                <DateInput
+                                    label="End"
+                                    // showTimeSelect
+                                    selected={data.end}
+                                    value={data.end}
+                                    name="end"
+                                    errors={errors.end}
+                                    customDateFormat="DD-MMM-YYYY HH:mm"
+                                    // showTimeSelect
+                                    onChange={(e) =>
+                                        setData(
+                                            "end",
+                                            moment(e).format("YYYY-MM-DD HH:mm")
+                                        )
+                                    }
+                                />
+                            </div>
+                        ) : null}
                         <div className="mt-4 w-full flex justify-between items-center">
                             <LoadingButton
                                 theme="black"
@@ -551,6 +570,18 @@ function CardTableProsespermohonans({
                     </form>
                 </div>
             </Modal>
+            {showModalSendNotif && statusprosesperm && (
+                <ModalSendNotif
+                    showModal={showModalSendNotif}
+                    userOpts={userOpts}
+                    setShowModal={setShowModalSendNotif}
+                    statusprosesperm={
+                        statusprosesperm ? statusprosesperm : null
+                    }
+                    transpermohonan={transpermohonan}
+                    prosesperm={prosesperm}
+                />
+            )}
         </div>
     );
 }

@@ -3,6 +3,7 @@
 namespace App\Traits;
 use App\Models\UserFirebase;
 use Illuminate\Http\Request;
+use Kreait\Firebase\Messaging\AndroidConfig;
 use Kreait\Firebase\Messaging\CloudMessage;
 
 trait FirebaseTrait {
@@ -97,13 +98,60 @@ trait FirebaseTrait {
         $deviceTokens = UserFirebase::whereIn('user_id', $userids)
         ->whereNotNull('fcmTokenMobile')->pluck('fcmTokenMobile')->toArray();
         $messaging = app('firebase.messaging');
+        $config = AndroidConfig::fromArray([
+        'ttl' => '3600s',
+        'priority' => 'high',
+        'notification' => [
+            'title' => 'judul uji coba di background',
+            'body' => 'uji coba body.',
+            'icon' => 'stock_ticker_update',
+            'color' => '#f45342',
+            'sound' => 'default',
+        ],
+]);
         if (count($deviceTokens) > 0) {
             $message = CloudMessage::fromArray([
                 'notification' => ['title' => $title, 'body' => $body], // optional
                 'data' => $data, // optional
             ]);
+            // ->withAndroidConfig($config);
             $messaging->sendMulticast($message, $deviceTokens);
-
+        }
+        return response()->json(['success' => false, 'message' => "send message fail "]);
+    }
+    public function sendDataToMultiUserMobile($userids=[], $data=[])
+    {
+        $deviceTokens = UserFirebase::whereIn('user_id', $userids)
+        ->whereNotNull('fcmTokenMobile')->pluck('fcmTokenMobile')->toArray();
+        $messaging = app('firebase.messaging');
+        $config = AndroidConfig::fromArray([
+        'ttl' => '3600s',
+        'priority' => 'high',
+    ]);
+        if (count($deviceTokens) > 0) {
+            $message = CloudMessage::fromArray([
+                'data' => $data, // optional
+            ]);
+            // ->withAndroidConfig($config);
+            $messaging->sendMulticast($message, $deviceTokens);
+        }
+        return response()->json(['success' => false, 'message' => "send message fail "]);
+    }
+    public function sendDataToMultiUserWeb($userids=[], $data=[])
+    {
+        $deviceTokens = UserFirebase::whereIn('user_id', $userids)
+        ->whereNotNull('fcmToken')->pluck('fcmToken')->toArray();
+        $messaging = app('firebase.messaging');
+        $config = AndroidConfig::fromArray([
+        'ttl' => '3600s',
+        'priority' => 'high',
+    ]);
+        if (count($deviceTokens) > 0) {
+            $message = CloudMessage::fromArray([
+                'data' => $data, // optional
+            ]);
+            // ->withAndroidConfig($config);
+            $messaging->sendMulticast($message, $deviceTokens);
         }
         return response()->json(['success' => false, 'message' => "send message fail "]);
     }

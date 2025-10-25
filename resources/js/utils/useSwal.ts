@@ -3,7 +3,7 @@ import Swal from "sweetalert2";
 type Props = {
     title?: string;
     text?: string;
-    icon?: "warning";
+    icon?: "warning" | "info";
     // cb: ({}) => void;
 };
 const confirm = ({ title, text, icon }: Props) =>
@@ -16,4 +16,13 @@ const confirm = ({ title, text, icon }: Props) =>
         cancelButtonColor: "#d33",
         confirmButtonText: "Yes",
     });
-export default { confirm };
+
+const info = ({ title, text, icon }: Props) =>
+    Swal.fire({
+        title: title ? title : "informasi",
+        text: text ? text : "halo selamat datang",
+        icon: icon ? icon : "info",
+        timer: 1500,
+    });
+
+export default { confirm, info };

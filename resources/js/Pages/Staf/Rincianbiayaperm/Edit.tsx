@@ -20,7 +20,7 @@ import CardDrincianbiayapermList from "@/Components/Cards/Admin/CardDrincianbiay
 import ModalCetakLaporan from "@/Components/Modals/ModalCetakLaporan";
 import Button from "@/Components/Shared/Button";
 import StafLayout from "@/Layouts/StafLayout";
-
+import apputils from "@/bootstrap";
 type Props = {
     itemrincianbiayapermOpts: OptionSelect[];
     base_route: string;
@@ -66,6 +66,29 @@ const Edit = ({
             jmlKasbon > jmlPenggunaan ? jmlKasbon - jmlPenggunaan : 0;
         return xsisaPenggunaan.toString();
     };
+    const sendMessageToWebUser = async (
+        user_id: number,
+        datas: { navigationId: string } & object
+    ) => {
+        let xlink = `/send_message`;
+        const response = await apputils.backend.post(xlink, {
+            user_ids: [user_id],
+            title: "Permohonan Kasbon",
+            body: "Permohonan Kasbon Telah Dibuat",
+            datas,
+        });
+        const data = response.data;
+    };
+    const sendDataToMobileRole = async (
+        datas: { navigationId: string } & object
+    ) => {
+        let xlink = `/admin/messages/api/senddatatomobilerole`;
+        const response = await apputils.backend.post(xlink, {
+            role: "admin",
+            datas,
+        });
+        const data = response.data;
+    };
 
     function handleSubmit(e: any) {
         e.preventDefault();
@@ -78,6 +101,9 @@ const Edit = ({
                 onSuccess: (d) => {
                     reset("jumlah_biaya", "ket_biaya");
                     firstInput.current.focus();
+                    sendDataToMobileRole({
+                        navigationId: "kasbon",
+                    });
                 },
             }
         );
@@ -152,7 +178,7 @@ const Edit = ({
                                     {rincianbiayaperm.status_rincianbiayaperm ===
                                     "wait_approval" ? (
                                         <form onSubmit={handleSubmit}>
-                                            <div className="grid grid-cols-2 gap-2">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                                 <div className="w-full flex flex-col mb-2">
                                                     <SelectSearch
                                                         xref={firstInput}
@@ -227,7 +253,13 @@ const Edit = ({
                                                         type="submit"
                                                         className="text-sm py-2"
                                                     >
-                                                        <span>Simpan</span>
+                                                        <i
+                                                            className="fa fa-plus text-md"
+                                                            aria-hidden="true"
+                                                        ></i>
+                                                        <span className="ml-2">
+                                                            Tambah
+                                                        </span>
                                                     </LoadingButton>
                                                 </div>
                                             </div>
@@ -271,7 +303,12 @@ const Edit = ({
                                     theme="blue"
                                     onClick={(e) => prosesLaporan(e)}
                                 >
-                                    <span>Cetak</span>
+                                    <i
+                                        className="fa fa-print text-md"
+                                        aria-hidden="true"
+                                    ></i>
+
+                                    <span className="ml-2">Cetak</span>
                                 </Button>
                             </div>
                             <CardDrincianbiayapermList
@@ -284,10 +321,7 @@ const Edit = ({
             <ModalCetakLaporan
                 showModal={showModalLaporan}
                 setShowModal={setShowModalLaporan}
-                src={route(
-                    base_route + "transaksi.rincianbiayaperms.lap.staf",
-                    rincianbiayaperm.id
-                )}
+                src={route("rincianbiayaperms.lap.staf", rincianbiayaperm.id)}
             />
         </StafLayout>
     );

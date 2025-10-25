@@ -22,6 +22,8 @@ class ItemkegiatanCollection extends JsonResource
             'grupitemkegiatans' => $this->grupitemkegiatans,
             'isunique' => $this->isunique == 1 ? true : false,
             'checkbiaya' => $this->checkbiaya == 1 ? true : false,
+            'is_alert' => $this->is_alert == 1 ? true : false,
+            'start_alert' => $this->start_alert,
         ];
     }
 }

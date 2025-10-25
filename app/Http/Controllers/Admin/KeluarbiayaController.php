@@ -24,6 +24,9 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Inertia\Inertia;
 use App\Traits\PeriodetimeTrait;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Closure;
+use Illuminate\Support\Facades\URL;
 
 class KeluarbiayaController extends Controller
 {
@@ -69,7 +72,7 @@ class KeluarbiayaController extends Controller
         $keluarbiayas = $keluarbiayas->with('kasbons');
         if ($this->is_admin) {
             if (request()->has('user_id')) {
-                $keluarbiayas = $keluarbiayas->where('user_id', $this->user->id);
+                $keluarbiayas = $keluarbiayas->where('user_id', request('user_id'));
             }
         } else {
             $keluarbiayas = $keluarbiayas->where('user_id', $this->user->id);
@@ -78,14 +81,18 @@ class KeluarbiayaController extends Controller
         $keluarbiayas = $keluarbiayas->filter(Request::only(['search']))
             ->paginate(10)
             ->appends(Request::all());
-
+            $user = User::find(request('user_id'));
+            // if(!$user){
+            //     $user = $this->user;
+            // }
         return Inertia::render('Admin/Keluarbiaya/Index', [
             'statusOpts' => $xstatus,
             'status' => $status,
             'filters' => Request::all('search'),
             'keluarbiayas' => KeluarbiayaCollection::collection($keluarbiayas),
             'isAdmin' => $this->is_admin,
-            'user' => ['value' => $this->user->id, 'label' => $this->user->name],
+            // 'user' => ['value' => $this->user->id, 'label' => $this->user->name],
+            'user' => $user?['value' => $user->id, 'label' => $user->name]:[],
             'base_route' => $this->base_route,
         ]);
     }
@@ -99,12 +106,12 @@ class KeluarbiayaController extends Controller
         $instansis = Instansi::all();
         $metodebayars = Metodebayar::all();
         $rekenings = Rekening::all();
-        $kasbons = Kasbon::where('status_kasbon', 'approved')->where('sisa_penggunaan', '>', '0')->where('user_id', $this->user->id)->get();
+        $kasbons = Kasbon::where('jenis_kasbon', 'non_permohonan')->where('status_kasbon', 'approved')->where('sisa_penggunaan', '>', '0')->where('user_id', $this->user->id)->get();
         return Inertia::render('Admin/Keluarbiaya/Create', [
             'instansiOpts' => collect($instansis)->map(fn ($o) => ['label' => $o['nama_instansi'], 'value' => $o['id']]),
             'metodebayarOpts' => collect($metodebayars)->map(fn ($o) => ['label' => $o['nama_metodebayar'], 'value' => $o['id']]),
             'rekeningOpts' => collect($rekenings)->map(fn ($o) => ['label' => $o['nama_rekening'], 'value' => $o['id']]),
-            'kasbonOpts' => collect($kasbons)->map(fn ($o) => ['label' => number_format($o['sisa_penggunaan']), 'value' => $o['id'], 'sisa_penggunaan' => $o['sisa_penggunaan']])->toArray(),
+            'kasbonOpts' => collect($kasbons)->map(fn ($o) => ['label' => sprintf('%s - %s', $o['id'], number_format($o['jumlah_kasbon'])), 'value' => $o['id'], 'sisa_penggunaan' => $o['sisa_penggunaan'], 'instansi'=>$o['instansi']])->toArray(),
             // 'transpermohonan' => Inertia::lazy(fn () => $transpermohonan),
             'base_route' => $this->base_route,
         ]);
@@ -118,7 +125,13 @@ class KeluarbiayaController extends Controller
         $validated =  request()->validate([
             'instansi_id' => ['required'],
             'metodebayar_id' => ['required'],
-            'rekening_id' => ['required'],
+            'rekening_id' => ['required',  function (string $attribute, mixed $value, Closure $fail) {
+                $rek = Rekening::find($value);
+                if($rek){
+                    if($rek->metodebayar_id != request('metodebayar_id'))
+                    $fail("metodebayar {$attribute} harus sesuai!");
+                }
+            }],
             'kasbon_id' => ['nullable'],
             'saldo_awal' => ['nullable'],
             'jumlah_biaya' => ['nullable'],
@@ -213,13 +226,13 @@ class KeluarbiayaController extends Controller
             $id = $kasbons[0]->id;
             $kasbon = Kasbon::find($id);
             if ($keluarbiaya->status_keluarbiaya == 'approved') {
-                $kasbon->update(['status_kasbon' => 'finish']);
+                // $kasbon->update(['status_kasbon' => 'finish']);
             //     $this->returSisaKasbon($kasbon, 0);
             // } elseif ($keluarbiaya->status_keluarbiaya == 'wait_approval') {
-                if ($keluarbiaya->saldo_akhir > 0) {
+                // if ($keluarbiaya->saldo_akhir > 0) {
                     $kasbon->update(['status_kasbon' => 'used']);
                     $this->returSisaKasbon($kasbon, $keluarbiaya->saldo_akhir);
-                }
+                // }
             }
         }
         return redirect()->back()->with('status Pengeluaran updated');
@@ -269,7 +282,7 @@ class KeluarbiayaController extends Controller
                 [
                     // 'saldo_awal' => 0,
                     'jumlah_biaya' => $jmlbiaya,
-                    'saldo_akhir' => $keluarbiaya->metodebayar->id == '1'? $keluarbiaya->saldo_awal - $jmlbiaya:0,
+                    'saldo_akhir' => 0,
                 ]
             );
         }
@@ -366,6 +379,8 @@ class KeluarbiayaController extends Controller
                 $ids = $kasbon->jurnalumums()->pluck('id');
                 if (count($ids) == 2) {
                     $ju1 = Jurnalumum::updateOrCreate(['id' => $ids[0]], [
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
                         'uraian' => $uraian,
                         'akun_id' => $akunpiutang,
                         'debet' => $jsisa,
@@ -373,6 +388,8 @@ class KeluarbiayaController extends Controller
                         'parent_id' => $parent_id
                     ]);
                     $ju2 = Jurnalumum::updateOrCreate(['id' => $ids[1]], [
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
                         'uraian' => $uraian,
                         'akun_id' => $akunkas,
                         'debet' => 0,
@@ -396,12 +413,12 @@ class KeluarbiayaController extends Controller
 
         $jsisa = $kasbon->sisa_penggunaan;
         //posting jurnalumum
-        if ($jsisa > 0) {
+        // if ($jsisa > 0) {
             $ids = $kasbon->jurnalumums;
             if (count($ids) == 2) {
                 $ids[0]->delete();
                 $ids[1]->delete();
-            }
+            // }
         }
 
         // if ($jsisa > 0) {
@@ -451,6 +468,8 @@ class KeluarbiayaController extends Controller
             $ids = $kasbon->jurnalumums()->pluck('id');
             if (count($ids) == 2) {
                 $ju1 = Jurnalumum::updateOrCreate(['id' => $ids[0]], [
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
                     'uraian' => $uraian,
                     'akun_id' => $akunpiutang,
                     'debet' => $jsisa,
@@ -458,6 +477,8 @@ class KeluarbiayaController extends Controller
                     'parent_id' => $parent_id
                 ]);
                 $ju2 = Jurnalumum::updateOrCreate(['id' => $ids[1]], [
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
                     'uraian' => $uraian,
                     'akun_id' => $akunkas,
                     'debet' => 0,
@@ -501,16 +522,25 @@ class KeluarbiayaController extends Controller
             ];
         }));
         $tanggal = Carbon::now()->format('d M Y');
+        $media = request('media','print');
+        // $qr_kode = sprintf("lapkeluarbiaya_%s.png", rand(1,10));
+        $qr_kode = sprintf("lapkeluarbiaya_%s.png", $this->user->id);
+        $xpath = url()->current().'/?media=screen';
+        QrCode::format('png')->size(100)->generate($xpath, public_path($qr_kode));
+        $base_url = URL::to('/');
         $data = [
-            'judul_lap' => 'PENGELUARAN BIAYA',
+            'qrcode' => config('app.qrcodeurl',''). $qr_kode,
+            'judul_lap' => 'PENGELUARAN BIAYA NON PERMOHONAN',
             'keluarbiaya' => $keluarbiaya,
             'dkeluarbiayas' => $dkeluarbiayas,
             'tanggal' => $tanggal,
         ];
-        $pdf = Pdf::loadView('pdf.lapKeluarbiaya', $data)->setPaper(array(0, 0, 609.4488, 935.433), 'portrait');
-        // return view('pdf.lapKeluarbiayauser', compact('judul_lap', 'subjudul_lap'));
-        // return $pdf->stream('lapKeluarbiayauser.pdf');
-        return 'data:application/pdf;base64,' . base64_encode($pdf->stream());
+        if($media == 'print'){
+            $pdf = Pdf::loadView('pdf.lapKeluarbiaya', $data)->setPaper(array(0, 0, 609.4488, 935.433), 'portrait');
+            return 'data:application/pdf;base64,' . base64_encode($pdf->stream());
+        }else{
+            return view('lapKeluarbiaya', $data);
+        }
     }
     public function infoKeluarbiaya()
     {
@@ -536,17 +566,8 @@ class KeluarbiayaController extends Controller
         $itemkegiatanOpts = Itemkegiatan::all();
 
         $dkeluarbiayas = Dkeluarbiaya::query();
-        $dkeluarbiayas = $dkeluarbiayas
-            // ->with('keluarbiaya', function ($q) {
-            //     $q->where('status_keluarbiaya', 'approveda');
-            //     if (request()->has('user_id')) {
-            //     $q->where('user_id', request('user_id'));
-            //     }
-            // });
-
-            ->join('keluarbiayas','keluarbiayas.id','dkeluarbiayas.keluarbiaya_id');
-            $dkeluarbiayas = $dkeluarbiayas->whereRaw('dkeluarbiayas.created_at >= ? and dkeluarbiayas.created_at <= ?',  [$periods])
-            ->with(['itemkegiatan','keluarbiaya.instansi','keluarbiaya.rekening','keluarbiaya.user']);
+        $dkeluarbiayas = $dkeluarbiayas->whereRaw('dkeluarbiayas.created_at >= ? and dkeluarbiayas.created_at <= ?',  [$periods])
+            ->with(['keluarbiaya','itemkegiatan','keluarbiaya.instansi','keluarbiaya.rekening','keluarbiaya.user']);
 
             $dkeluarbiayas = $dkeluarbiayas->filter(Request::only(['search','itemkegiatan_id','user_id']));
             if (request()->has(['sortBy', 'sortDir'])) {

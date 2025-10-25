@@ -108,7 +108,7 @@ export default function CardTableKeluarbiayapermusers({
             >
                 <div className="rounded-full mb-0 px-4 py-3 border-0 ">
                     <div className="flex justify-between w-full flex-col md:flex-row">
-                        <div className="relative w-full max-w-full flex-grow flex-1 ">
+                        <div className="relative w-full max-w-full flex-grow flex-1 mb-2">
                             <h3
                                 className={
                                     "font-semibold text-lg " +
@@ -120,7 +120,7 @@ export default function CardTableKeluarbiayapermusers({
                                 PENGELUARAN BIAYA PERMOHONAN
                             </h3>
                         </div>
-                        <div className="flex justify-center gap-2 flex-row items-start">
+                        <div className="flex flex-col justify-center gap-1 md:flex-row items-start">
                             {isAdmin ? (
                                 <AsyncSelectSearch
                                     placeholder="Pilih User"

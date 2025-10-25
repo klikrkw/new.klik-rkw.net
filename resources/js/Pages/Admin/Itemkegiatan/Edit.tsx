@@ -22,8 +22,11 @@ const Edit = () => {
         akun: OptionSelect | undefined;
         grupitemkegiatans: OptionSelect[] | [];
         itemrincianbiayaperms: OptionSelect[] | [];
+        itemprosesperms: OptionSelect[] | [];
         isunique: boolean;
         checkbiaya: boolean;
+        is_alert: boolean;
+        start_alert: number;
         _method: string;
     };
 
@@ -37,6 +40,8 @@ const Edit = () => {
         selInstansiOpt,
         akunOpts,
         selAkunOpt,
+        itemprosespermOpts,
+        selItemprosespermOpts,
     } = usePage<{
         grupitemkegiatanOpts: OptionSelect[];
         itemrincianbiayapermOpts: OptionSelect[];
@@ -47,6 +52,8 @@ const Edit = () => {
         selInstansiOpt: OptionSelect;
         akunOpts: OptionSelect[];
         selAkunOpt: OptionSelect;
+        itemprosespermOpts: OptionSelect[];
+        selItemprosespermOpts: OptionSelect[];
     }>().props;
 
     const { data, setData, errors, post, processing } = useForm<FormValues>({
@@ -59,6 +66,9 @@ const Edit = () => {
         itemrincianbiayaperms: selItemrincianbiayapermOpts,
         isunique: itemkegiatan.isunique || false,
         checkbiaya: itemkegiatan.checkbiaya || false,
+        is_alert: itemkegiatan.is_alert || false,
+        start_alert: itemkegiatan.start_alert || 0,
+        itemprosesperms: selItemprosespermOpts,
         _method: "PUT",
     });
 
@@ -170,6 +180,20 @@ const Edit = () => {
                                         })
                                     }
                                 />
+                                <SelectSearch
+                                    isMulti
+                                    name="itemprosesperms"
+                                    label="Item Proses Permohonan"
+                                    value={data.itemprosesperms}
+                                    options={itemprosespermOpts}
+                                    className="w-full"
+                                    onChange={(e: any) =>
+                                        setData({
+                                            ...data,
+                                            itemprosesperms: e ? e : {},
+                                        })
+                                    }
+                                />
                                 <div className="mb-4">
                                     <label className="inline-flex items-center cursor-pointer">
                                         <input
@@ -189,6 +213,41 @@ const Edit = () => {
                                         </span>
                                     </label>
                                 </div>
+                                <div>
+                                    <label className="inline-flex items-center cursor-pointer">
+                                        <input
+                                            id="customCheckLogin"
+                                            type="checkbox"
+                                            className="form-checkbox border-0 rounded text-blueGray-700 ml-1 w-5 h-5 ease-linear transition-all duration-150"
+                                            checked={data.is_alert}
+                                            onChange={(e) =>
+                                                setData(
+                                                    "is_alert",
+                                                    e.target.checked
+                                                )
+                                            }
+                                        />
+                                        <span className="ml-2 text-sm font-semibold text-blueGray-600">
+                                            Is Alert
+                                        </span>
+                                    </label>
+                                </div>
+
+                                <Input
+                                    name="start_alert"
+                                    pattern="[0-9]*"
+                                    onInput={(evt: any) => {
+                                        const v = evt.target.validity.valid
+                                            ? evt.target.value
+                                            : data.start_alert;
+                                        setData("start_alert", v);
+                                    }}
+                                    label="Start Alert"
+                                    errors={errors.start_alert}
+                                    value={data.start_alert}
+                                    type="text"
+                                    className="w-full"
+                                />
                                 <div className="flex items-center justify-between">
                                     <LinkButton
                                         theme="blueGrey"

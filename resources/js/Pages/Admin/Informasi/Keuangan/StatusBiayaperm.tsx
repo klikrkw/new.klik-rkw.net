@@ -81,13 +81,13 @@ const StatusBiayaperm = ({
                 <div className="w-full px-2">
                     <div className="relative flex flex-col min-w-0 break-words w-full mb-2 shadow-lg shadow-slate-400 rounded-lg bg-blueGray-100 border-0">
                         <div className="rounded-t mb-2 px-4 pt-4 ">
-                            <div className="w-full flex  justify-between bg-lightBlue-800 text-lightBlue-100 px-2 py-2 shadow-md rounded-lg">
+                            <div className="w-full flex flex-col md:flex-row justify-between gap-2 bg-lightBlue-800 text-lightBlue-100 px-2 py-2 shadow-md rounded-lg">
                                 <div className="text-left">
                                     <h1 className="font-semibold">
                                         BIAYA PERMOHONAN
                                     </h1>
                                 </div>
-                                <div className="w-1/2 lg:w-1/2 text-blueGray-800 flex flex-col md:flex-row justify-between items-center gap-2">
+                                <div className="w-full md:w-1/2 text-blueGray-800 flex flex-col md:flex-row justify-between items-center gap-2">
                                     <SelectSearch
                                         name="lunas"
                                         value={curUser}
@@ -129,7 +129,7 @@ const StatusBiayaperm = ({
                         </div>
                         <div className="flex-auto px-2 lg:px-4 py-6 pt-0">
                             {data.length > 0 ? (
-                                <div className="p-1 w-full flex-col">
+                                <div className="p-1 w-full flex-col overflow-y-auto">
                                     <table className="w-full">
                                         <thead>
                                             <tr className="border-y-2 font-semibold bg-slate-300">

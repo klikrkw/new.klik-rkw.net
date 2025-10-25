@@ -29,19 +29,23 @@ class PostingjurnalController extends Controller
         $now = Carbon::now();
         $prev = $date1->subDays(7);
         // $prev = $date1->setDay(1);
-
+        $postingjurnals = Postingjurnal::query();
         if (request()->has(['date1']) && request()->has(['date2'])) {
             $now = Carbon::parse(request('date2'));
             $prev = Carbon::parse(request('date1'));
+        }else{
+            $periods = $this->getPeriodTimes($period);
+            $postingjurnals = $postingjurnals->whereRaw('postingjurnals.created_at >= ? and postingjurnals.created_at <= ?',  $periods);
         }
 
-        $postingjurnals = Postingjurnal::query();
         if (request()->has(['sortBy', 'sortDir'])) {
             $postingjurnals = $postingjurnals->orderBy(request('sortBy'), request('sortDir'));
         }
+
         $postingjurnals = $postingjurnals->filter(Request::only('search','period'))
             ->paginate(10)
             ->appends(Request::all());
+
         return Inertia::render('Admin/Postingjurnal/Index', [
             'filters' => Request::all('search', 'user_id'),
             'postingjurnals' => PostingjurnalCollection::collection($postingjurnals),
