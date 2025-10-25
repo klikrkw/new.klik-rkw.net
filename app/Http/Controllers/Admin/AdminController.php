@@ -53,7 +53,7 @@ class AdminController extends Controller
     {
         $query = Transpermohonan::selectRaw('jenispermohonans.nama_jenispermohonan, count(jenispermohonan_id) as jumlah')
             ->join('jenispermohonans', 'transpermohonans.jenispermohonan_id', 'jenispermohonans.id')
-            ->groupBy(['jenispermohonan_id', 'jenispermohonans.nama_jenispermohonan'])
+            ->groupBy('jenispermohonan_id', 'jenispermohonans.nama_jenispermohonan')
             ->get();
         $collection = collect($query);
         $data = [];
